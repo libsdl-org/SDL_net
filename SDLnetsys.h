@@ -41,7 +41,7 @@
 #include <OpenTptInternet.h>
 #else
 #if defined(__WIN32__) || defined(WIN32)
-#define Win32_Winsock
+#define __USE_W32_SOCKETS
 #include <windows.h>
 #else /* UNIX */
 #include <sys/time.h>
@@ -66,10 +66,10 @@
 #define SOCKET		EndpointRef
 #define INVALID_SOCKET	kOTInvalidEndpointRef
 #else
-#ifndef Win32_Winsock
+#ifndef __USE_W32_SOCKETS
 #define closesocket	close
 #define SOCKET	int
 #define INVALID_SOCKET	-1
 #define SOCKET_ERROR	-1
-#endif /* Win32_Winsock */
+#endif /* __USE_W32_SOCKETS */
 #endif /* Open Transport */

@@ -268,7 +268,7 @@ char *SDLNet_ResolveIP(IPaddress *ip)
 /* Initialize/Cleanup the network API */
 int  SDLNet_Init(void)
 {
-#ifdef Win32_Winsock
+#ifdef __USE_W32_SOCKETS
 	/* Start up the windows networking */
 	WORD version_wanted = MAKEWORD(1,1);
 	WSADATA wsaData;
@@ -282,7 +282,7 @@ int  SDLNet_Init(void)
 }
 void SDLNet_Quit(void)
 {
-#ifdef Win32_Winsock
+#ifdef __USE_W32_SOCKETS
 	/* Clean up windows networking */
 	if ( WSACleanup() == SOCKET_ERROR ) {
 		if ( WSAGetLastError() == WSAEINPROGRESS ) {
