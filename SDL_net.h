@@ -378,10 +378,10 @@ do					\
 #else
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Read16(areap) 		\
-	((((Uint8 *)area)[0] <<  8) | ((Uint8 *)area)[1] <<  0)
+	((((Uint8 *)areap)[0] <<  8) | ((Uint8 *)areap)[1] <<  0)
 #else
 #define SDLNet_Read16(areap) 		\
-	((((Uint8 *)area)[1] <<  8) | ((Uint8 *)area)[0] <<  0)
+	((((Uint8 *)areap)[1] <<  8) | ((Uint8 *)areap)[0] <<  0)
 #endif
 #endif /* !SDL_DATA_ALIGNED */
 
@@ -392,12 +392,12 @@ do					\
 #else
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Read32(areap) 		\
-	((((Uint8 *)area)[0] << 24) | (((Uint8 *)area)[1] << 16) | \
-	 (((Uint8 *)area)[2] <<  8) |  ((Uint8 *)area)[3] <<  0)
+	((((Uint8 *)areap)[0] << 24) | (((Uint8 *)areap)[1] << 16) | \
+	 (((Uint8 *)areap)[2] <<  8) |  ((Uint8 *)areap)[3] <<  0)
 #else
 #define SDLNet_Read32(areap) 		\
-	((((Uint8 *)area)[3] << 24) | (((Uint8 *)area)[2] << 16) | \
-	 (((Uint8 *)area)[1] <<  8) |  ((Uint8 *)area)[0] <<  0)
+	((((Uint8 *)areap)[3] << 24) | (((Uint8 *)areap)[2] << 16) | \
+	 (((Uint8 *)areap)[1] <<  8) |  ((Uint8 *)areap)[0] <<  0)
 #endif
 #endif /* !SDL_DATA_ALIGNED */
 
