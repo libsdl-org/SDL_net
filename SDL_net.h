@@ -22,8 +22,8 @@
 
 /* $Id$ */
 
-#ifndef _SDLnet_h
-#define _SDLnet_h
+#ifndef _SDL_net_h
+#define _SDL_net_h
 
 #include "SDL.h"
 #include "SDL_endian.h"
@@ -440,4 +440,4 @@ do					\
 #endif
 #include "close_code.h"
 
-#endif /* _SDLnet_h */
+#endif /* _SDL_net_h */
