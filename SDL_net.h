@@ -40,8 +40,8 @@ extern "C" {
    SDL must be initialized before calls to functions in this library,
    because this library uses utility functions from the SDL library.
 */
-extern int  SDLNet_Init(void);
-extern void SDLNet_Quit(void);
+extern DECLSPEC int  SDLNet_Init(void);
+extern DECLSPEC void SDLNet_Quit(void);
 
 /***********************************************************************/
 /* IPv4 hostname resolution API                                        */
@@ -82,7 +82,9 @@ typedef struct _TCPsocket *TCPsocket;
 /* Open a TCP network socket
    If ip.host is INADDR_NONE, this creates a local server socket on the 
    given port, otherwise a TCP connection to the remote host and port is
-   attempted.
+   attempted.  The address passed in should already be swapped to network
+   byte order (addresses returned from SDLNet_ResolveHost() are already
+   in the correct form).
    The newly created socket is returned, or NULL if there was an error.
 */
 extern DECLSPEC TCPsocket SDLNet_TCP_Open(IPaddress *ip);
