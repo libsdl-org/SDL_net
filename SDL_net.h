@@ -111,7 +111,8 @@ extern DECLSPEC int SDLNet_TCP_Send(TCPsocket sock, void *data, int len);
    and store them in the buffer pointed to by 'data'.
    This function returns the actual amount of data received.  If the return
    value is less than or equal to zero, then either the remote connection was
-   closed, or an unknown socket error occurred.
+   closed, or an unknown socket error occurred.  The function may return less
+   data than you asked for. If you need to, just call the function again.
 */
 extern DECLSPEC int SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxlen);
 
