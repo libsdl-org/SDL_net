@@ -64,14 +64,14 @@ typedef struct {
 #ifndef INADDR_NONE
 #define INADDR_NONE	0xFFFFFFFF
 #endif
-extern DECLSPEC int SDLCALL SDLNet_ResolveHost(IPaddress *address, char *host, Uint16 port);
+extern DECLSPEC int SDLCALL SDLNet_ResolveHost(IPaddress *address, const char *host, Uint16 port);
 
 /* Resolve an ip address to a host name in canonical form.
    If the ip couldn't be resolved, this function returns NULL,
    otherwise a pointer to a static buffer containing the hostname
    is returned.  Note that this function is not thread-safe.
 */
-extern DECLSPEC char * SDLCALL SDLNet_ResolveIP(IPaddress *ip);
+extern DECLSPEC const char * SDLCALL SDLNet_ResolveIP(IPaddress *ip);
 
 
 /***********************************************************************/

@@ -177,7 +177,7 @@ void SDLNet_Quit(void)
 }
 
 /* Resolve a host name and port to an IP address in network form */
-int SDLNet_ResolveHost(IPaddress *address, char *host, Uint16 port)
+int SDLNet_ResolveHost(IPaddress *address, const char *host, Uint16 port)
 {
 	int retval = 0;
 
@@ -231,7 +231,7 @@ int SDLNet_ResolveHost(IPaddress *address, char *host, Uint16 port)
 */
 /* MacOS implementation by Roy Wood
  */
-char *SDLNet_ResolveIP(IPaddress *ip)
+const char *SDLNet_ResolveIP(IPaddress *ip)
 {
 	if (ip != nil)
 	{
@@ -309,7 +309,7 @@ void SDLNet_Quit(void)
 }
 
 /* Resolve a host name and port to an IP address in network form */
-int SDLNet_ResolveHost(IPaddress *address, char *host, Uint16 port)
+int SDLNet_ResolveHost(IPaddress *address, const char *host, Uint16 port)
 {
 	int retval = 0;
 
@@ -344,7 +344,7 @@ int SDLNet_ResolveHost(IPaddress *address, char *host, Uint16 port)
  * Main Programmer of Arianne RPG.
  * http://come.to/arianne_rpg
  */
-char *SDLNet_ResolveIP(IPaddress *ip)
+const char *SDLNet_ResolveIP(IPaddress *ip)
 {
 	struct hostent *hp;
 
