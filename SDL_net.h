@@ -312,7 +312,7 @@ extern no_parse_DECLSPEC char * SDLNet_GetError(void);
 /* Inline macro functions to read/write network data */
 
 /* Warning, some systems have data access alignment restrictions */
-#ifdef sparc
+#if defined(sparc) || defined(mips)
 #define SDL_DATA_ALIGNED	1
 #endif
 #ifndef SDL_DATA_ALIGNED
