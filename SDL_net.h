@@ -319,15 +319,10 @@ extern DECLSPEC char * SDLNet_GetError(void);
 
 /* Write a 16 bit value to network packet buffer */
 #if !SDL_DATA_ALIGNED
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-#define SDLNet_Write16(value, areap) \
-	(*(Uint16 *)(areap) = value)
-#else
 #define SDLNet_Write16(value, areap) \
 	(*(Uint16 *)(areap) = SDL_SwapBE16(value))
-#endif
 #else
-static __inline__ void SDLNet_Write16(value, areap)
+static __inline__ void SDLNet_Write16(Uint16 value, void *areap)
 {
 	Uint8 *area = (Uint8 *)(areap);
 	area[0] = (value>>8)&0xFF;
@@ -337,15 +332,10 @@ static __inline__ void SDLNet_Write16(value, areap)
 
 /* Write a 32 bit value to network packet buffer */
 #if !SDL_DATA_ALIGNED
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-#define SDLNet_Write32(value, areap) \
-	*(Uint32 *)(areap) = value;
-#else
 #define SDLNet_Write32(value, areap) \
 	*(Uint32 *)(areap) = SDL_SwapBE32(value);
-#endif
 #else
-static __inline__ void SDLNet_Write32(value, areap)
+static __inline__ void SDLNet_Write32(Uint32 value, void *areap)
 {
 	Uint8 *area = (Uint8 *)(areap);
 	area[0] = (value>>24)&0xFF;
@@ -357,15 +347,10 @@ static __inline__ void SDLNet_Write32(value, areap)
 
 /* Read a 16 bit value from network packet buffer */
 #if !SDL_DATA_ALIGNED
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-#define SDLNet_Read16(areap) \
-	(*(Uint16 *)areap)
-#else
 #define SDLNet_Read16(areap) \
 	(SDL_SwapBE16(*(Uint16 *)(areap)))
-#endif
 #else
-static __inline__ Uint16 SDLNet_Read16(areap)
+static __inline__ Uint16 SDLNet_Read16(void *areap)
 {
 	Uint8 *area = (Uint8 *)areap;
 	return((area[0]<<8)|area[1]);
@@ -374,15 +359,10 @@ static __inline__ Uint16 SDLNet_Read16(areap)
 
 /* Read a 32 bit value from network packet buffer */
 #if !SDL_DATA_ALIGNED
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-#define SDLNet_Read32(areap) \
-	(*(Uint32 *)areap)
-#else
 #define SDLNet_Read32(areap) \
 	(SDL_SwapBE32(*(Uint32 *)(areap)))
-#endif
 #else
-static __inline__ Uint32 SDLNet_Read32(areap)
+static __inline__ Uint32 SDLNet_Read32(void *areap)
 {
 	Uint8 *area = (Uint8 *)areap;
 	return((area[0]<<24)|(area[1]<<16)|(area[2]<<8)|area[3]);

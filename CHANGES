@@ -1,4 +1,9 @@
 
+1.2.1:
+Sam Lantinga - Tue Apr 17 11:42:13 PDT 2001
+ * Cleaned up swap function definitions in SDL_net.h
+ * Added the swap functions back in for binary compatibility
+
 1.2.0:
 Sam Lantinga - Wed Apr  4 12:42:20 PDT 2001
  * Synchronized release version with SDL 1.2.0

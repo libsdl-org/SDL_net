@@ -293,6 +293,39 @@ char *SDLNet_ResolveIP(IPaddress *ip)
 
 #endif /* MACOS_OPENTRANSPORT */
 
+#if !SDL_DATA_ALIGNED /* function versions for binary compatibility */
+
+/* Write a 16 bit value to network packet buffer */
+#undef SDLNet_Write16
+void   SDLNet_Write16(Uint16 value, void *areap)
+{
+	(*(Uint16 *)(areap) = SDL_SwapBE16(value));
+}
+
+/* Write a 32 bit value to network packet buffer */
+#undef SDLNet_Write32
+void   SDLNet_Write32(Uint32 value, void *areap)
+{
+	*(Uint32 *)(areap) = SDL_SwapBE32(value);
+}
+
+/* Read a 16 bit value from network packet buffer */
+#undef SDLNet_Read16
+Uint16 SDLNet_Read16(void *areap)
+{
+	return (SDL_SwapBE16(*(Uint16 *)(areap)));
+}
+
+/* Read a 32 bit value from network packet buffer */
+#undef SDLNet_Read32
+Uint32 SDLNet_Read32(void *areap)
+{
+	return (SDL_SwapBE32(*(Uint32 *)(areap)));
+}
+
+#endif /* !SDL_DATA_ALIGNED */
+
+
 #ifdef USE_GUSI_SOCKETS
 
 /* Configure Socket Factories */
