@@ -144,7 +144,7 @@ OSStatus DoNegotiateIPReuseAddrOption(EndpointRef ep, Boolean enableReuseIPMode)
 // ( 01/02/19 )
 static __inline__ Uint32 CompleteMask(OTEventCode code)	
 { 	
-	return 1 << (code & 0x1F); 
+	return 1 << (code & 0x1F);
 }
 
 /* Notifier for async OT calls */
@@ -216,7 +216,7 @@ static void AsyncTCPPopEvent( TCPsocket sock )
 		// Shoule we care ?
 		// (TODO)
 		OTRcvConnect( sock->channel, NULL );
-		sock->connected = 1;	
+		sock->connected = 1;
 	}
 	
 	if( sock->curEvent & T_ORDREL )
@@ -281,25 +281,25 @@ static void AsycnTCPDeleteSocket( TCPsocket sock )
 TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 {
 	EndpointRef dummy = NULL;
-	
+
 	TCPsocket sock = AsyncTCPNewSocket();
 	if( ! sock)
 		return NULL;
-	
+
 	// Determin whether bind locally, or connect to remote
 	if ( (ip->host != INADDR_NONE) && (ip->host != INADDR_ANY) )
 	{
 		// ######## Connect to remote
 		OTResult stat;
 		InetAddress inAddr;
-		TBind bindReq;		
-		
+		TBind bindReq;
+
 		// Open endpoint
 		sock->error = OTAsyncOpenEndpoint(
 			OTCreateConfiguration(kTCPName), NULL, &(sock->info),
 			(OTNotifyProcPtr)(AsyncTCPNotifier),
 			sock );
-		
+
 		AsyncTCPPopEvent( sock );
 		while( !sock->error && !( sock->completion & CompleteMask(T_OPENCOMPLETE)))
 		{
@@ -308,31 +308,31 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 			//WaitNextEvent(everyEvent, &macEvent, 1, NULL);
 			AsyncTCPPopEvent( sock );
 		}
-		
+
 		if( !sock->channel )
 		{
 			SDLNet_SetError("OTAsyncOpenEndpoint failed --- client socket could not be opened");
 			goto error_return;
 		}
-		
+
 		// Set blocking mode
 		// I'm not sure if this is a good solution....
 		// Check out Apple's sample code, OT Virtual Server
 		// ( 010314 masahiro minami<elsur@aaa.letter.co.jp>)
-		
+
 		sock->error = OTSetBlocking( sock->channel );
 		if( sock->error != kOTNoError )
 		{
 			SDLNet_SetError("OTSetBlocking() returned an error");
 			goto error_return;
 		}
-		
+
 		// Bind the socket
 		OTInitInetAddress(&inAddr, 0, 0 );
 		bindReq.addr.len = sizeof( InetAddress );
 		bindReq.addr.buf = (unsigned char*)&inAddr;
 		bindReq.qlen = 0;
-		
+
 		sock->error = OTBind( sock->channel, &bindReq, NULL );
 		AsyncTCPPopEvent(sock);
 		while( !sock->error && !( sock->completion & CompleteMask(T_BINDCOMPLETE)))
@@ -341,14 +341,14 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 			//WaitNextEvent(everyEvent, &macEvent, 1, NULL);
 			AsyncTCPPopEvent(sock);
 		}
-		
-		
+
+
 		switch( stat = OTGetEndpointState( sock->channel ))
 		{
 			InetAddress inAddr;
 			TCall sndCall;
 			OTResult res;
-			
+
 			case T_OUTCON:
 				SDLNet_SetError("SDLNet_Open() failed -- T_OUTCON");
 				goto error_return;
@@ -357,7 +357,7 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 				sock->readShutdown = false;
 				sock->writeShutdown = false;
 				sock->event &=~T_CONNECT;
-				
+
 				OTMemzero(&sndCall, sizeof(TCall));
 				OTInitInetAddress(&inAddr, ip->port, ip->host );
 				sndCall.addr.len = sizeof(InetAddress);
@@ -372,11 +372,11 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 				// What's to be done ? (TODO)
 				SDLNet_SetError("SDLNet_TCP_Open() failed -- EndpointState not good");
 				goto error_return;
-				
+
 		}
 		if( !(sock->event & (T_CONNECT|T_DISCONNECT)))
 			goto error_return;
-			
+
 		AsyncTCPPopEvent( sock );
 		while( !(sock->event & (T_CONNECT|T_DISCONNECT)))
 		{
@@ -401,11 +401,11 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 		// ######## Bind locally
 		TBind bindReq;
 		InetAddress	inAddr;
-		
+
 	// First, get InetInterfaceInfo.
 	// I don't search for all of them.
 	// Does that matter ?
-			
+
 		sock->error = OTAsyncOpenEndpoint(
 			OTCreateConfiguration("tilisten, tcp"), NULL, &(sock->info),
 			(OTNotifyProcPtr)(AsyncTCPNotifier),
@@ -415,13 +415,13 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 		{
 			AsyncTCPPopEvent( sock );
 		}
-		
+
 		if( ! sock->channel )
 		{
 			SDLNet_SetError("OTAsyncOpenEndpoint failed --- server socket could not be opened");
 			goto error_return;
 		}
-		
+
 		// Create a master OTConfiguration
 		sock->config = OTCreateConfiguration(kTCPName);
 		if( ! sock->config )
@@ -429,7 +429,7 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 			SDLNet_SetError("Could not create master OTConfiguration");
 			goto error_return;
 		}
-		
+
 		// Bind the socket
 		OTInitInetAddress(&inAddr, ip->port, 0 );
 		inAddr.fAddressType = AF_INET;
@@ -734,7 +734,7 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 	} else {
 
 	// ##########  Binding locally
-	
+
 		memset(&sock_addr, 0, sizeof(sock_addr));
 		sock_addr.sin_family = AF_INET;
 		sock_addr.sin_addr.s_addr = INADDR_ANY;
@@ -749,6 +749,10 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 		if ( listen(sock->channel, 5) == SOCKET_ERROR ) {
 			SDLNet_SetError("Couldn't listen to local port");
 			goto error_return;
+		}
+		/* allow local address reuse */
+		{ int yes = 1;
+			setsockopt(sock->channel, IPPROTO_TCP, SO_REUSEADDR, (char*)&yes, sizeof(yes));
 		}
 #ifdef O_NONBLOCK
 		/* Set the socket to non-blocking mode for accept() */

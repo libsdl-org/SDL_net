@@ -1,5 +1,7 @@
 
 1.2.4:
+Stephane Magnenat - Wed Feb 13 15:28:04 PST 2002
+ * Sockets are created with the SO_REUSEADDR flag by default
 Juergen Wind - Wed Feb 13 09:21:55 PST 2002
  * Fixed data alignment problems on IRIX
 
