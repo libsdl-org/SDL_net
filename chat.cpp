@@ -1,6 +1,6 @@
 /*
     CHAT:  A chat client using the SDL example network and GUI libraries
-    Copyright (C) 1997-1999  Sam Lantinga
+    Copyright (C) 1997-2004 Sam Lantinga
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
