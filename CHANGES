@@ -1,4 +1,8 @@
 
+1.2.3:
+Jonathan Atkins - Sun Sep 23 10:44:27 PDT 2001
+ * Fixed non-blocking socket flags on Windows
+
 1.2.2:
 Sam Lantinga - Sun Jul 22 16:41:44 PDT 2001
  * Added Project Builder projects for building MacOS X framework

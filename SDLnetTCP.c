@@ -830,6 +830,13 @@ TCPsocket SDLNet_TCP_Accept(TCPsocket server)
 		SDLNet_SetError("accept() failed");
 		goto error_return;
 	}
+#ifdef WIN32
+      {
+              /* passing a zero value, socket mode set to block on */
+              unsigned long mode = 0;
+              ioctlsocket (sock->channel, FIONBIO, &mode);
+      }
+#endif /* WIN32 */
 	sock->remoteAddress.host = sock_addr.sin_addr.s_addr;
 	sock->remoteAddress.port = sock_addr.sin_port;
 
