@@ -16,10 +16,12 @@ libSDL_net_la_SOURCES =		\
 EXTRA_DIST =			\
 	CHANGES			\
 	autogen.sh		\
+	VisualC.zip		\
 	MPWmake.sea.hqx		\
 	quit.bmp		\
 	scroll_dn.bmp		\
-	scroll_up.bmp
+	scroll_up.bmp		\
+	SDL_net.spec.in
 
 libSDL_net_la_LIBADD = @INETLIB@
 libSDL_net_la_LDFLAGS = 		\
