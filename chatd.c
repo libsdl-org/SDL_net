@@ -132,7 +132,7 @@ void HandleClient(int which)
 			data[CHAT_DEL_SLOT] = which;
 			for ( i=0; i<CHAT_MAXPEOPLE; ++i ) {
 				if ( people[i].active ) {
-					SDLNet_TCP_Send(people[i].sock,data,2);
+					SDLNet_TCP_Send(people[i].sock,data,CHAT_DEL_LEN);
 				}
 			}
 		}
