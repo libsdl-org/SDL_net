@@ -27,6 +27,7 @@
 
 #include "SDL.h"
 #include "SDL_endian.h"
+#include "SDL_version.h"
 #include "begin_code.h"
 
 
@@ -35,6 +36,28 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* Printable format: "%d.%d.%d", MAJOR, MINOR, PATCHLEVEL
+*/
+#define SDL_NET_MAJOR_VERSION	1
+#define SDL_NET_MINOR_VERSION	2
+#define SDL_NET_PATCHLEVEL	6
+
+/* This macro can be used to fill a version structure with the compile-time
+ * version of the SDL_net library.
+ */
+#define SDL_NET_VERSION(X)						\
+{									\
+	(X)->major = SDL_NET_MAJOR_VERSION;				\
+	(X)->minor = SDL_NET_MINOR_VERSION;				\
+	(X)->patch = SDL_NET_PATCHLEVEL;				\
+}
+
+/* This function gets the version of the dynamically linked SDL_net library.
+   it should NOT be used to fill a version structure, instead you should
+   use the SDL_NET_VERSION() macro.
+ */
+extern DECLSPEC const SDL_version * SDLCALL SDLNet_Linked_Version(void);
 
 /* Initialize/Cleanup the network API
    SDL must be initialized before calls to functions in this library,

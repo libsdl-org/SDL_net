@@ -30,6 +30,13 @@
 #include "SDL_net.h"
 
 
+const SDL_version *SDLNet_Linked_Version(void)
+{
+	static SDL_version linked_version;
+	SDL_NET_VERSION(&linked_version);
+	return(&linked_version);
+}
+
 /* Since the UNIX/Win32/BeOS code is so different from MacOS,
    we'll just have two completely different sections here.
 */
