@@ -156,6 +156,8 @@ extern DECLSPEC void SDLNet_FreePacketV(UDPpacket **packetV);
 
 /* Open a UDP network socket
    If 'port' is non-zero, the UDP socket is bound to a local port.
+   The 'port' should be given in native byte order, but is used
+   internally in network (big endian) byte order, in addresses, etc.
    This allows other systems to send to this socket via a known port.
 */
 extern DECLSPEC UDPsocket SDLNet_UDP_Open(Uint16 port);
