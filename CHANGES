@@ -1,5 +1,7 @@
 
 1.2.5:
+Luc-Olivier de Charrière - Sun, 05 Jan 2003 22:04:29 +0100
+ * Added support for sending UDP broadcast packets
 Sam Lantinga - Sun Oct 20 20:54:41 PDT 2002
  * Added shared library support for MacOS X
 Sam Lantinga - Sat Aug 24 18:16:08 PDT 2002

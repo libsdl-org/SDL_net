@@ -363,7 +363,8 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 	}
 #else
 	/* Bind locally, if appropriate */
-	if ( port ) {
+	if ( port )
+	{
 		struct sockaddr_in sock_addr;
 		memset(&sock_addr, 0, sizeof(sock_addr));
 		sock_addr.sin_family = AF_INET;
@@ -485,6 +486,7 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 	int numsent, i, j;
 	struct UDP_channel *binding;
 	int status;
+	int hold;
 #ifndef MACOS_OPENTRANSPORT
 	int sock_len;
 	struct sockaddr_in sock_addr;
@@ -527,23 +529,35 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 				++numsent;
 			}
 #else
+			if ( packets[i]->address.host == INADDR_BROADCAST )
+			{
+				hold=1;
+				setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, &hold, sizeof(hold));
+			}
 			sock_addr.sin_addr.s_addr = packets[i]->address.host;
 			sock_addr.sin_port = packets[i]->address.port;
 			sock_addr.sin_family = AF_INET;
 			status = sendto(sock->channel, 
 					packets[i]->data, packets[i]->len, 0,
 					(struct sockaddr *)&sock_addr,sock_len);
-			if ( status >= 0 ) {
+			if ( status >= 0 )
+			{
 				packets[i]->status = status;
 				++numsent;
 			}
+			if ( packets[i]->address.host == INADDR_BROADCAST )
+			{
+				hold=0;
+				setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, &hold, sizeof(hold));
+			}
+			
 #endif /* MACOS_OPENTRANSPORT */
 		}
 		else 
 		{
 			/* Send to each of the bound addresses on the channel */
 #ifdef DEBUG_NET
-			printf("SDLNet_UDP_SendV sending packet to channe = %d\n", packets[i]->channel );
+			printf("SDLNet_UDP_SendV sending packet to channel = %d\n", packets[i]->channel );
 #endif
 			
 			binding = &sock->binding[packets[i]->channel];
@@ -577,15 +591,26 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 				}
 
 #else
+				if ( binding->address[j].host == INADDR_BROADCAST )
+				{
+					hold=1;
+					setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, &hold, sizeof(hold));
+				}
 				sock_addr.sin_addr.s_addr = binding->address[j].host;
 				sock_addr.sin_port = binding->address[j].port;
 				sock_addr.sin_family = AF_INET;
 				status = sendto(sock->channel, 
 						packets[i]->data, packets[i]->len, 0,
 						(struct sockaddr *)&sock_addr,sock_len);
-				if ( status >= 0 ) {
+				if ( status >= 0 )
+				{
 					packets[i]->status = status;
 					++numsent;
+				}
+				if ( binding->address[j].host == INADDR_BROADCAST )
+				{
+					hold=1;
+					setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, &hold, sizeof(hold));
 				}
 #endif /* MACOS_OPENTRANSPORT */
 			}
@@ -784,3 +809,4 @@ extern void SDLNet_UDP_Close(UDPsocket sock)
 		free(sock);
 	}
 }
+
