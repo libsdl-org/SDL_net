@@ -33,6 +33,7 @@
 /* Since the UNIX/Win32/BeOS code is so different from MacOS,
    we'll just have two completely different sections here.
 */
+static int SDLNet_started = 0;
 
 #ifdef MACOS_OPENTRANSPORT
 
@@ -52,7 +53,6 @@ enum
 	dnsError = 255
 };
 
-static Boolean OTstarted = false;
 //static InetSvcRef dns = 0;
 static DNSStatus dnsStatus;
 Uint32 OTlocalhost = 0;
@@ -147,10 +147,9 @@ int  SDLNet_Init(void)
 
 
 	retval = 0;
-	if ( ! OTstarted ) {
+	if ( ! SDLNet_started ) {
 		status = InitOpenTransport();
 		if ( status == noErr ) {
-			OTstarted = true;
 			retval = OpenDNS();
 			if ( retval < 0 ) {
 				SDLNet_Quit();
@@ -160,16 +159,20 @@ int  SDLNet_Init(void)
 			retval = status;
 		}
 	}
-	
+	if ( retval == 0 ) {
+		++SDLNet_started;
+	}
 	return(retval);
 }
 
 void SDLNet_Quit(void)
 {
-	if ( OTstarted ) {
+	if ( SDLNet_started == 0 ) {
+		return;
+	}
+	if ( SDLNet_started-- == 0 ) {
 		CloseDNS();
 		CloseOpenTransport();
-		OTstarted = false;
 	}
 }
 
@@ -268,29 +271,41 @@ char *SDLNet_ResolveIP(IPaddress *ip)
 /* Initialize/Cleanup the network API */
 int  SDLNet_Init(void)
 {
+	if ( !SDLNet_started ) {
 #ifdef __USE_W32_SOCKETS
-	/* Start up the windows networking */
-	WORD version_wanted = MAKEWORD(1,1);
-	WSADATA wsaData;
+		/* Start up the windows networking */
+		WORD version_wanted = MAKEWORD(1,1);
+		WSADATA wsaData;
 
-	if ( WSAStartup(version_wanted, &wsaData) != 0 ) {
-		SDLNet_SetError("Couldn't initialize Winsock 1.1\n");
-		return(-1);
-	}
+		if ( WSAStartup(version_wanted, &wsaData) != 0 ) {
+			SDLNet_SetError("Couldn't initialize Winsock 1.1\n");
+			return(-1);
+		}
+#else
+		;
 #endif
+	}
+	++SDLNet_started;
 	return(0);
 }
 void SDLNet_Quit(void)
 {
-#ifdef __USE_W32_SOCKETS
-	/* Clean up windows networking */
-	if ( WSACleanup() == SOCKET_ERROR ) {
-		if ( WSAGetLastError() == WSAEINPROGRESS ) {
-			WSACancelBlockingCall();
-			WSACleanup();
-		}
+	if ( SDLNet_started == 0 ) {
+		return;
 	}
+	if ( SDLNet_started-- == 0 ) {
+#ifdef __USE_W32_SOCKETS
+		/* Clean up windows networking */
+		if ( WSACleanup() == SOCKET_ERROR ) {
+			if ( WSAGetLastError() == WSAEINPROGRESS ) {
+				WSACancelBlockingCall();
+				WSACleanup();
+			}
+		}
+#else
+		;
 #endif
+	}
 }
 
 /* Resolve a host name and port to an IP address in network form */

@@ -1,5 +1,7 @@
 
 1.2.5:
+Sam Lantinga - Sat Aug 24 18:16:08 PDT 2002
+ * It is now safe to nest calls to SDLNet_Init() / SDLNet_Quit()
 Gaëtan de Menten - Sat Aug 24 18:08:39 PDT 2002
  * Fixed UDP virtual address bind bug
 
