@@ -281,8 +281,17 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 		/* Set the socket to non-blocking mode for accept() */
 		fcntl(sock->channel, F_SETFL, O_NONBLOCK);
 #else
+#ifdef WIN32
+		{
+		  /* passing a non-zero value, socket mode set non-blocking */
+		  int mode = 1;
+		  ioctlsocket (sock->channel, FIONBIO, &mode);
+		}
+#else
 #warning How do we set non-blocking mode on other operating systems?
-#endif
+#endif /* WIN32 */
+#endif /* O_NONBLOCK */
+
 #endif /* macintosh */
 		sock->sflag = 1;
 	}
