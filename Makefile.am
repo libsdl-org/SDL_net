@@ -21,11 +21,12 @@ EXTRA_DIST =			\
 	quit.bmp		\
 	scroll_dn.bmp		\
 	scroll_up.bmp		\
-	SDL_net.spec.in
+	SDL_net.spec.in		\
+	SDL_net.spec
 
 libSDL_net_la_LIBADD = @INETLIB@
 libSDL_net_la_LDFLAGS = 		\
-        -release $(LT_RELEASE)	\
+	-release $(LT_RELEASE)	\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
 if HAVE_GUI_LIB
@@ -41,10 +42,9 @@ chatd_SOURCES = chatd.c
 chatd_LDADD = libSDL_net.la
 
 # Rule to build tar-gzipped distribution package
-$(PACKAGE)-$(VERSION).tar.gz: dist
+$(PACKAGE)-$(VERSION).tar.gz: distcheck
 
 # Rule to build RPM distribution package
 rpm: $(PACKAGE)-$(VERSION).tar.gz
-	cp $(PACKAGE)-$(VERSION).tar.gz /usr/src/redhat/SOURCES
-	rpm -ba --nodeps $(PACKAGE).spec
+	rpm -ta $(PACKAGE)-$(VERSION).tar.gz
 
