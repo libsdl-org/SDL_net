@@ -39,3 +39,12 @@ chat_SOURCES = chat.cpp chat.h
 chat_LDADD = libSDL_net.la -lGUI
 chatd_SOURCES = chatd.c
 chatd_LDADD = libSDL_net.la
+
+# Rule to build tar-gzipped distribution package
+$(PACKAGE)-$(VERSION).tar.gz: dist
+
+# Rule to build RPM distribution package
+rpm: $(PACKAGE)-$(VERSION).tar.gz
+	cp $(PACKAGE)-$(VERSION).tar.gz /usr/src/redhat/SOURCES
+	rpm -ba --nodeps $(PACKAGE).spec
+
