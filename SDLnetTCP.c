@@ -752,7 +752,7 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 		}
 		/* allow local address reuse */
 		{ int yes = 1;
-			setsockopt(sock->channel, IPPROTO_TCP, SO_REUSEADDR, (char*)&yes, sizeof(yes));
+			setsockopt(sock->channel, SOL_SOCKET, SO_REUSEADDR, (char*)&yes, sizeof(yes));
 		}
 #ifdef O_NONBLOCK
 		/* Set the socket to non-blocking mode for accept() */
