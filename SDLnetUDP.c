@@ -432,7 +432,7 @@ int SDLNet_UDP_Bind(UDPsocket sock, int channel, IPaddress *address)
 		}
 		binding = &sock->binding[channel];
 	}
-	if ( binding->numbound == SDLNET_MAX_UDPCHANNELS ) {
+	if ( binding->numbound == SDLNET_MAX_UDPADDRESSES ) {
 		SDLNet_SetError("No room for new addresses");
 		return(-1);
 	}

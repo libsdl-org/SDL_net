@@ -1,4 +1,8 @@
 
+1.2.5:
+Gaëtan de Menten - Sat Aug 24 18:08:39 PDT 2002
+ * Fixed UDP virtual address bind bug
+
 1.2.4:
 Sam Lantinga - Sat Apr 13 07:49:47 PDT 2002
  * Updated autogen.sh for new versions of automake
