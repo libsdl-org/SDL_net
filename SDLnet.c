@@ -209,7 +209,7 @@ int SDLNet_ResolveHost(IPaddress *address, const char *host, Uint16 port)
 				return(SDLNet_ResolveHost(address, "127.0.0.1", port));
 
 			/* Have OpenTransport resolve the hostname for us */
-			retval = OTInetStringToAddress(dnsStatus.dns, host, &hinfo);
+			retval = OTInetStringToAddress(dnsStatus.dns, (char *)host, &hinfo);
 			if (retval == noErr) {
 				while( dnsStatus.stat != dnsResolved )
 					{WaitNextEvent(everyEvent, 0, 1, NULL );}
