@@ -532,7 +532,7 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 			if ( packets[i]->address.host == INADDR_BROADCAST )
 			{
 				hold=1;
-				setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, &hold, sizeof(hold));
+				setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, (void *)&hold, sizeof(hold));
 			}
 			sock_addr.sin_addr.s_addr = packets[i]->address.host;
 			sock_addr.sin_port = packets[i]->address.port;
@@ -548,7 +548,7 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 			if ( packets[i]->address.host == INADDR_BROADCAST )
 			{
 				hold=0;
-				setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, &hold, sizeof(hold));
+				setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, (void *)&hold, sizeof(hold));
 			}
 			
 #endif /* MACOS_OPENTRANSPORT */
@@ -594,7 +594,7 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 				if ( binding->address[j].host == INADDR_BROADCAST )
 				{
 					hold=1;
-					setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, &hold, sizeof(hold));
+					setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, (void *)&hold, sizeof(hold));
 				}
 				sock_addr.sin_addr.s_addr = binding->address[j].host;
 				sock_addr.sin_port = binding->address[j].port;
@@ -610,7 +610,7 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 				if ( binding->address[j].host == INADDR_BROADCAST )
 				{
 					hold=1;
-					setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, &hold, sizeof(hold));
+					setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, (void *)&hold, sizeof(hold));
 				}
 #endif /* MACOS_OPENTRANSPORT */
 			}
