@@ -1,3 +1,6 @@
+1.2.6:
+Kyle Davenport - Sat, 19 Apr 2003 17:13:31 -0500
+ * Added .la files to the development RPM, fixing RPM build on RedHat 8
 
 1.2.5:
 Luc-Olivier de Charrière - Sun, 05 Jan 2003 22:04:29 +0100
