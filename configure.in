@@ -115,5 +115,5 @@ CXXFLAGS="$CXXFLAGS $CFLAGS"
 
 # Finally create all the generated files
 AC_OUTPUT([
-Makefile SDL_net.spec
+Makefile SDL_net.spec SDL_net.qpg
 ])
