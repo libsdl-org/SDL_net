@@ -30,11 +30,17 @@
 
 #include <string.h>
 
+#include "SDL_byteorder.h"
+
 #include "SDLnetsys.h"
 #include "SDL_net.h"
 
 
-#ifdef macintosh
+/* Since the UNIX/Win32/BeOS code is so different from MacOS,
+   we'll just have two completely different sections here.
+*/
+
+#ifdef MACOS_OPENTRANSPORT
 
 static Boolean OTstarted = false;
 static InetSvcRef dns = 0;
@@ -47,7 +53,11 @@ static int OpenDNS(void)
 	OSStatus status;
 
 	retval = 0;
+#if ! TARGET_API_MAC_CARBON
 	dns = OTOpenInternetServices(kDefaultInternetServicesPath, 0, &status);
+#else
+	dns = OTOpenInternetServicesInContext( kDefaultInternetServicesPath, 0, &status, NULL );
+#endif
 	if ( status == noErr ) {
 		InetInterfaceInfo	info;
 		
@@ -79,10 +89,17 @@ int  SDLNet_Init(void)
 {
 	OSStatus status;
 	int retval;
-
+#if TARGET_API_MAC_CARBON
+	OTClientContextPtr	context;
+#endif
+	
 	retval = 0;
 	if ( ! OTstarted ) {
+#if ! TARGET_API_MAC_CARBON
 		status = InitOpenTransport();
+#else
+		status = InitOpenTransportInContext( kInitOTForApplicationMask, &context );
+#endif
 		if ( status == noErr ) {
 			OTstarted = true;
 			retval = OpenDNS();
@@ -102,7 +119,11 @@ void SDLNet_Quit(void)
 {
 	if ( OTstarted ) {
 		CloseDNS();
+#if ! TARGET_API_MAC_CARBON
 		CloseOpenTransport();
+#else
+		CloseOpenTransportInContext( NULL );
+#endif
 		OTstarted = false;
 	}
 }
@@ -153,7 +174,47 @@ int SDLNet_ResolveHost(IPaddress *address, char *host, Uint16 port)
 	return(retval);
 }
 
-#else /* !macintosh */
+/* Resolve an ip address to a host name in canonical form.
+   If the ip couldn't be resolved, this function returns NULL,
+   otherwise a pointer to a static buffer containing the hostname
+   is returned.  Note that this function is not thread-safe.
+*/
+/* MacOS implementation by Roy Wood
+ */
+char *SDLNet_ResolveIP(IPaddress *ip)
+{
+	if (ip != nil)
+	{
+	InetHost				theIP;
+	static InetDomainName	theInetDomainName;
+	OSStatus				theOSStatus;
+	
+		
+		/*	Default result will be null string */
+		
+		theInetDomainName[0] = '\0';	
+		
+		
+		/*	Do a reverse DNS lookup */
+		
+		theIP = ip->host;
+		
+		theOSStatus = OTInetAddressToName(dns,theIP,theInetDomainName);
+		
+		/*	If successful, return the result */
+			
+		if (theOSStatus == kOTNoError)
+		{
+			return(theInetDomainName);
+		}
+	}
+	
+	SDLNet_SetError("Can't perform reverse DNS lookup");
+	
+	return(NULL);
+}
+
+#else /* !MACOS_OPENTRANSPORT */
 
 /* Initialize/Cleanup the network API */
 int  SDLNet_Init(void)
@@ -210,8 +271,6 @@ int SDLNet_ResolveHost(IPaddress *address, char *host, Uint16 port)
 	return(retval);
 }
 
-#endif /* macintosh */
-
 /* Resolve an ip address to a host name in canonical form.
    If the ip couldn't be resolved, this function returns NULL,
    otherwise a pointer to a static buffer containing the hostname
@@ -221,42 +280,7 @@ int SDLNet_ResolveHost(IPaddress *address, char *host, Uint16 port)
  * Main Programmer of Arianne RPG.
  * http://come.to/arianne_rpg
  */
-/* MacOS implementation by Roy Wood
- */
 char *SDLNet_ResolveIP(IPaddress *ip)
-#ifdef macintosh
-{
-	if (ip != nil)
-	{
-	InetHost				theIP;
-	static InetDomainName	theInetDomainName;
-	OSStatus				theOSStatus;
-	
-		
-		/*	Default result will be null string */
-		
-		theInetDomainName[0] = '\0';	
-		
-		
-		/*	Do a reverse DNS lookup */
-		
-		theIP = ip->host;
-		
-		theOSStatus = OTInetAddressToName(dns,theIP,theInetDomainName);
-		
-		/*	If successful, return the result */
-			
-		if (theOSStatus == kOTNoError)
-		{
-			return(theInetDomainName);
-		}
-	}
-	
-	SDLNet_SetError("Can't perform reverse DNS lookup");
-	
-	return(NULL);
-}
-#else
 {
 	struct hostent *hp;
 
@@ -266,33 +290,23 @@ char *SDLNet_ResolveIP(IPaddress *ip)
 	}
   	return NULL;
 }
-#endif
 
+#endif /* MACOS_OPENTRANSPORT */
 
-/* Write a 16/32 bit value to network packet buffer */
-void SDLNet_Write16(Uint16 value, void *areap)
+#ifdef USE_GUSI_SOCKETS
+
+/* Configure Socket Factories */
+
+void GUSISetupFactories()
 {
-	Uint8 *area = (Uint8 *)areap;
-	area[0] = (value>>8)&0xFF;
-	area[1] = value&0xFF;
-}
-void SDLNet_Write32(Uint32 value, void *areap)
-{
-	Uint8 *area = (Uint8 *)areap;
-	area[0] = (value>>24)&0xFF;
-	area[1] = (value>>16)&0xFF;
-	area[2] = (value>>8)&0xFF;
-	area[3] = value&0xFF;
+	GUSIwithInetSockets();
 }
 
-/* Read a 16/32 bit value from network packet buffer */
-Uint16 SDLNet_Read16(void *areap)
+/* Configure File Devices */
+
+void GUSISetupDevices()
 {
-	Uint8 *area = (Uint8 *)areap;
-	return((area[0]<<8)|area[1]);
+	return;
 }
-Uint32 SDLNet_Read32(void *areap)
-{
-	Uint8 *area = (Uint8 *)areap;
-	return((area[0]<<24)|(area[1]<<16)|(area[2]<<8)|area[3]);
-}
+
+#endif /* USE_GUSI_SOCKETS */

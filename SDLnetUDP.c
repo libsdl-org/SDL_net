@@ -120,6 +120,10 @@ void SDLNet_FreePacketV(UDPpacket **packetV)
 	}
 }
 
+/* Since the UNIX/Win32/BeOS code is so different from MacOS,
+   we'll just have two completely different sections here.
+*/
+
 /* Open a UDP network socket
    If 'port' is non-zero, the UDP socket is bound to a fixed local port.
 */
@@ -136,12 +140,15 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 	memset(sock, 0, sizeof(*sock));
 	
 	/* Open the socket */
-#ifdef macintosh
+#ifdef MACOS_OPENTRANSPORT
 	{
 	OSStatus status;
-		
+
+#if ! TARGET_API_MAC_CARBON
 		sock->channel = OTOpenEndpoint(OTCreateConfiguration(kUDPName),0, nil, &status);
-		
+#else
+		sock->channel = OTOpenEndpointInContext(OTCreateConfiguration(kUDPName),0, nil, &status, nil );
+#endif
 		if (status != noErr)
 		{
 			SDLNet_SetError("Couldn't create socket, OTOpenEndpoint() = %d",(int) status);
@@ -150,7 +157,7 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 	}
 #else
 	sock->channel = socket(AF_INET, SOCK_DGRAM, 0);
-#endif /* macintosh */
+#endif /* MACOS_OPENTRANSPORT */
 
 	if ( sock->channel == INVALID_SOCKET ) 
 	{
@@ -158,7 +165,7 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 		goto error_return;
 	}
 
-#ifdef macintosh
+#ifdef MACOS_OPENTRANSPORT
 	{
 	InetAddress wanted;
 	InetAddress assigned;
@@ -225,7 +232,7 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 		sock->address.host = sock_addr.sin_addr.s_addr;
 		sock->address.port = sock_addr.sin_port;
 	}
-#endif /* macintosh */
+#endif /* MACOS_OPENTRANSPORT */
 
 	/* The socket is ready */
 	
@@ -326,7 +333,7 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 	int numsent, i, j;
 	struct UDP_channel *binding;
 	int status;
-#ifndef macintosh
+#ifndef MACOS_OPENTRANSPORT
 	int sock_len;
 	struct sockaddr_in sock_addr;
 
@@ -341,7 +348,7 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 		
 		if ( packets[i]->channel < 0 ) 
 		{
-#ifdef macintosh
+#ifdef MACOS_OPENTRANSPORT
 		TUnitData OTpacket;
 		InetAddress address;
 
@@ -371,7 +378,7 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 				packets[i]->status = status;
 				++numsent;
 			}
-#endif /* macintosh */
+#endif /* MACOS_OPENTRANSPORT */
 		}
 		else 
 		{
@@ -381,7 +388,7 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 			
 			for ( j=binding->numbound-1; j>=0; --j ) 
 			{
-#ifdef macintosh
+#ifdef MACOS_OPENTRANSPORT
 			TUnitData OTpacket;
 			InetAddress address;
 
@@ -412,7 +419,7 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 					packets[i]->status = status;
 					++numsent;
 				}
-#endif /* macintosh */
+#endif /* MACOS_OPENTRANSPORT */
 			}
 		}
 	}
@@ -431,7 +438,7 @@ int SDLNet_UDP_Send(UDPsocket sock, int channel, UDPpacket *packet)
 static int SocketReady(SOCKET sock)
 {
 	int retval;
-#ifdef macintosh
+#ifdef MACOS_OPENTRANSPORT
 	OTResult status;
 	size_t	numBytes;
 #else
@@ -439,7 +446,7 @@ static int SocketReady(SOCKET sock)
 	fd_set mask;
 #endif
 
-#ifdef macintosh
+#ifdef MACOS_OPENTRANSPORT
 	status = OTCountDataBytes(sock,&numBytes);
 	
 	if (status == noErr && numBytes > 0) 
@@ -467,7 +474,7 @@ static int SocketReady(SOCKET sock)
 		/* Look! */
 		retval = select(sock+1, &mask, NULL, NULL, &tv);
 	} while ( errno == EINTR );
-#endif /* macintosh */
+#endif /* MACOS_OPENTRANSPORT */
 
 	return(retval == 1);
 }
@@ -483,7 +490,7 @@ extern int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
 {
 	int numrecv, i, j;
 	struct UDP_channel *binding;
-#ifdef macintosh
+#ifdef MACOS_OPENTRANSPORT
 	TUnitData OTpacket;
 	OTFlags flags;
 	InetAddress address;
@@ -499,7 +506,7 @@ extern int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
 
 		packet = packets[numrecv];
 		
-#ifdef macintosh
+#ifdef MACOS_OPENTRANSPORT
 		memset(&OTpacket, 0, sizeof(OTpacket));
 		OTpacket.addr.buf = (Uint8 *)&address;
 		OTpacket.addr.maxlen = (sizeof address);
@@ -518,7 +525,12 @@ extern int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
 		sock_len = sizeof(sock_addr);
 		packet->status = recvfrom(sock->channel,
 				packet->data, packet->maxlen, 0,
-				(struct sockaddr *)&sock_addr, &sock_len);
+				(struct sockaddr *)&sock_addr,
+#ifdef USE_GUSI_SOCKETS
+				(unsigned int *)&sock_len);
+#else
+						&sock_len);
+#endif
 		if ( packet->status >= 0 ) {
 			packet->len = packet->status;
 			packet->address.host = sock_addr.sin_addr.s_addr;
@@ -582,12 +594,12 @@ extern void SDLNet_UDP_Close(UDPsocket sock)
 	{
 		if ( sock->channel != INVALID_SOCKET ) 
 		{
-#ifdef macintosh
+#ifdef MACOS_OPENTRANSPORT
 			OTUnbind(sock->channel);
 			OTCloseProvider(sock->channel);
 #else
 			closesocket(sock->channel);
-#endif /* macintosh */
+#endif /* MACOS_OPENTRANSPORT */
 		}
 		
 		free(sock);

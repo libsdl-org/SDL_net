@@ -28,8 +28,15 @@
 #include <string.h>
 #include <errno.h>
 
-/* Include system network headers */
 #ifdef macintosh
+#ifndef USE_GUSI_SOCKETS
+#define MACOS_OPENTRANSPORT
+#error Open Transport driver is broken
+#endif
+#endif /* macintosh */
+
+/* Include system network headers */
+#ifdef MACOS_OPENTRANSPORT
 #include <OpenTransport.h>
 #include <OpenTptInternet.h>
 #else
@@ -50,10 +57,10 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #endif /* WIN32 */
-#endif /* MACOS */
+#endif /* Open Transport */
 
 /* System-dependent definitions */
-#ifdef macintosh
+#ifdef MACOS_OPENTRANSPORT
 #define closesocket	OTCloseProvider
 #define SOCKET		EndpointRef
 #define INVALID_SOCKET	kOTInvalidEndpointRef
@@ -64,4 +71,4 @@
 #define INVALID_SOCKET	-1
 #define SOCKET_ERROR	-1
 #endif /* Win32_Winsock */
-#endif /* macintosh */
+#endif /* Open Transport */

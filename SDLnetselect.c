@@ -108,7 +108,7 @@ int SDLNet_DelSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock)
    first.  This function returns the number of sockets ready for reading,
    or -1 if there was an error with the select() system call.
 */
-#ifdef macintosh
+#ifdef MACOS_OPENTRANSPORT
 int SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout)
 {
 Uint32	stop;
@@ -191,7 +191,7 @@ int SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout)
 	}
 	return(retval);
 }
-#endif
+#endif /* MACOS_OPENTRANSPORT */
    
 /* Free a set of sockets allocated by SDL_NetAllocSocketSet() */
 extern void SDLNet_FreeSocketSet(SDLNet_SocketSet set)

@@ -32,8 +32,13 @@
 #include <string.h>
 
 #include "SDL_net.h"
+#ifdef macintosh
+#include "GUI.h"
+#include "GUI_widgets.h"
+#else
 #include <GUI/GUI.h>
 #include <GUI/GUI_widgets.h>
+#endif
 #include "chat.h"
 
 
@@ -137,6 +142,7 @@ void SendKey(SDLKey key, Uint16 unicode)
 		case '\0':
 			break;
 		case '\r':
+		case '\n':
 			/* Send our line of text */
 			SendBuf(keybuf, keypos);
 			keypos = 0;

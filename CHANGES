@@ -1,3 +1,8 @@
+
+1.2.0:
+Sam Lantinga - Wed Apr  4 12:42:20 PDT 2001
+ * Synchronized release version with SDL 1.2.0
+
 1.1.2:
 Sam Lantinga - Sat Feb 10 16:33:59 PST 2001
  * SDL_net works with the sockets API out of the box on MacOS X.
