@@ -436,7 +436,7 @@ int SDLNet_TCP_Send(TCPsocket sock, void *datap, int len)
 		if (len == kOTFlowErr)
 			len = 0;
 #else
-		len = send(sock->channel, data, left, 0);
+		len = send(sock->channel, (const char *) data, left, 0);
 #endif
 		if ( len > 0 ) {
 			sent += len;
@@ -476,7 +476,7 @@ int SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxlen)
 #else
 	errno = 0;
 	do {
-		len = recv(sock->channel, data, maxlen, 0);
+		len = recv(sock->channel, (char *) data, maxlen, 0);
 	} while ( errno == EINTR );
 #endif /* macintosh */
 
