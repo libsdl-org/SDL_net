@@ -1,0 +1,16 @@
+1.1.1:
+Sam Lantinga - Sat Jul  1 15:20:51 PDT 2000
+ * Modified chat example to work with GUIlib 1.1.0
+Roy Wood - Fri Jun 30 10:41:05 PDT 2000
+ * A few MacOS fixes (not yet complete)
+
+1.1.0:
+Andreas Umbach - Sat May 27 14:44:06 PDT 2000
+ * Suggested non-blocking server sockets
+ * Suggested setting TCP_NODELAY by default
+Roy Wood - Sat May 27 14:41:42 PDT 2000
+ * Ported to MacOS (not yet complete)
+
+1.0.2:
+Miguel Angel Blanch - Sat, 22 Apr 2000 23:06:05
+ * Implemented SDLNet_ResolveIP()
