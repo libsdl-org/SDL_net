@@ -284,7 +284,7 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 #ifdef WIN32
 		{
 		  /* passing a non-zero value, socket mode set non-blocking */
-		  int mode = 1;
+		  unsigned long mode = 1;
 		  ioctlsocket (sock->channel, FIONBIO, &mode);
 		}
 #else
