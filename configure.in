@@ -39,6 +39,10 @@ AC_SUBST(LT_AGE)
 dnl Setup for automake
 AM_INIT_AUTOMAKE(SDL_net, $VERSION)
 
+dnl Detect the canonical host and target build environment
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+
 dnl Check for tools
 
 AC_PROG_MAKE_SET
@@ -49,16 +53,20 @@ AM_PROG_LIBTOOL
 AC_PROG_INSTALL
 
 dnl The alpha architecture needs special flags for binary portability
-AC_CANONICAL_TARGET
 case "$target" in
     alpha*-*-linux*)
         CFLAGS="$CFLAGS -mcpu=ev4 -Wa,-mall"
+        ;;
+    *-*-cygwin* | *-*-mingw32*)
+        if test "$build" != "$target"; then # cross-compiling
+            ac_default_prefix=/usr/local/cross-tools/i386-mingw32msvc
+        fi
         ;;
 esac
 
 dnl Figure out which networking libraries to use
 case "$target" in
-    *-*-mingw32*)
+    *-*-cygwin* | *-*-mingw32*)
         INETLIB="-lwsock32"
         ;;
     *-*-beos*)
