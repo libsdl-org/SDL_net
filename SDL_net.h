@@ -59,10 +59,13 @@ typedef struct {
    If 'host' is NULL, the resolved host will be set to INADDR_ANY.
  */
 #ifndef INADDR_ANY
-#define INADDR_ANY	0x00000000
+#define INADDR_ANY		0x00000000
 #endif
 #ifndef INADDR_NONE
-#define INADDR_NONE	0xFFFFFFFF
+#define INADDR_NONE		0xFFFFFFFF
+#endif
+#ifndef INADDR_BROADCAST
+#define INADDR_BROADCAST	0xFFFFFFFF
 #endif
 extern DECLSPEC int SDLCALL SDLNet_ResolveHost(IPaddress *address, const char *host, Uint16 port);
 

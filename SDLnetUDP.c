@@ -381,6 +381,11 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 		sock->address.host = sock_addr.sin_addr.s_addr;
 		sock->address.port = sock_addr.sin_port;
 	}
+
+	/* Allow LAN broadcasts with the socket */
+	{ int yes = 1;
+		setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, (char*)&yes, sizeof(yes));
+	}
 #endif /* MACOS_OPENTRANSPORT */
 
 	/* The socket is ready */
@@ -486,7 +491,6 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 	int numsent, i, j;
 	struct UDP_channel *binding;
 	int status;
-	int hold;
 #ifndef MACOS_OPENTRANSPORT
 	int sock_len;
 	struct sockaddr_in sock_addr;
@@ -529,11 +533,6 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 				++numsent;
 			}
 #else
-			if ( packets[i]->address.host == INADDR_BROADCAST )
-			{
-				hold=1;
-				setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, (void *)&hold, sizeof(hold));
-			}
 			sock_addr.sin_addr.s_addr = packets[i]->address.host;
 			sock_addr.sin_port = packets[i]->address.port;
 			sock_addr.sin_family = AF_INET;
@@ -545,12 +544,6 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 				packets[i]->status = status;
 				++numsent;
 			}
-			if ( packets[i]->address.host == INADDR_BROADCAST )
-			{
-				hold=0;
-				setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, (void *)&hold, sizeof(hold));
-			}
-			
 #endif /* MACOS_OPENTRANSPORT */
 		}
 		else 
@@ -591,11 +584,6 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 				}
 
 #else
-				if ( binding->address[j].host == INADDR_BROADCAST )
-				{
-					hold=1;
-					setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, (void *)&hold, sizeof(hold));
-				}
 				sock_addr.sin_addr.s_addr = binding->address[j].host;
 				sock_addr.sin_port = binding->address[j].port;
 				sock_addr.sin_family = AF_INET;
@@ -606,11 +594,6 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 				{
 					packets[i]->status = status;
 					++numsent;
-				}
-				if ( binding->address[j].host == INADDR_BROADCAST )
-				{
-					hold=1;
-					setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, (void *)&hold, sizeof(hold));
 				}
 #endif /* MACOS_OPENTRANSPORT */
 			}
