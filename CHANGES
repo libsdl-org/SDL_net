@@ -1,4 +1,6 @@
 1.2.6:
+Sam Lantinga - Wed Nov 19 00:23:44 PST 2003
+ * Updated libtool support for new mingw32 DLL build process
 Shard - Thu, 05 Jun 2003 09:30:20 -0500
  * Fixed compiling on BeOS, which may not have SO_BROADCAST
 Kyle Davenport - Sat, 19 Apr 2003 17:13:31 -0500

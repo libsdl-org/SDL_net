@@ -26,7 +26,8 @@ EXTRA_DIST =			\
 	SDL_net.spec
 
 libSDL_net_la_LIBADD = @INETLIB@
-libSDL_net_la_LDFLAGS = 		\
+libSDL_net_la_LDFLAGS = 	\
+	-no-undefined		\
 	-release $(LT_RELEASE)	\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
