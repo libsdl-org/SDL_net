@@ -1,6 +1,6 @@
 /*
-    NETLIB:  An example cross-platform network library for use with SDL
-    Copyright (C) 1997-1999  Sam Lantinga
+    SDL_net:  An example cross-platform network library for use with SDL
+    Copyright (C) 1997, 1998, 1999, 2000, 2001  Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -17,17 +17,10 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
     Sam Lantinga
-    5635-34 Springhouse Dr.
-    Pleasanton, CA 94588 (USA)
-    slouken@devolution.com
-    
-    
-    HISTORY:
-    
-    2000/3/24 - rrwood - MacOS-related changes to SDLNet_TCP_Open() to correctly get returned IP:port info
-    2000/3/25 - rrwood - rename "address" field of struct _TCPsocket to "remoteAddress"
-    2000/3/25 - rrwood - add "localAddress" field to struct _TCPsocket
+    slouken@libsdl.org
 */
+
+/* $Id$ */
 
 #include "SDLnetsys.h"
 #include "SDL_net.h"
