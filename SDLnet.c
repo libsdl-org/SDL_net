@@ -177,7 +177,7 @@ void SDLNet_Quit(void)
 	if ( SDLNet_started == 0 ) {
 		return;
 	}
-	if ( SDLNet_started-- == 0 ) {
+	if ( --SDLNet_started == 0 ) {
 		CloseDNS();
 		CloseOpenTransport();
 	}
@@ -300,7 +300,7 @@ void SDLNet_Quit(void)
 	if ( SDLNet_started == 0 ) {
 		return;
 	}
-	if ( SDLNet_started-- == 0 ) {
+	if ( --SDLNet_started == 0 ) {
 #ifdef __USE_W32_SOCKETS
 		/* Clean up windows networking */
 		if ( WSACleanup() == SOCKET_ERROR ) {
