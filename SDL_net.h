@@ -321,54 +321,84 @@ extern no_parse_DECLSPEC char * SDLNet_GetError(void);
 
 /* Write a 16 bit value to network packet buffer */
 #if !SDL_DATA_ALIGNED
-#define SDLNet_Write16(value, areap) \
+#define SDLNet_Write16(value, areap)	\
 	(*(Uint16 *)(areap) = SDL_SwapBE16(value))
 #else
-static __inline__ void SDLNet_Write16(Uint16 value, void *areap)
-{
-	Uint8 *area = (Uint8 *)(areap);
-	area[0] = (value>>8)&0xFF;
-	area[1] = value&0xFF;
-}
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#define SDLNet_Write16(value, areap)	\
+do 					\
+{					\
+	Uint8 *area = (Uint8 *)(areap);	\
+	area[0] = (value >>  8) & 0xFF;	\
+	area[1] =  value        & 0xFF;	\
+} while ( 0 )
+#else
+#define SDLNet_Write16(value, areap)	\
+do 					\
+{					\
+	Uint8 *area = (Uint8 *)(areap);	\
+	area[1] = (value >>  8) & 0xFF;	\
+	area[0] =  value        & 0xFF;	\
+} while ( 0 )
+#endif
 #endif /* !SDL_DATA_ALIGNED */
 
 /* Write a 32 bit value to network packet buffer */
 #if !SDL_DATA_ALIGNED
-#define SDLNet_Write32(value, areap) \
+#define SDLNet_Write32(value, areap) 	\
 	*(Uint32 *)(areap) = SDL_SwapBE32(value);
 #else
-static __inline__ void SDLNet_Write32(Uint32 value, void *areap)
-{
-	Uint8 *area = (Uint8 *)(areap);
-	area[0] = (value>>24)&0xFF;
-	area[1] = (value>>16)&0xFF;
-	area[2] = (value>>8)&0xFF;
-	area[3] = value&0xFF;
-}
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#define SDLNet_Write32(value, areap) 	\
+do					\
+{					\
+	Uint8 *area = (Uint8 *)(areap);	\
+	area[0] = (value >> 24) & 0xFF;	\
+	area[1] = (value >> 16) & 0xFF;	\
+	area[2] = (value >>  8) & 0xFF;	\
+	area[3] =  value       & 0xFF;	\
+} while ( 0 )
+#else
+#define SDLNet_Write32(value, areap) 	\
+do					\
+{					\
+	Uint8 *area = (Uint8 *)(areap);	\
+	area[3] = (value >> 24) & 0xFF;	\
+	area[2] = (value >> 16) & 0xFF;	\
+	area[1] = (value >>  8) & 0xFF;	\
+	area[0] =  value       & 0xFF;	\
+} while ( 0 )
+#endif
 #endif /* !SDL_DATA_ALIGNED */
 
 /* Read a 16 bit value from network packet buffer */
 #if !SDL_DATA_ALIGNED
-#define SDLNet_Read16(areap) \
+#define SDLNet_Read16(areap) 		\
 	(SDL_SwapBE16(*(Uint16 *)(areap)))
 #else
-static __inline__ Uint16 SDLNet_Read16(void *areap)
-{
-	Uint8 *area = (Uint8 *)areap;
-	return((area[0]<<8)|area[1]);
-}
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#define SDLNet_Read16(areap) 		\
+	((((Uint8 *)area)[0] <<  8) | ((Uint8 *)area)[1] <<  0)
+#else
+#define SDLNet_Read16(areap) 		\
+	((((Uint8 *)area)[1] <<  8) | ((Uint8 *)area)[0] <<  0)
+#endif
 #endif /* !SDL_DATA_ALIGNED */
 
 /* Read a 32 bit value from network packet buffer */
 #if !SDL_DATA_ALIGNED
-#define SDLNet_Read32(areap) \
+#define SDLNet_Read32(areap) 		\
 	(SDL_SwapBE32(*(Uint32 *)(areap)))
 #else
-static __inline__ Uint32 SDLNet_Read32(void *areap)
-{
-	Uint8 *area = (Uint8 *)areap;
-	return((area[0]<<24)|(area[1]<<16)|(area[2]<<8)|area[3]);
-}
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#define SDLNet_Read32(areap) 		\
+	((((Uint8 *)area)[0] << 24) | (((Uint8 *)area)[1] << 16) | \
+	 (((Uint8 *)area)[2] <<  8) |  ((Uint8 *)area)[3] <<  0)
+#else
+#define SDLNet_Read32(areap) 		\
+	((((Uint8 *)area)[3] << 24) | (((Uint8 *)area)[2] << 16) | \
+	 (((Uint8 *)area)[1] <<  8) |  ((Uint8 *)area)[0] <<  0)
+#endif
 #endif /* !SDL_DATA_ALIGNED */
 
 #ifdef MACOS_OPENTRANSPORT

@@ -1,5 +1,7 @@
 
 1.2.3:
+Sam Lantinga - Fri Oct 26 07:15:28 PDT 2001
+ * Fixed byte order read/write macros on sparc
 Jonathan Atkins - Sun Sep 23 10:44:27 PDT 2001
  * Fixed non-blocking socket flags on Windows
 
