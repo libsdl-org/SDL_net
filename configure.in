@@ -70,6 +70,12 @@ case "$target" in
     *-*-cygwin* | *-*-mingw32*)
         INETLIB="-lwsock32"
         ;;
+    sparc*-*-solaris*)
+        INETLIB="-lsocket -lnsl"	
+        ;;
+    *-*-qnx*)
+        INETLIB="-lsocket"
+        ;;
     *-*-beos*)
         INETLIB=""
         ;;
