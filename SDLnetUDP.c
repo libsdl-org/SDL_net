@@ -382,10 +382,12 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 		sock->address.port = sock_addr.sin_port;
 	}
 
+#ifdef SO_BROADCAST
 	/* Allow LAN broadcasts with the socket */
 	{ int yes = 1;
 		setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, (char*)&yes, sizeof(yes));
 	}
+#endif
 #endif /* MACOS_OPENTRANSPORT */
 
 	/* The socket is ready */

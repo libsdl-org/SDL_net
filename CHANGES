@@ -1,4 +1,6 @@
 1.2.6:
+Shard - Thu, 05 Jun 2003 09:30:20 -0500
+ * Fixed compiling on BeOS, which may not have SO_BROADCAST
 Kyle Davenport - Sat, 19 Apr 2003 17:13:31 -0500
  * Added .la files to the development RPM, fixing RPM build on RedHat 8
 
