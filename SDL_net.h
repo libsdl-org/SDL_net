@@ -131,7 +131,8 @@ extern DECLSPEC IPaddress * SDLCALL SDLNet_TCP_GetPeerAddress(TCPsocket sock);
    is less than the amount of data sent, then either the remote connection was
    closed, or an unknown socket error occurred.
 */
-extern DECLSPEC int SDLCALL SDLNet_TCP_Send(TCPsocket sock, void *data, int len);
+extern DECLSPEC int SDLCALL SDLNet_TCP_Send(TCPsocket sock, const void *data,
+		int len);
 
 /* Receive up to 'maxlen' bytes of data over the non-server socket 'sock',
    and store them in the buffer pointed to by 'data'.

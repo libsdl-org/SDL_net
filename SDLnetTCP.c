@@ -588,9 +588,9 @@ IPaddress *SDLNet_TCP_GetPeerAddress(TCPsocket sock)
    is less than the amount of data sent, then either the remote connection was
    closed, or an unknown socket error occurred.
 */
-int SDLNet_TCP_Send(TCPsocket sock, void *datap, int len)
+int SDLNet_TCP_Send(TCPsocket sock, const void *datap, int len)
 {
-	Uint8 *data = (Uint8 *)datap;	/* For pointer arithmetic */
+	const Uint8 *data = (const Uint8 *)datap;	/* For pointer arithmetic */
 	int sent, left;
 
 	/* Server sockets are for accepting connections only */
@@ -865,9 +865,9 @@ IPaddress *SDLNet_TCP_GetPeerAddress(TCPsocket sock)
    is less than the amount of data sent, then either the remote connection was
    closed, or an unknown socket error occurred.
 */
-int SDLNet_TCP_Send(TCPsocket sock, void *datap, int len)
+int SDLNet_TCP_Send(TCPsocket sock, const void *datap, int len)
 {
-	Uint8 *data = (Uint8 *)datap;	/* For pointer arithmetic */
+	const Uint8 *data = (const Uint8 *)datap;	/* For pointer arithmetic */
 	int sent, left;
 
 	/* Server sockets are for accepting connections only */
