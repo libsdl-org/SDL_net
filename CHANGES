@@ -1,3 +1,7 @@
+1.1.2:
+Patrick Levin - Mon, 8 Jan 2001 23:20:11 +0100
+ * Fixed non-blocking socket modes on Win32
+
 1.1.1:
 Sam Lantinga - Sat Jul  1 15:20:51 PDT 2000
  * Modified chat example to work with GUIlib 1.1.0
