@@ -40,8 +40,8 @@ extern "C" {
    SDL must be initialized before calls to functions in this library,
    because this library uses utility functions from the SDL library.
 */
-extern DECLSPEC int  SDLNet_Init(void);
-extern DECLSPEC void SDLNet_Quit(void);
+extern DECLSPEC int  SDLCALL SDLNet_Init(void);
+extern DECLSPEC void SDLCALL SDLNet_Quit(void);
 
 /***********************************************************************/
 /* IPv4 hostname resolution API                                        */
@@ -64,14 +64,14 @@ typedef struct {
 #ifndef INADDR_NONE
 #define INADDR_NONE	0xFFFFFFFF
 #endif
-extern DECLSPEC int SDLNet_ResolveHost(IPaddress *address, char *host, Uint16 port);
+extern DECLSPEC int SDLCALL SDLNet_ResolveHost(IPaddress *address, char *host, Uint16 port);
 
 /* Resolve an ip address to a host name in canonical form.
    If the ip couldn't be resolved, this function returns NULL,
    otherwise a pointer to a static buffer containing the hostname
    is returned.  Note that this function is not thread-safe.
 */
-extern DECLSPEC char *SDLNet_ResolveIP(IPaddress *ip);
+extern DECLSPEC char * SDLCALL SDLNet_ResolveIP(IPaddress *ip);
 
 
 /***********************************************************************/
@@ -88,24 +88,24 @@ typedef struct _TCPsocket *TCPsocket;
    SDLNet_ResolveHost() are already in the correct form).
    The newly created socket is returned, or NULL if there was an error.
 */
-extern DECLSPEC TCPsocket SDLNet_TCP_Open(IPaddress *ip);
+extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_Open(IPaddress *ip);
 
 /* Accept an incoming connection on the given server socket.
    The newly created socket is returned, or NULL if there was an error.
 */
-extern DECLSPEC TCPsocket SDLNet_TCP_Accept(TCPsocket server);
+extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_Accept(TCPsocket server);
 
 /* Get the IP address of the remote system associated with the socket.
    If the socket is a server socket, this function returns NULL.
 */
-extern DECLSPEC IPaddress *SDLNet_TCP_GetPeerAddress(TCPsocket sock);
+extern DECLSPEC IPaddress * SDLCALL SDLNet_TCP_GetPeerAddress(TCPsocket sock);
 
 /* Send 'len' bytes of 'data' over the non-server socket 'sock'
    This function returns the actual amount of data sent.  If the return value
    is less than the amount of data sent, then either the remote connection was
    closed, or an unknown socket error occurred.
 */
-extern DECLSPEC int SDLNet_TCP_Send(TCPsocket sock, void *data, int len);
+extern DECLSPEC int SDLCALL SDLNet_TCP_Send(TCPsocket sock, void *data, int len);
 
 /* Receive up to 'maxlen' bytes of data over the non-server socket 'sock',
    and store them in the buffer pointed to by 'data'.
@@ -113,10 +113,10 @@ extern DECLSPEC int SDLNet_TCP_Send(TCPsocket sock, void *data, int len);
    value is less than or equal to zero, then either the remote connection was
    closed, or an unknown socket error occurred.
 */
-extern DECLSPEC int SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxlen);
+extern DECLSPEC int SDLCALL SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxlen);
 
 /* Close a TCP network socket */
-extern DECLSPEC void SDLNet_TCP_Close(TCPsocket sock);
+extern DECLSPEC void SDLCALL SDLNet_TCP_Close(TCPsocket sock);
 
 
 /***********************************************************************/
@@ -141,17 +141,17 @@ typedef struct {
 /* Allocate/resize/free a single UDP packet 'size' bytes long.
    The new packet is returned, or NULL if the function ran out of memory.
  */
-extern DECLSPEC UDPpacket *SDLNet_AllocPacket(int size);
-extern DECLSPEC int SDLNet_ResizePacket(UDPpacket *packet, int newsize);
-extern DECLSPEC void SDLNet_FreePacket(UDPpacket *packet);
+extern DECLSPEC UDPpacket * SDLCALL SDLNet_AllocPacket(int size);
+extern DECLSPEC int SDLCALL SDLNet_ResizePacket(UDPpacket *packet, int newsize);
+extern DECLSPEC void SDLCALL SDLNet_FreePacket(UDPpacket *packet);
 
 /* Allocate/Free a UDP packet vector (array of packets) of 'howmany' packets,
    each 'size' bytes long.
    A pointer to the first packet in the array is returned, or NULL if the
    function ran out of memory.
  */
-extern DECLSPEC UDPpacket **SDLNet_AllocPacketV(int howmany, int size);
-extern DECLSPEC void SDLNet_FreePacketV(UDPpacket **packetV);
+extern DECLSPEC UDPpacket ** SDLCALL SDLNet_AllocPacketV(int howmany, int size);
+extern DECLSPEC void SDLCALL SDLNet_FreePacketV(UDPpacket **packetV);
 
 
 /* Open a UDP network socket
@@ -160,7 +160,7 @@ extern DECLSPEC void SDLNet_FreePacketV(UDPpacket **packetV);
    internally in network (big endian) byte order, in addresses, etc.
    This allows other systems to send to this socket via a known port.
 */
-extern DECLSPEC UDPsocket SDLNet_UDP_Open(Uint16 port);
+extern DECLSPEC UDPsocket SDLCALL SDLNet_UDP_Open(Uint16 port);
 
 /* Bind the address 'address' to the requested channel on the UDP socket.
    If the channel is -1, then the first unbound channel will be bound with
@@ -171,10 +171,10 @@ extern DECLSPEC UDPsocket SDLNet_UDP_Open(Uint16 port);
    address, to which all outbound packets on the channel are sent.
    This function returns the channel which was bound, or -1 on error.
 */
-extern DECLSPEC int SDLNet_UDP_Bind(UDPsocket sock, int channel, IPaddress *address);
+extern DECLSPEC int SDLCALL SDLNet_UDP_Bind(UDPsocket sock, int channel, IPaddress *address);
 
 /* Unbind all addresses from the given channel */
-extern DECLSPEC void SDLNet_UDP_Unbind(UDPsocket sock, int channel);
+extern DECLSPEC void SDLCALL SDLNet_UDP_Unbind(UDPsocket sock, int channel);
 
 /* Get the primary IP address of the remote system associated with the 
    socket and channel.  If the channel is -1, then the primary IP port
@@ -182,7 +182,7 @@ extern DECLSPEC void SDLNet_UDP_Unbind(UDPsocket sock, int channel);
    opened with a specific port.
    If the channel is not bound and not -1, this function returns NULL.
  */
-extern DECLSPEC IPaddress *SDLNet_UDP_GetPeerAddress(UDPsocket sock, int channel);
+extern DECLSPEC IPaddress * SDLCALL SDLNet_UDP_GetPeerAddress(UDPsocket sock, int channel);
 
 /* Send a vector of packets to the the channels specified within the packet.
    If the channel specified in the packet is -1, the packet will be sent to
@@ -191,7 +191,7 @@ extern DECLSPEC IPaddress *SDLNet_UDP_GetPeerAddress(UDPsocket sock, int channel
    been sent, -1 if the packet send failed.
    This function returns the number of packets sent.
 */
-extern DECLSPEC int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets);
+extern DECLSPEC int SDLCALL SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets);
 
 /* Send a single packet to the specified channel.
    If the channel specified in the packet is -1, the packet will be sent to
@@ -200,7 +200,7 @@ extern DECLSPEC int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int np
    been sent.
    This function returns 1 if the packet was sent, or 0 on error.
 */
-extern DECLSPEC int SDLNet_UDP_Send(UDPsocket sock, int channel, UDPpacket *packet);
+extern DECLSPEC int SDLCALL SDLNet_UDP_Send(UDPsocket sock, int channel, UDPpacket *packet);
 
 /* Receive a vector of pending packets from the UDP socket.
    The returned packets contain the source address and the channel they arrived
@@ -212,7 +212,7 @@ extern DECLSPEC int SDLNet_UDP_Send(UDPsocket sock, int channel, UDPpacket *pack
    This function returns the number of packets read from the network, or -1
    on error.  This function does not block, so can return 0 packets pending.
 */
-extern DECLSPEC int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets);
+extern DECLSPEC int SDLCALL SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets);
 
 /* Receive a single packet from the UDP socket.
    The returned packet contains the source address and the channel it arrived
@@ -224,10 +224,10 @@ extern DECLSPEC int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets);
    This function returns the number of packets read from the network, or -1
    on error.  This function does not block, so can return 0 packets pending.
 */
-extern DECLSPEC int SDLNet_UDP_Recv(UDPsocket sock, UDPpacket *packet);
+extern DECLSPEC int SDLCALL SDLNet_UDP_Recv(UDPsocket sock, UDPpacket *packet);
 
 /* Close a UDP network socket */
-extern DECLSPEC void SDLNet_UDP_Close(UDPsocket sock);
+extern DECLSPEC void SDLCALL SDLNet_UDP_Close(UDPsocket sock);
 
 
 /***********************************************************************/
@@ -245,21 +245,21 @@ typedef struct {
    This returns a socket set for up to 'maxsockets' sockets, or NULL if
    the function ran out of memory.
  */
-extern DECLSPEC SDLNet_SocketSet SDLNet_AllocSocketSet(int maxsockets);
+extern DECLSPEC SDLNet_SocketSet SDLCALL SDLNet_AllocSocketSet(int maxsockets);
 
 /* Add a socket to a set of sockets to be checked for available data */
 #define SDLNet_TCP_AddSocket(set, sock) \
 			SDLNet_AddSocket(set, (SDLNet_GenericSocket)sock)
 #define SDLNet_UDP_AddSocket(set, sock) \
 			SDLNet_AddSocket(set, (SDLNet_GenericSocket)sock)
-extern DECLSPEC int SDLNet_AddSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock);
+extern DECLSPEC int SDLCALL SDLNet_AddSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock);
 
 /* Remove a socket from a set of sockets to be checked for available data */
 #define SDLNet_TCP_DelSocket(set, sock) \
 			SDLNet_DelSocket(set, (SDLNet_GenericSocket)sock)
 #define SDLNet_UDP_DelSocket(set, sock) \
 			SDLNet_DelSocket(set, (SDLNet_GenericSocket)sock)
-extern DECLSPEC int SDLNet_DelSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock);
+extern DECLSPEC int SDLCALL SDLNet_DelSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock);
 
 /* This function checks to see if data is available for reading on the
    given set of sockets.  If 'timeout' is 0, it performs a quick poll,
@@ -268,7 +268,7 @@ extern DECLSPEC int SDLNet_DelSocket(SDLNet_SocketSet set, SDLNet_GenericSocket 
    first.  This function returns the number of sockets ready for reading, 
    or -1 if there was an error with the select() system call.
 */
-extern DECLSPEC int SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout);
+extern DECLSPEC int SDLCALL SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout);
 
 /* After calling SDLNet_CheckSockets(), you can use this function on a
    socket that was in the socket set, to find out if data is available
@@ -278,7 +278,7 @@ extern DECLSPEC int SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout);
 		((sock != NULL) && ((SDLNet_GenericSocket)sock)->ready)
 
 /* Free a set of sockets allocated by SDL_NetAllocSocketSet() */
-extern DECLSPEC void SDLNet_FreeSocketSet(SDLNet_SocketSet set);
+extern DECLSPEC void SDLCALL SDLNet_FreeSocketSet(SDLNet_SocketSet set);
 
 
 /***********************************************************************/
@@ -286,12 +286,12 @@ extern DECLSPEC void SDLNet_FreeSocketSet(SDLNet_SocketSet set);
 /***********************************************************************/
 
 /* Write a 16/32 bit value to network packet buffer */
-extern DECLSPEC void SDLNet_Write16(Uint16 value, void *area);
-extern DECLSPEC void SDLNet_Write32(Uint32 value, void *area);
+extern DECLSPEC void SDLCALL SDLNet_Write16(Uint16 value, void *area);
+extern DECLSPEC void SDLCALL SDLNet_Write32(Uint32 value, void *area);
 
 /* Read a 16/32 bit value from network packet buffer */
-extern DECLSPEC Uint16 SDLNet_Read16(void *area);
-extern DECLSPEC Uint32 SDLNet_Read32(void *area);
+extern DECLSPEC Uint16 SDLCALL SDLNet_Read16(void *area);
+extern DECLSPEC Uint32 SDLCALL SDLNet_Read32(void *area);
 
 /***********************************************************************/
 /* Error reporting functions                                           */
@@ -304,8 +304,8 @@ extern DECLSPEC Uint32 SDLNet_Read32(void *area);
 /* I'm eventually going to try to disentangle SDL_net from SDL, thus making
    SDL_net an independent X-platform networking toolkit.  Not today though....
 
-extern no_parse_DECLSPEC void SDLNet_SetError(const char *fmt, ...);
-extern no_parse_DECLSPEC char * SDLNet_GetError(void);
+extern no_parse_DECLSPEC void SDLCALL SDLNet_SetError(const char *fmt, ...);
+extern no_parse_DECLSPEC char * SDLCALL SDLNet_GetError(void);
 */
 
 

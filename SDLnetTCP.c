@@ -740,6 +740,11 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 		sock_addr.sin_addr.s_addr = INADDR_ANY;
 		sock_addr.sin_port = ip->port;
 
+		/* allow local address reuse */
+		{ int yes = 1;
+			setsockopt(sock->channel, SOL_SOCKET, SO_REUSEADDR, (char*)&yes, sizeof(yes));
+		}
+
 		/* Bind the socket for listening */
 		if ( bind(sock->channel, (struct sockaddr *)&sock_addr,
 				sizeof(sock_addr)) == SOCKET_ERROR ) {
@@ -749,10 +754,6 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 		if ( listen(sock->channel, 5) == SOCKET_ERROR ) {
 			SDLNet_SetError("Couldn't listen to local port");
 			goto error_return;
-		}
-		/* allow local address reuse */
-		{ int yes = 1;
-			setsockopt(sock->channel, SOL_SOCKET, SO_REUSEADDR, (char*)&yes, sizeof(yes));
 		}
 #ifdef O_NONBLOCK
 		/* Set the socket to non-blocking mode for accept() */

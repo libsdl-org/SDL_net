@@ -1,5 +1,8 @@
 
 1.2.4:
+Sam Lantinga - Sat Apr 13 07:49:47 PDT 2002
+ * Updated autogen.sh for new versions of automake
+ * Specify the SDL API calling convention (C by default)
 Stephane Magnenat - Wed Feb 13 15:28:04 PST 2002
  * Sockets are created with the SO_REUSEADDR flag by default
 Juergen Wind - Wed Feb 13 09:21:55 PST 2002
