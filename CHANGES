@@ -1,4 +1,6 @@
 1.1.2:
+Sam Lantinga - Sat Feb 10 16:33:59 PST 2001
+ * SDL_net works with the sockets API out of the box on MacOS X.
 Paul S Jenner - Sun, 4 Feb 2001 03:58:44 -0800 (PST)
  * Added an RPM spec file
 Patrick Levin - Mon, 8 Jan 2001 23:20:11 +0100
