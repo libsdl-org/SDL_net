@@ -111,8 +111,7 @@ extern DECLSPEC int SDLNet_TCP_Send(TCPsocket sock, void *data, int len);
    and store them in the buffer pointed to by 'data'.
    This function returns the actual amount of data received.  If the return
    value is less than or equal to zero, then either the remote connection was
-   closed, or an unknown socket error occurred.  The function may return less
-   data than you asked for. If you need to, just call the function again.
+   closed, or an unknown socket error occurred.
 */
 extern DECLSPEC int SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxlen);
 
@@ -303,8 +302,8 @@ extern DECLSPEC Uint32 SDLNet_Read32(void *area);
 /* I'm eventually going to try to disentangle SDL_net from SDL, thus making
    SDL_net an independent X-platform networking toolkit.  Not today though....
 
-extern DECLSPEC void SDLNet_SetError(const char *fmt, ...);
-extern DECLSPEC char * SDLNet_GetError(void);
+extern no_parse_DECLSPEC void SDLNet_SetError(const char *fmt, ...);
+extern no_parse_DECLSPEC char * SDLNet_GetError(void);
 */
 
 
@@ -370,10 +369,11 @@ static __inline__ Uint32 SDLNet_Read32(void *areap)
 }
 #endif /* !SDL_DATA_ALIGNED */
 
-
+#ifdef MACOS_OPENTRANSPORT
+#endif
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
-}
+};
 #endif
 #include "close_code.h"
 

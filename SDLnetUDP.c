@@ -24,18 +24,163 @@
 
 #include "SDLnetsys.h"
 #include "SDL_net.h"
-
+#ifdef MACOS_OPENTRANSPORT
+#include <Events.h>
+#endif
 
 struct _UDPsocket {
 	int ready;
 	SOCKET channel;
 	IPaddress address;
+
+#ifdef MACOS_OPENTRANSPORT
+	OTEventCode newEvent;
+	OTEventCode event;
+	OTEventCode curEvent;
+	OTEventCode newCompletion;
+	OTEventCode completion;
+	OTEventCode curCompletion;
+	TEndpointInfo info;
+	Boolean		readShutdown;
+	Boolean		writeShutdown;
+	OSStatus	error;
+	OTConfigurationRef	config;		// Master configuration. you can clone this.
+#endif /* MACOS_OPENTRANSPORT */
+
 	struct UDP_channel {
 		int numbound;
 		IPaddress address[SDLNET_MAX_UDPADDRESSES];
 	} binding[SDLNET_MAX_UDPCHANNELS];
 };
 
+#ifdef MACOS_OPENTRANSPORT
+
+/* A helper function for Mac OpenTransport support*/
+// This function is a complete copy from GUSI
+// ( masahiro minami<elsur@aaa.letter.co.jp> )
+// ( 01/02/19 )
+//
+// I guess this function should be put in SDLnet.c
+// ( 010315 masahiro minami<elsur@aaa.letter.co.jp>)
+// (TODO)
+static __inline__ Uint32 CompleteMask(OTEventCode code)	
+{ 	
+	return 1 << (code & 0x1F); 
+}
+
+/* Notifier for async OT calls */
+// This function is completely same as AsyncTCPNotifier,
+// except for the argument, UDPsocket / TCPsocket
+// ( 010315 masahiro minami<elsur@aaa.letter.co.jp>)
+static pascal void AsyncUDPNotifier( UDPsocket sock, OTEventCode code,
+					OTResult result, void* cookie )
+{
+	switch( code & 0x7f000000L)
+	{
+		case 0:
+			sock->newEvent |= code;
+			result = 0;
+			break;
+		case kCOMPLETEEVENT:
+			if(!(code & 0x00FFFFE0 ))
+				sock->newCompletion |= CompleteMask( code );
+			if( code == T_OPENCOMPLETE )
+				sock->channel = (SOCKET)(cookie);
+			break;
+		default:
+			if( code != kOTProviderWillClose )
+				result = 0;
+	}
+	// Do we need these ???? TODO
+	// sock->SetAsyncMacError( result );
+	// sock->Wakeup();
+	
+	// Do we need to ?
+	//YieldToAnyThread();
+}
+
+/* Retrieve OT event */
+// This function is completely same as AsyncTCPPopEvent,
+// except for the argument, UDPsocket / TCPsocket
+// ( 010315 masahiro minami<elsur@aaa.letter.co.jp>)
+static void AsyncUDPPopEvent( UDPsocket sock )
+{
+	// Make sure OT calls are not interrupted
+	// Not sure if we really need this.
+	OTEnterNotifier( sock->channel );
+	
+	sock->event |= (sock->curEvent = sock->newEvent );
+	sock->completion |= ( sock->curCompletion = sock->newCompletion );
+	sock->newEvent = sock->newCompletion = 0;
+	
+	OTLeaveNotifier( sock->channel );
+	
+	if( sock->curEvent & T_UDERR)
+	{
+		// We just clear the error.
+		// Should we feed this back to users ?
+		// (TODO )
+		OTRcvUDErr( sock->channel, NULL );	
+	}
+	
+	// Remote is disconnecting...
+	if( sock->curEvent & ( T_DISCONNECT | T_ORDREL ))
+	{
+		sock->readShutdown = true;
+	}
+	
+	if( sock->curEvent &T_CONNECT)
+	{
+		// Ignore the info of remote (second parameter).
+		// Shoule we care ?
+		// (TODO)
+		OTRcvConnect( sock->channel, NULL );	
+	}
+	
+	if( sock->curEvent & T_ORDREL )
+	{
+		OTRcvOrderlyDisconnect( sock->channel );
+	}
+	
+	if( sock->curEvent & T_DISCONNECT )
+	{
+		OTRcvDisconnect( sock->channel, NULL );
+	}
+	
+	// Should we ??
+	// (010318 masahiro minami<elsur@aaa.letter.co.jp>
+	//YieldToAnyThread();
+}
+
+/* Create a new UDPsocket */
+// Because TCPsocket structure gets bigger and bigger,
+// I think we'd better have a constructor function and delete function.
+// ( 01/02/25 masahiro minami<elsur@aaa.letter.co.jp> )
+/*static*/ UDPsocket AsyncUDPNewSocket()
+{
+	UDPsocket sock;
+	
+	sock = (UDPsocket)malloc(sizeof(*sock));
+	if ( sock == NULL ) {
+		SDLNet_SetError("Out of memory");
+		return NULL;
+	}
+	
+	sock->newEvent = 0;
+	sock->event = 0;
+	sock->curEvent = 0;
+	sock->newCompletion = 0;
+	sock->completion = 0;
+	sock->curCompletion = 0;
+	//sock->info = NULL;
+	sock->readShutdown = sock->writeShutdown = false;
+	sock->error = 0;
+	sock->config = NULL;
+	
+	return sock;	
+}
+
+#endif /* MACOS_OPENTRANSPORT */
 
 /* Allocate/free a single UDP packet 'size' bytes long.
    The new packet is returned, or NULL if the function ran out of memory.
@@ -130,6 +275,9 @@ void SDLNet_FreePacketV(UDPpacket **packetV)
 extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 {
 	UDPsocket sock;
+#ifdef MACOS_OPENTRANSPORT
+	EndpointRef dummy = NULL;
+#endif
 
 	/* Allocate a UDP socket structure */
 	sock = (UDPsocket)malloc(sizeof(*sock));
@@ -142,18 +290,22 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 	/* Open the socket */
 #ifdef MACOS_OPENTRANSPORT
 	{
-	OSStatus status;
-
-#if ! TARGET_API_MAC_CARBON
-		sock->channel = OTOpenEndpoint(OTCreateConfiguration(kUDPName),0, nil, &status);
-#else
-		sock->channel = OTOpenEndpointInContext(OTCreateConfiguration(kUDPName),0, nil, &status, nil );
-#endif
-		if (status != noErr)
+		sock->error = OTAsyncOpenEndpoint(
+			OTCreateConfiguration(kUDPName),0, &(sock->info),
+			(OTNotifyProcPtr)AsyncUDPNotifier, sock );
+		AsyncUDPPopEvent( sock );
+		while( !sock->error && !( sock->completion & CompleteMask(T_OPENCOMPLETE)))
 		{
-			SDLNet_SetError("Couldn't create socket, OTOpenEndpoint() = %d",(int) status);
+			AsyncUDPPopEvent( sock );
+		}
+		if( sock->error )
+		{
+			SDLNet_SetError("Could not open UDP socket");
 			goto error_return;
 		}
+		// Should we ??
+		// (01/05/03 minami<elsur@aaa.letter.co.jp>
+		OTSetBlocking( sock->channel );
 	}
 #else
 	sock->channel = socket(AF_INET, SOCK_DGRAM, 0);
@@ -167,44 +319,36 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 
 #ifdef MACOS_OPENTRANSPORT
 	{
-	InetAddress wanted;
-	InetAddress assigned;
-	TBind wanted_addr;
-	TBind assigned_addr;
+	InetAddress required, assigned;
+	TBind req_addr, assigned_addr;
 	OSStatus status;
 	InetInterfaceInfo info;
-
+		
 		memset(&assigned_addr, 0, sizeof(assigned_addr));
 		assigned_addr.addr.maxlen = sizeof(assigned);
 		assigned_addr.addr.len = sizeof(assigned);
 		assigned_addr.addr.buf = (UInt8 *) &assigned;
 		
-		memset(&wanted_addr, 0, sizeof(wanted_addr));
-		wanted_addr.addr.maxlen = sizeof(wanted);
-		wanted_addr.addr.len = sizeof(wanted);
-		wanted_addr.addr.buf = (UInt8 *) &wanted;
+		if ( port ) {
+			status = OTInetGetInterfaceInfo( &info, kDefaultInetInterface );
+			if( status != kOTNoError )
+				goto error_return;
+			OTInitInetAddress(&required, port, info.fAddress );
+			req_addr.addr.maxlen = sizeof( required );
+			req_addr.addr.len = sizeof( required );
+			req_addr.addr.buf = (UInt8 *) &required;
 		
-		status = OTInetGetInterfaceInfo(&info, kDefaultInetInterface);
-		
-		if (status != noErr)
-		{
-			SDLNet_SetError("Couldn't get interface info, OTInetGetInterfaceInfo() = %d",(int) status);
-			goto error_return;
+			sock->error = OTBind(sock->channel, &req_addr, &assigned_addr);
+		} else {
+			sock->error = OTBind(sock->channel, nil, &assigned_addr );
 		}
-		
-		OTInitInetAddress(&wanted, port, info.fAddress);
+		AsyncUDPPopEvent(sock);
 
-		if (port == 0)
+		while( !sock->error && !(sock->completion & CompleteMask(T_BINDCOMPLETE)))
 		{
-			status = OTBind(sock->channel, nil, &assigned_addr);
-		}
-		
-		else
-		{
-			status = OTBind(sock->channel, &wanted_addr, &assigned_addr);
-		}
-			
-		if (status != noErr)
+			AsyncUDPPopEvent(sock);
+		}	
+		if (sock->error != noErr)
 		{
 			SDLNet_SetError("Couldn't bind to local port, OTBind() = %d",(int) status);
 			goto error_return;
@@ -212,6 +356,10 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 
 		sock->address.host = assigned.fHost;
 		sock->address.port = assigned.fPort;
+		
+#ifdef DEBUG_NET
+		printf("UDP open host = %d, port = %d\n", assigned.fHost, assigned.fPort );
+#endif
 	}
 #else
 	/* Bind locally, if appropriate */
@@ -239,6 +387,10 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 	return(sock);
 
 error_return:
+#ifdef MACOS_OPENTRANSPORT
+	if( dummy )
+		OTCloseProvider( dummy );
+#endif
 	SDLNet_UDP_Close(sock);
 	
 	return(NULL);
@@ -357,10 +509,17 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 			OTpacket.addr.len = (sizeof address);
 			OTpacket.udata.buf = packets[i]->data;
 			OTpacket.udata.len = packets[i]->len;
-			OTInitInetAddress(&address, packets[i]->address.port,packets[i]->address.host);
+			OTInitInetAddress(&address, packets[i]->address.port, packets[i]->address.host);
+#ifdef DEBUG_NET
+			printf("Packet send address: 0x%8.8x:%d, length = %d\n", packets[i]->address.host, packets[i]->address.port, packets[i]->len);
+#endif
 			
 			status = OTSndUData(sock->channel, &OTpacket);
-			
+#ifdef DEBUG_NET
+			printf("SDLNet_UDP_SendV   OTSndUData return value is ;%d\n", status );
+#endif
+
+			AsyncUDPPopEvent( sock );
 			packets[i]->status = status;
 			
 			if (status == noErr)
@@ -383,6 +542,9 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 		else 
 		{
 			/* Send to each of the bound addresses on the channel */
+#ifdef DEBUG_NET
+			printf("SDLNet_UDP_SendV sending packet to channe = %d\n", packets[i]->channel );
+#endif
 			
 			binding = &sock->binding[packets[i]->channel];
 			
@@ -392,15 +554,21 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 			TUnitData OTpacket;
 			InetAddress address;
 
+				OTInitInetAddress(&address, binding->address[j].port,binding->address[j].host);
+#ifdef DEBUG_NET
+				printf("Packet send address: 0x%8.8x:%d, length = %d\n", binding->address[j].host, binding->address[j].port, packets[i]->len);
+#endif
 				memset(&OTpacket, 0, sizeof(OTpacket));
 				OTpacket.addr.buf = (Uint8 *)&address;
 				OTpacket.addr.len = (sizeof address);
 				OTpacket.udata.buf = packets[i]->data;
 				OTpacket.udata.len = packets[i]->len;
-				OTInitInetAddress(&address, binding->address[j].port,binding->address[j].host);
 			                              
 				status = OTSndUData(sock->channel, &OTpacket);
-				
+#ifdef DEBUG_NET
+				printf("SDLNet_UDP_SendV   OTSndUData returne value is;%d\n", status );
+#endif
+				AsyncUDPPopEvent(sock);
 				packets[i]->status = status;
 				
 				if (status == noErr)
@@ -437,27 +605,32 @@ int SDLNet_UDP_Send(UDPsocket sock, int channel, UDPpacket *packet)
 /* Returns true if a socket is has data available for reading right now */
 static int SocketReady(SOCKET sock)
 {
-	int retval;
+	int retval = 0;
 #ifdef MACOS_OPENTRANSPORT
 	OTResult status;
-	size_t	numBytes;
 #else
 	struct timeval tv;
 	fd_set mask;
 #endif
 
 #ifdef MACOS_OPENTRANSPORT
-	status = OTCountDataBytes(sock,&numBytes);
-	
-	if (status == noErr && numBytes > 0) 
-	{
+	//status = OTGetEndpointState(sock);
+	status = OTLook(sock);
+	if( status > 0 )
 		retval = 1;
-	} 
-	
-	else 
+		
+/*	switch( status )
 	{
-		retval = 0;
-	}
+//		case T_IDLE:
+		case T_DATAXFER:
+//		case T_INREL:
+			retval = 1;
+			break;
+		default:
+			OTCountDataBytes( sock, &numBytes );
+			if( numBytes )
+				retval = 1;
+	}*/
 #else
 	/* Check the file descriptors for available data */
 	do {
@@ -514,12 +687,18 @@ extern int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
 		OTpacket.udata.maxlen = packet->maxlen;
 		
 		packet->status = OTRcvUData(sock->channel, &OTpacket, &flags);
-		
+#ifdef DEBUG_NET
+		printf("Packet status: %d\n", packet->status);
+#endif
+		AsyncUDPPopEvent(sock);
 		if (packet->status == noErr)
 		{
 			packet->len = OTpacket.udata.len;
 			packet->address.host = address.fHost;
 			packet->address.port = address.fPort;
+#ifdef DEBUG_NET
+			printf("Packet address: 0x%8.8x:%d, length = %d\n", packet->address.host, packet->address.port, packet->len);
+#endif
 		}
 #else
 		sock_len = sizeof(sock_addr);

@@ -17,6 +17,7 @@ EXTRA_DIST =			\
 	CHANGES			\
 	autogen.sh		\
 	VisualC.zip		\
+	PBProjects.tar.gz	\
 	MPWmake.sea.bin		\
 	quit.bmp		\
 	scroll_dn.bmp		\

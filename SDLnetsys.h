@@ -31,7 +31,7 @@
 #ifdef macintosh
 #ifndef USE_GUSI_SOCKETS
 #define MACOS_OPENTRANSPORT
-#error Open Transport driver is broken
+//#error Open Transport driver is broken
 #endif
 #endif /* macintosh */
 
@@ -47,10 +47,10 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <netinet/in.h>
 #ifndef __BEOS__
 #include <arpa/inet.h>
 #endif
-#include <netinet/in.h>
 #ifdef linux /* FIXME: what other platforms have this? */
 #include <netinet/tcp.h>
 #endif
@@ -61,7 +61,8 @@
 
 /* System-dependent definitions */
 #ifdef MACOS_OPENTRANSPORT
-#define closesocket	OTCloseProvider
+//#define closesocket	OTCloseProvider
+#define closesocket OTSndOrderlyDisconnect
 #define SOCKET		EndpointRef
 #define INVALID_SOCKET	kOTInvalidEndpointRef
 #else

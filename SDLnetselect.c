@@ -30,6 +30,9 @@
 struct SDLNet_Socket {
 	int ready;
 	SOCKET channel;
+#ifdef MACOS_OPENTRANSPORT
+	OTEventCode curEvent;
+#endif
 };
 
 struct _SDLNet_SocketSet {
@@ -128,18 +131,37 @@ int 	numReady;
 	
 		for (i = set->numsockets-1;i >= 0;--i) 
 		{
-			status = OTCountDataBytes(set->sockets[i]->channel,&numBytes);
-		
-			if (status != noErr && status != kOTNoDataErr) 
+			status = OTLook( set->sockets[i]->channel );
+			if( status > 0 )
 			{
-				return(-1);
+				switch( status )
+				{
+					case T_UDERR:
+						OTRcvUDErr( set->sockets[i]->channel , nil);
+						break;
+					case T_DISCONNECT:
+						OTRcvDisconnect( set->sockets[i]->channel, nil );
+						break;
+					case T_ORDREL:
+						OTRcvOrderlyDisconnect(set->sockets[i]->channel );
+						break;
+					case T_CONNECT:
+						OTRcvConnect( set->sockets[i]->channel, nil );
+						break;
+					
+				
+					default:
+						set->sockets[i]->ready = 1;
+						++numReady;
+				}
 			}
-			
-			else if (numBytes > 0) 
+			else if( OTCountDataBytes(set->sockets[i]->channel, &numBytes ) != kOTNoDataErr )
 			{
 				set->sockets[i]->ready = 1;
 				++numReady;
 			}
+			else
+				set->sockets[i]->ready = 0;
 		}
 		
 	} while (!numReady && (SDL_GetTicks() < stop));

@@ -1,4 +1,10 @@
 
+1.2.2:
+Sam Lantinga - Sun Jul 22 16:41:44 PDT 2001
+ * Added Project Builder projects for building MacOS X framework
+Masahiro Minami - Sun, 27 May 2001 02:10:35 +0900
+ * Added working MacOS Open Transport support
+
 1.2.1:
 Sam Lantinga - Tue Apr 17 11:42:13 PDT 2001
  * Cleaned up swap function definitions in SDL_net.h

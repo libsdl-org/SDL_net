@@ -71,7 +71,7 @@ my_strdup (char *str)
   
   if (str)
     {
-      new_str = malloc ((strlen (str) + 1) * sizeof(char));
+      new_str = (char *)malloc ((strlen (str) + 1) * sizeof(char));
       strcpy (new_str, str);
     }
   else
@@ -80,12 +80,15 @@ my_strdup (char *str)
   return new_str;
 }
 
-int main ()
+int main (int argc, char *argv[])
 {
   int major, minor, micro;
   char *tmp_version;
 
+  /* This hangs on some systems (?)
   system ("touch conf.sdltest");
+  */
+  { FILE *fp = fopen("conf.sdltest", "a"); if ( fp ) fclose(fp); }
 
   /* HP/UX 9 (%@#!) writes to sscanf strings */
   tmp_version = my_strdup("$min_sdl_version");
@@ -137,6 +140,11 @@ int main ()
           AC_TRY_LINK([
 #include <stdio.h>
 #include "SDL.h"
+
+int main(int argc, char *argv[])
+{ return 0; }
+#undef  main
+#define main K_and_R_C_main
 ],      [ return 0; ],
         [ echo "*** The test program compiled, but did not run. This usually means"
           echo "*** that the run-time linker is not finding SDL or finding the wrong"

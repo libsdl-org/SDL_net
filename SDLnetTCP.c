@@ -40,6 +40,7 @@
 
 #ifdef MACOS_OPENTRANSPORT
 
+#include <Events.h>
 #include <Threads.h>
 #include <OpenTransport.h>
 #include <OpenTptInternet.h>
@@ -48,12 +49,39 @@
 struct _TCPsocket {
 	int ready;
 	SOCKET channel;
+	
+	// These are taken from GUSI interface.
+	// I'm not sure if it's really necessary here yet
+	// ( masahiro minami<elsur@aaa.letter.co.jp> )
+	// ( 01/02/19 )
+	OTEventCode curEvent;
+	OTEventCode newEvent;
+	OTEventCode event;
+	OTEventCode curCompletion;
+	OTEventCode newCompletion;
+	OTEventCode completion;
+	OSStatus	error;
+	TEndpointInfo info;
+	Boolean		readShutdown;
+	Boolean		writeShutdown;
+	Boolean		connected;
+	OTConfigurationRef	config;		// Master configuration. you can clone this.
+	TCPsocket	nextListener;
+	// ( end of new members --- masahiro minami<elsur@aaa.letter.co.jp>
+	
 	IPaddress remoteAddress;
 	IPaddress localAddress;
 	int sflag;
-
+	
+	// Maybe we don't need this---- it's from original SDL_net
+	// (masahiro minami<elsur@aaa.letter.co.jp>)
+	// ( 01/02/20 )
 	int rcvdPassConn;
 };
+
+// To be used in WaitNextEvent() here and there....
+// (010311 masahiro minami<elsur@aaa.letter.co.jp>)
+EventRecord macEvent;
 
 #if TARGET_API_MAC_CARBON
 /* for Carbon */
@@ -70,7 +98,11 @@ OTNotifyUPP notifier;
    			this code will not function as desired
 */
 
-
+/*
+NOTE: As this version is written async way, we don't use this function...
+(010526) masahiro minami<elsur@aaa.letter.co.jp>
+*/
+/*
 OSStatus DoNegotiateIPReuseAddrOption(EndpointRef ep, Boolean enableReuseIPMode)
 
 {
@@ -111,257 +143,335 @@ OSStatus DoNegotiateIPReuseAddrOption(EndpointRef ep, Boolean enableReuseIPMode)
 				
 	return err;
 }
+*/
 
-static pascal void YieldingNotifier(void* contextPtr, OTEventCode code, 
-									   OTResult result, void* cookie)
-{
-#pragma unused(contextPtr)
-#pragma unused(result)
-#pragma unused(cookie)
-	
-	switch (code) {
-	    case kOTSyncIdleEvent:
-		/* Yield the CPU to OS events */
-#if ! TARGET_API_MAC_CARBON
-		WaitNextEvent(~0, nil, 0, nil);
-#else
-		YieldToAnyThread();
-#endif
-		break;
-	    default:
-		break;
-	}
+/* A helper function for Mac OpenTransport support*/
+// This function is a complete copy from GUSI
+// ( masahiro minami<elsur@aaa.letter.co.jp> )
+// ( 01/02/19 )
+static __inline__ Uint32 CompleteMask(OTEventCode code)	
+{ 	
+	return 1 << (code & 0x1F); 
 }
 
+/* Notifier for async OT calls */
+static pascal void AsyncTCPNotifier( TCPsocket sock, OTEventCode code,
+					OTResult result, void* cookie )
+{
+
+#ifdef DEBUG_NET
+	printf("AsyncTCPNotifier got an event : 0x%8.8x\n", code );
+#endif
+	
+	switch( code & 0x7f000000L)
+	{
+		case 0:
+			sock->newEvent |= code;
+			result = 0;
+			break;
+		case kCOMPLETEEVENT:
+			if(!(code & 0x00FFFFE0 ))
+				sock->newCompletion |= CompleteMask( code );
+			if( code == T_OPENCOMPLETE )
+				sock->channel = (SOCKET)(cookie);
+			break;
+		default:
+			if( code != kOTProviderWillClose )
+				result = 0;
+	}
+	// Do we need these ???? TODO
+	// sock->SetAsyncMacError( result );
+	// sock->Wakeup();
+}
+
+/* Retrieve OT event */
+// This function is taken from GUSI interface.
+// ( 01/02/19 masahiro minami<elsur@aaa.letter.co.jp> )
+static void AsyncTCPPopEvent( TCPsocket sock )
+{
+	// Make sure OT calls are not interrupted
+	// Not sure if we really need this.
+	OTEnterNotifier( sock->channel );
+	
+	sock->event |= (sock->curEvent = sock->newEvent );
+	sock->completion |= ( sock->curCompletion = sock->newCompletion );
+	sock->newEvent = sock->newCompletion = 0;
+	
+	OTLeaveNotifier( sock->channel );
+	
+	if( sock->curEvent & T_UDERR)
+	{
+		// We just clear the error.
+		// Should we feed this back to users ?
+		// (TODO )
+		OTRcvUDErr( sock->channel, NULL );
+		
+#ifdef DEBUG_NET
+		printf("AsyncTCPPopEvent  T_UDERR recognized");
+#endif
+	}
+	
+	// Remote is disconnecting...
+	if( sock->curEvent & ( T_DISCONNECT | T_ORDREL ))
+	{
+		sock->readShutdown = true;
+	}
+	
+	if( sock->curEvent &T_CONNECT )
+	{
+		// Ignore the info of remote (second parameter).
+		// Shoule we care ?
+		// (TODO)
+		OTRcvConnect( sock->channel, NULL );
+		sock->connected = 1;	
+	}
+	
+	if( sock->curEvent & T_ORDREL )
+	{
+		OTRcvOrderlyDisconnect( sock->channel );
+	}
+	
+	if( sock->curEvent & T_DISCONNECT )
+	{
+		OTRcvDisconnect( sock->channel, NULL );
+	}
+	
+	// Do we need to ?
+	// (masahiro minami<elsur@aaa.letter.co.jp>)
+	//YieldToAnyThread();
+}
+
+/* Create a new TCPsocket */
+// Because TCPsocket structure gets bigger and bigger,
+// I think we'd better have a constructor function and delete function.
+// ( 01/02/25 masahiro minami<elsur@aaa.letter.co.jp> )
+static TCPsocket AsyncTCPNewSocket()
+{
+	TCPsocket sock;
+	
+	sock = (TCPsocket)malloc(sizeof(*sock));
+	if ( sock == NULL ) {
+		SDLNet_SetError("Out of memory");
+		return NULL;
+	}
+	
+	sock->newEvent = 0;
+	sock->event = 0;
+	sock->curEvent = 0;
+	sock->newCompletion = 0;
+	sock->completion = 0;
+	sock->curCompletion = 0;
+	//sock->info = NULL;
+	sock->readShutdown = sock->writeShutdown = sock->connected = false;
+	sock->error = 0;
+	sock->config = NULL;
+	sock->nextListener = NULL;
+	sock->sflag = 0;
+	return sock;	
+}
+
+// hmmm.... do we need this ???
+// ( 01/02/25 masahiro minami<elsur@aaa.letter.co.jp>)
+static void AsycnTCPDeleteSocket( TCPsocket sock )
+{
+	SDLNet_TCP_Close( sock );
+}
 /* Open a TCP network socket
    If 'remote' is NULL, this creates a local server socket on the given port,
    otherwise a TCP connection to the remote host and port is attempted.
    The newly created socket is returned, or NULL if there was an error.
+
+   ( re-written by masahiro minami<elsur@aaa.letter.co.jp>
+     Now endpoint is created in Async mode.
+     01/02/20 )
 */
 TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 {
-	TCPsocket sock;
-	extern Uint32 OTlocalhost;
-	EndpointRef	dummyEP;
+	EndpointRef dummy = NULL;
 	
-	// Open a dummy end-point.
-	// Not sure if this is really necessary....	
-#if ! TARGET_API_MAC_CARBON
-	dummyEP = OTOpenEndpoint( OTCreateConfiguration("tcp"), 0, nil, nil );
-#else
-	dummyEP = OTOpenEndpointInContext( OTCreateConfiguration("tcp"), 0, nil, nil, nil );
-	/* create notifier for carbon */
-	notifier = NewOTNotifyUPP( YieldingNotifier );
-	if( notifier == NULL )
+	TCPsocket sock = AsyncTCPNewSocket();
+	if( ! sock)
+		return NULL;
+	
+	// Determin whether bind locally, or connect to remote
+	if ( (ip->host != INADDR_NONE) && (ip->host != INADDR_ANY) )
 	{
-		SDLNet_SetError("Out of memory");
-		goto error_return;
+		// ######## Connect to remote
+		OTResult stat;
+		InetAddress inAddr;
+		TBind bindReq;		
+		
+		// Open endpoint
+		sock->error = OTAsyncOpenEndpoint(
+			OTCreateConfiguration(kTCPName), NULL, &(sock->info),
+			(OTNotifyProcPtr)(AsyncTCPNotifier),
+			sock );
+		
+		AsyncTCPPopEvent( sock );
+		while( !sock->error && !( sock->completion & CompleteMask(T_OPENCOMPLETE)))
+		{
+			//SetThreadState( kCurrentThreadID, kReadyThreadState, kNoThreadID );
+			//YieldToAnyThread();
+			//WaitNextEvent(everyEvent, &macEvent, 1, NULL);
+			AsyncTCPPopEvent( sock );
+		}
+		
+		if( !sock->channel )
+		{
+			SDLNet_SetError("OTAsyncOpenEndpoint failed --- client socket could not be opened");
+			goto error_return;
+		}
+		
+		// Set blocking mode
+		// I'm not sure if this is a good solution....
+		// Check out Apple's sample code, OT Virtual Server
+		// ( 010314 masahiro minami<elsur@aaa.letter.co.jp>)
+		
+		sock->error = OTSetBlocking( sock->channel );
+		if( sock->error != kOTNoError )
+		{
+			SDLNet_SetError("OTSetBlocking() returned an error");
+			goto error_return;
+		}
+		
+		// Bind the socket
+		OTInitInetAddress(&inAddr, 0, 0 );
+		bindReq.addr.len = sizeof( InetAddress );
+		bindReq.addr.buf = (unsigned char*)&inAddr;
+		bindReq.qlen = 0;
+		
+		sock->error = OTBind( sock->channel, &bindReq, NULL );
+		AsyncTCPPopEvent(sock);
+		while( !sock->error && !( sock->completion & CompleteMask(T_BINDCOMPLETE)))
+		{
+			//YieldToAnyThread();
+			//WaitNextEvent(everyEvent, &macEvent, 1, NULL);
+			AsyncTCPPopEvent(sock);
+		}
+		
+		
+		switch( stat = OTGetEndpointState( sock->channel ))
+		{
+			InetAddress inAddr;
+			TCall sndCall;
+			OTResult res;
+			
+			case T_OUTCON:
+				SDLNet_SetError("SDLNet_Open() failed -- T_OUTCON");
+				goto error_return;
+				break;
+			case T_IDLE:
+				sock->readShutdown = false;
+				sock->writeShutdown = false;
+				sock->event &=~T_CONNECT;
+				
+				OTMemzero(&sndCall, sizeof(TCall));
+				OTInitInetAddress(&inAddr, ip->port, ip->host );
+				sndCall.addr.len = sizeof(InetAddress);
+				sndCall.addr.buf = (unsigned char*)&inAddr;
+				sock->connected = 0;
+				res = OTConnect( sock->channel, &sndCall, NULL );
+				AsyncTCPPopEvent(sock);
+				while( sock->error == kOTNoDataErr || !sock->connected )
+					AsyncTCPPopEvent(sock);
+				break;
+			default:
+				// What's to be done ? (TODO)
+				SDLNet_SetError("SDLNet_TCP_Open() failed -- EndpointState not good");
+				goto error_return;
+				
+		}
+		if( !(sock->event & (T_CONNECT|T_DISCONNECT)))
+			goto error_return;
+			
+		AsyncTCPPopEvent( sock );
+		while( !(sock->event & (T_CONNECT|T_DISCONNECT)))
+		{
+			AsyncTCPPopEvent( sock );
+		}
+		// OTConnect successfull
+		if( sock->event & T_CONNECT)
+		{
+			sock->remoteAddress.host = inAddr.fHost;
+			sock->remoteAddress.port = inAddr.fPort;
+			sock->sflag = false;
+		}
+		else
+		{
+			// OTConnect failed
+			sock->event &= ~T_DISCONNECT;
+			goto error_return;
+		}
 	}
-#endif
-	
-	/* Allocate a TCP socket structure */
-	sock = (TCPsocket)malloc(sizeof(*sock));
-	if ( sock == NULL ) {
-		SDLNet_SetError("Out of memory");
-		goto error_return;
-	}
-
-	/* Connect to remote, or bind locally, as appropriate */
-	if ( (ip->host != INADDR_NONE) && (ip->host != INADDR_ANY) ) {
-
-	// #########  Connecting to remote
-		OSStatus status;
-		TCall sndTCall;
-		InetAddress sndInetAddress;
-		TCall rcvTCall;
-		InetAddress rcvInetAddress;
-		TBind assignedAddressTBind;
-		InetAddress assignedInetAddress;
-#if ! TARGET_API_MAC_CARBON
-		sock->channel = OTOpenEndpoint(OTCreateConfiguration(kTCPName),
-							0, nil, &status);
-#else
-		sock->channel = OTOpenEndpointInContext(OTCreateConfiguration(kTCPName),
-							0, nil, &status, nil);
-#endif
-		if ( sock->channel == INVALID_SOCKET ) {
-			SDLNet_SetError("Couldn't create socket");
-			goto error_return;
-		}
-			
-		DoNegotiateIPReuseAddrOption( sock->channel, true );
-			
-#if ! TARGET_API_MAC_CARBON
-		status = OTInstallNotifier(sock->channel, YieldingNotifier, nil);
-#else
-		status = OTInstallNotifier(sock->channel, notifier, nil);
-#endif
-			
-		if ( status != noErr ) {
-			SDLNet_SetError("Couldn't install socket OT notifier");
-			goto error_return;
-		}
-
-		status = OTSetBlocking( sock->channel );
-		if ( status != noErr ) {
-			SDLNet_SetError("Couldn't configure socket to issue OT syncIdleEvents");
-			goto error_return;
-		}
-		status = OTSetSynchronous( sock->channel );
-		if ( status != noErr ) {
-			SDLNet_SetError("Couldn't configure socket to issue OT syncIdleEvents");
-			goto error_return;
-		}
-		status = OTUseSyncIdleEvents(sock->channel, true);
-		if ( status != noErr ) {
-			SDLNet_SetError("Couldn't configure socket to issue OT syncIdleEvents");
-			goto error_return;
-		}
-
-		/* I used to use OTAlloc() to set up TCall/TBind structures, 
-		  	 but was getting bogus results in some cases-- weird */
-		memset(&assignedAddressTBind, 0, sizeof(assignedAddressTBind));
-		assignedAddressTBind.addr.maxlen = sizeof(assignedInetAddress);
-		assignedAddressTBind.addr.len = sizeof(assignedInetAddress);
-		assignedAddressTBind.addr.buf = (UInt8 *) &assignedInetAddress;
-		  
-		status = OTBind(sock->channel, nil, &assignedAddressTBind);
-		if ( status != noErr ) {
-			SDLNet_SetError("Couldn't bind to local port");
-			goto error_return;
-		}
-		  
-		/* If the assigned IP is 0, then it's the default interface, so look up *that* IP */
-		if (assignedInetAddress.fHost == 0) {
-		  	InetInterfaceInfo theInetInterfaceInfo;
-		  	
-			if (OTInetGetInterfaceInfo(&theInetInterfaceInfo,kDefaultInetInterface) == noErr)
-			{
-				assignedInetAddress.fHost = theInetInterfaceInfo.fAddress;
-			}
-		}
-
-		sock->localAddress.host = assignedInetAddress.fHost;
-		sock->localAddress.port = assignedInetAddress.fPort;
-
-		memset(&sndTCall, 0, sizeof(sndTCall));
-		sndTCall.addr.maxlen = sizeof(sndInetAddress);
-		sndTCall.addr.len = sizeof(sndInetAddress);
-		sndTCall.addr.buf = (UInt8 *) &sndInetAddress;
-		  
-		OTInitInetAddress(&sndInetAddress, ip->port, ip->host);
-
-		memset(&rcvTCall, 0, sizeof(rcvTCall));
-		rcvTCall.addr.maxlen = sizeof(rcvInetAddress);
-		rcvTCall.addr.len = sizeof(rcvInetAddress);
-		rcvTCall.addr.buf = (UInt8 *) &rcvInetAddress;
-		  
-		status = OTConnect(sock->channel, &sndTCall, &rcvTCall);
-		if ( status != noErr ) {
-			SDLNet_SetError("Couldn't connect to remote host");
-			goto error_return;
-		}
-		  
-		sock->remoteAddress.host = rcvInetAddress.fHost;
-		sock->remoteAddress.port = rcvInetAddress.fPort;
-		sock->sflag = 0;
-	} else {
-
-	// ##########  Binding locally
-	
-		OSStatus status;
+	else
+	{
+		// ######## Bind locally
 		TBind bindReq;
-		InetInterfaceInfo	theInetInterfaceInfo;
-		InetAddress	ipAddress;
-
+		InetAddress	inAddr;
+		
 	// First, get InetInterfaceInfo.
 	// I don't search for all of them.
 	// Does that matter ?
 			
-		if( OTInetGetInterfaceInfo( &theInetInterfaceInfo, 0 ) != noErr )
+		sock->error = OTAsyncOpenEndpoint(
+			OTCreateConfiguration("tilisten, tcp"), NULL, &(sock->info),
+			(OTNotifyProcPtr)(AsyncTCPNotifier),
+			sock);
+		AsyncTCPPopEvent( sock );
+		while( !sock->error && !( sock->completion & CompleteMask( T_OPENCOMPLETE)))
 		{
-			SDLNet_SetError( "Could not get InetInterfaceInfo");
+			AsyncTCPPopEvent( sock );
+		}
+		
+		if( ! sock->channel )
+		{
+			SDLNet_SetError("OTAsyncOpenEndpoint failed --- server socket could not be opened");
 			goto error_return;
 		}
-			
-	// Second, open the endpoint
-#if ! TARGET_API_MAC_CARBON
-		sock->channel = OTOpenEndpoint(OTCreateConfiguration("tilisten, tcp"),
-							0, nil, &status);
-#else
-		sock->channel = OTOpenEndpointInContext(OTCreateConfiguration("tilisten, tcp"),
-							0, nil, &status, nil);
-#endif
+		
+		// Create a master OTConfiguration
+		sock->config = OTCreateConfiguration(kTCPName);
+		if( ! sock->config )
+		{
+			SDLNet_SetError("Could not create master OTConfiguration");
+			goto error_return;
+		}
+		
+		// Bind the socket
+		OTInitInetAddress(&inAddr, ip->port, 0 );
+		inAddr.fAddressType = AF_INET;
+		bindReq.addr.len = sizeof( InetAddress );
+		bindReq.addr.buf = (unsigned char*)&inAddr;
+		bindReq.qlen = 35;	// This number is NOT well considered. (TODO)
+		sock->localAddress.host = inAddr.fHost;
+		sock->localAddress.port = inAddr.fPort;
+		sock->sflag = true;
+		
+		sock->error = OTBind( sock->channel, &bindReq, NULL );
+		AsyncTCPPopEvent(sock);
+		while( !sock->error && !( sock->completion & CompleteMask(T_BINDCOMPLETE)))
+		{
+			AsyncTCPPopEvent(sock);
+		}
+		if( sock->error != kOTNoError )
+		{
+			SDLNet_SetError("Could not bind server socket");
+			goto error_return;
+		}
+		
+		if( dummy )
+			OTCloseProvider( dummy );
 
-		if ( sock->channel == INVALID_SOCKET ) {
-			SDLNet_SetError("Couldn't create socket");
-			goto error_return;
-		}
-			
-		DoNegotiateIPReuseAddrOption( sock->channel, true );
-
-	// And more options.
-	// 		Synchronous-Blocking
-#if ! TARGET_API_MAC_CARBON
-		status = OTInstallNotifier(sock->channel, YieldingNotifier, nil);
-#else
-		status = OTInstallNotifier(sock->channel, notifier, nil);
-#endif
-		if ( status != noErr ) {
-			SDLNet_SetError("Couldn't install socket OT notifier");
-			goto error_return;
-		}
-		status = OTSetBlocking( sock->channel );
-		if ( status != noErr ) {
-			SDLNet_SetError("Couldn't configure socket to issue OT syncIdleEvents");
-			goto error_return;
-		}
-		status = OTSetSynchronous( sock->channel );
-		if ( status != noErr ) {
-			SDLNet_SetError("Couldn't configure socket to issue OT syncIdleEvents");
-			goto error_return;
-		}
-		status = OTUseSyncIdleEvents(sock->channel, true);
-		if ( status != noErr ) {
-			SDLNet_SetError("Couldn't configure socket to issue OT syncIdleEvents");
-			goto error_return;
-		}
-			
-	// Now is the time for Binding.
-			
-		OTInitInetAddress( &ipAddress, ip->port, theInetInterfaceInfo.fAddress );
-
-		/* For the moment, go with qlen = 1, thought if we allocate the endpoint as a tilisten
-		 endpoint, then handling qlen > 1 is trivial */
-		bindReq.addr.buf = (UInt8*) &ipAddress;
-		bindReq.addr.len = sizeof( ipAddress );
-		bindReq.qlen = 1;
-
-		status = OTBind(sock->channel, &bindReq, nil);
-		if ( status != noErr ) {
-			SDLNet_SetError("Couldn't bind to local port");
-			goto error_return;
-		}
-	
-	// All right, everything is ready now.
-	
-		sock->localAddress.host = ipAddress.fHost;
-		sock->localAddress.port = ipAddress.fPort;
-		sock->sflag = 1;
 	}
+	
 	sock->ready = 0;
-
-	if( dummyEP != nil )
-		OTCloseProvider( dummyEP );
-
-	/* The socket is ready */
-	return(sock);
-
-error_return:
-	if( dummyEP != nil )
-		OTCloseProvider( dummyEP );
-	SDLNet_TCP_Close(sock);
-	return(NULL);
+	return sock;
+	
+	error_return:
+	if( dummy )
+		OTCloseProvider( dummy );
+	SDLNet_TCP_Close( sock );
+	return NULL;	
 }
 
 /* Accept an incoming connection on the given server socket.
@@ -369,8 +479,7 @@ error_return:
 */
 TCPsocket SDLNet_TCP_Accept(TCPsocket server)
 {
-	TCPsocket sock;
-
+	
 	/* Only server sockets can accept */
 	if ( ! server->sflag ) {
 		SDLNet_SetError("Only server sockets can accept()");
@@ -378,69 +487,96 @@ TCPsocket SDLNet_TCP_Accept(TCPsocket server)
 	}
 	server->ready = 0;
 
-	/* Allocate a TCP socket structure */
-	sock = (TCPsocket)malloc(sizeof(*sock));
-	if ( sock == NULL ) {
-		SDLNet_SetError("Out of memory");
-		goto error_return;
-	}
-
 	/* Accept a new TCP connection on a server socket */
-	{ InetAddress peer;
-	  TCall peerinfo;
-	  OSStatus status;
+	{
+		InetAddress peer;
+		TCall peerinfo;
+		TCPsocket sock = NULL;
+		Boolean mustListen = false;
+		OTResult err;
+		
+		memset(&peerinfo, 0, (sizeof peerinfo ));
+		peerinfo.addr.buf = (Uint8 *) &peer;
+		peerinfo.addr.maxlen = sizeof(peer);
+		
+		while( mustListen || !sock )
+		{
+			// OTListen
+			// We do NOT block ---- right thing ? (TODO)
+			err = OTListen( server->channel, &peerinfo );
 
+			if( err )
+				goto error_return;
+			else
+			{
+				mustListen = false;
+				sock = AsyncTCPNewSocket();
+				if( ! sock )
+					goto error_return;
+			}
+		}
+		if( sock )
+		{
+			// OTAsyncOpenEndpoint
+			server->error = OTAsyncOpenEndpoint( OTCloneConfiguration( server->config ),
+				NULL, &(sock->info), (OTNotifyProcPtr)AsyncTCPNotifier, sock );
+			AsyncTCPPopEvent( sock );
+			while( !sock->error && !( sock->completion & CompleteMask( T_OPENCOMPLETE)))
+			{
+				AsyncTCPPopEvent( sock );
+			}
+			if( ! sock->channel )
+			{
+				mustListen = false;
+				goto error_return;
+			}
+			
+			// OTAccept
+			server->completion &= ~(CompleteMask(T_ACCEPTCOMPLETE));
+			server->error = OTAccept( server->channel, sock->channel, &peerinfo );
+			AsyncTCPPopEvent( server );
+			while( !(server->completion & CompleteMask(T_ACCEPTCOMPLETE)))
+			{
+				AsyncTCPPopEvent( server );
+			}
+			
+			switch( server->error )
+			{
+				case kOTLookErr:
+					switch( OTLook(server->channel ))
+					{
+						case T_LISTEN:
+							mustListen = true;
+							break;
+						case T_DISCONNECT:
+							goto error_return;
+					}
+					break;
+				case 0:
+					sock->nextListener = server->nextListener;
+					server->nextListener = sock;
+					sock->remoteAddress.host = peer.fHost;
+					sock->remoteAddress.port = peer.fPort;
+					return sock;
+					// accept successful
+					break;
+				default:
+					free( sock );
+			}
+		}
+		sock->remoteAddress.host = peer.fHost;
+		sock->remoteAddress.port = peer.fPort;
+		sock->sflag = 0;
+		sock->ready = 0;
 
-/* Hmm-- what about the select() on this puppy?  Should check for incoing connection request, right? */
- 
-	  memset(&peerinfo, 0, (sizeof peerinfo));
-	  peerinfo.addr.buf = (UInt8 *) &peer;
-	  peerinfo.addr.maxlen = sizeof(peer);
-	  status = OTListen(server->channel, &peerinfo);
-	  if ( status != noErr ) {
-		/*SDLNet_SetError("OT: listen() failed");
-		goto error_return;*/
-		return NULL;
-	  }
-	  #if ! TARGET_API_MAC_CARBON
-	  sock->channel = OTOpenEndpoint(OTCreateConfiguration(kTCPName),
-							0, nil, &status);
-	  #else
-	  sock->channel = OTOpenEndpointInContext(OTCreateConfiguration(kTCPName),
-							0, nil, &status, nil);
-	  #endif
-
-	  if ( sock->channel == INVALID_SOCKET ) {
-		SDLNet_SetError("accept() failed");
-		goto error_return;
-	  }
-  #if ! TARGET_API_MAC_CARBON
-	  OTInstallNotifier( sock->channel, YieldingNotifier, nil );
-  #else
-	  OTInstallNotifier(sock->channel, notifier, nil);
-  #endif
-	  OTSetBlocking( sock->channel );
-	  OTSetSynchronous( sock->channel );
-	  OTUseSyncIdleEvents( sock->channel, true );
-	  
-	  status = OTAccept(server->channel, sock->channel, &peerinfo);
-	  if ( status != noErr ) {
-		SDLNet_SetError("OT: accept() failed");
-		goto error_return;
-	  }
-	  sock->remoteAddress.host = peer.fHost;
-	  sock->remoteAddress.port = peer.fPort;
+		/* The socket is ready */
+		return(sock);
+	
+	// Error; close the socket and return	
+	error_return:
+		SDLNet_TCP_Close(sock);
+		return(NULL);
 	}
-
-	sock->sflag = 0;
-	sock->ready = 0;
-
-	/* The socket is ready */
-	return(sock);
-
-error_return:
-	SDLNet_TCP_Close(sock);
-	return(NULL);
 }
 
 /* Get the IP address of the remote system associated with the socket.
@@ -483,6 +619,11 @@ int SDLNet_TCP_Send(TCPsocket sock, void *datap, int len)
 			left -= len;
 			data += len;
 		}
+		// Do we need to ?
+		// ( masahiro minami<elsur@aaa.letter.co.jp> )
+		// (TODO)
+		//WaitNextEvent(everyEvent, &macEvent, 1, NULL);
+		//AsyncTCPPopEvent(sock);
 	} while ( (left > 0) && (len > 0) );
 
 	return(sent);
@@ -496,18 +637,41 @@ int SDLNet_TCP_Send(TCPsocket sock, void *datap, int len)
 */
 int SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxlen)
 {
-	int len;
-
+	int len = 0;
+	OSStatus res;
 	/* Server sockets are for accepting connections only */
 	if ( sock->sflag ) {
 		SDLNet_SetError("Server sockets cannot receive");
 		return(-1);
 	}
 
-	len = OTRcv(sock->channel, data, maxlen, 0);
-	if (len == kOTNoDataErr) 
-		len = 0;
+	do
+	{
+		res = OTRcv(sock->channel, data, maxlen-len, 0);
+		if (res > 0) {
+			len = res;
+		}
+
+#ifdef DEBUG_NET
+		if ( res != kOTNoDataErr )
+			printf("SDLNet_TCP_Recv received ; %d\n", res );
+#endif
+		
+		AsyncTCPPopEvent(sock);
+		if( res == kOTLookErr )
+		{
+			res = OTLook(sock->channel );
+			continue;
+		}
+	} while ( (len == 0) && (res == kOTNoDataErr) );
+
 	sock->ready = 0;
+	if ( len == 0 ) { /* Open Transport error */
+#ifdef DEBUG_NET
+		printf("Open Transport error: %d\n", res);
+#endif
+		return(-1);
+	}
 	return(len);
 }
 
@@ -516,7 +680,8 @@ void SDLNet_TCP_Close(TCPsocket sock)
 {
 	if ( sock != NULL ) {
 		if ( sock->channel != INVALID_SOCKET ) {
-			closesocket(sock->channel);
+			//closesocket(sock->channel);
+			OTSndOrderlyDisconnect( sock->channel );
 		}
 		free(sock);
 	}

@@ -42,9 +42,61 @@
 
 #ifdef MACOS_OPENTRANSPORT
 
+#include <Events.h>
+
+typedef struct
+{
+	Uint8	stat;
+	InetSvcRef dns;
+}DNSStatus, *DNSStatusRef;
+
+enum
+{
+	dnsNotReady = 0,
+	dnsReady = 1,
+	dnsResolved = 2,
+	dnsError = 255
+};
+
 static Boolean OTstarted = false;
-static InetSvcRef dns = 0;
+//static InetSvcRef dns = 0;
+static DNSStatus dnsStatus;
 Uint32 OTlocalhost = 0;
+
+/* We need a notifier for opening DNS.*/
+/* ( 010311 masahiro minami<elsur@aaa.letter.co.jp>) */
+static pascal void OpenDNSNotifier(
+	void* context, OTEventCode code, OTResult result, void* cookie )
+{
+	switch( code )
+	{
+		case T_OPENCOMPLETE:
+			// DNS is ready now.
+			if( result == kOTNoError )
+			{
+				dnsStatus.dns = (InetSvcRef)cookie;
+				dnsStatus.stat = dnsReady;
+			}
+			else
+			{
+				SDLNet_SetError("T_DNRSTRINGTOADDRCOMPLETE event returned an error");
+				dnsStatus.dns = NULL;
+				dnsStatus.stat = dnsError;
+			}
+			break;
+		case T_DNRSTRINGTOADDRCOMPLETE:
+			// DNR resolved the name to address
+			// WORK IN PROGRESS (TODO )
+			dnsStatus.stat = dnsResolved;
+			break;
+		default:
+			if( result != kOTNoError )
+				dnsStatus.stat = dnsError;
+	}
+	// Is there anything else to be done here ???
+	// ( 010311 masahiro minami<elsur@aaa.letter.co.jp> )
+	// (TODO)
+}
 
 /* Local functions for initializing and cleaning up the DNS resolver */
 static int OpenDNS(void)
@@ -53,14 +105,19 @@ static int OpenDNS(void)
 	OSStatus status;
 
 	retval = 0;
-#if ! TARGET_API_MAC_CARBON
-	dns = OTOpenInternetServices(kDefaultInternetServicesPath, 0, &status);
-#else
-	dns = OTOpenInternetServicesInContext( kDefaultInternetServicesPath, 0, &status, NULL );
-#endif
+	status = OTAsyncOpenInternetServices(
+		kDefaultInternetServicesPath, 0, OpenDNSNotifier, NULL);
 	if ( status == noErr ) {
 		InetInterfaceInfo	info;
 		
+		dnsStatus.stat = dnsNotReady;
+		
+		while( dnsStatus.stat != dnsError && dnsStatus.dns == NULL)
+		{
+			// what's to be done ? Yield ? WaitNextEvent ? or what ?
+			// ( 010311 masahiro minami<elsur@aaa.letter.co.jp> )
+			//YieldToAnyThread();
+		}
 		/* Get the address of the local system -
 		   What should it be if ethernet is off?
 		 */
@@ -76,9 +133,10 @@ static int OpenDNS(void)
 
 static void CloseDNS(void)
 {
-	if ( dns ) {
-		OTCloseProvider(dns);
-		dns = 0;
+	if ( dnsStatus.dns ) {
+		OTCloseProvider(dnsStatus.dns);
+		dnsStatus.dns = 0;
+		dnsStatus.stat = dnsNotReady;
 	}
 	
 	OTlocalhost = 0;
@@ -89,17 +147,14 @@ int  SDLNet_Init(void)
 {
 	OSStatus status;
 	int retval;
-#if TARGET_API_MAC_CARBON
-	OTClientContextPtr	context;
-#endif
-	
+
+	dnsStatus.stat = dnsNotReady;
+	dnsStatus.dns = 0;
+
+
 	retval = 0;
 	if ( ! OTstarted ) {
-#if ! TARGET_API_MAC_CARBON
 		status = InitOpenTransport();
-#else
-		status = InitOpenTransportInContext( kInitOTForApplicationMask, &context );
-#endif
 		if ( status == noErr ) {
 			OTstarted = true;
 			retval = OpenDNS();
@@ -119,11 +174,7 @@ void SDLNet_Quit(void)
 {
 	if ( OTstarted ) {
 		CloseDNS();
-#if ! TARGET_API_MAC_CARBON
 		CloseOpenTransport();
-#else
-		CloseOpenTransportInContext( NULL );
-#endif
 		OTstarted = false;
 	}
 }
@@ -137,7 +188,7 @@ int SDLNet_ResolveHost(IPaddress *address, char *host, Uint16 port)
 	if ( host == NULL ) {
 		address->host = INADDR_ANY;
 	} else {
-		int a[4];
+/*		int a[4];
 
 		address->host = INADDR_NONE;
 		
@@ -147,13 +198,13 @@ int SDLNet_ResolveHost(IPaddress *address, char *host, Uint16 port)
 				address->host = ((a[0] << 24) |
 				                 (a[1] << 16) |
 				                 (a[2] <<  8) | a[3]);
-				if ( address->host == 0x7F000001 ) { /* localhost */
+				if ( address->host == 0x7F000001 ) {
 					address->host = OTlocalhost;
 				}
 			}
 		}
 		
-		if ( address->host == INADDR_NONE ) {
+		if ( address->host == INADDR_NONE ) {*/
 			InetHostInfo hinfo;
 			
 			/* Check for special case - localhost */
@@ -161,11 +212,13 @@ int SDLNet_ResolveHost(IPaddress *address, char *host, Uint16 port)
 				return(SDLNet_ResolveHost(address, "127.0.0.1", port));
 
 			/* Have OpenTransport resolve the hostname for us */
-			retval = OTInetStringToAddress(dns, host, &hinfo);
+			retval = OTInetStringToAddress(dnsStatus.dns, host, &hinfo);
 			if (retval == noErr) {
+				while( dnsStatus.stat != dnsResolved )
+					{WaitNextEvent(everyEvent, 0, 1, NULL );}
 				address->host = hinfo.addrs[0];
 			}
-		}
+		//}
 	}
 	
 	address->port = SDL_SwapBE16(port);
@@ -199,12 +252,14 @@ char *SDLNet_ResolveIP(IPaddress *ip)
 		
 		theIP = ip->host;
 		
-		theOSStatus = OTInetAddressToName(dns,theIP,theInetDomainName);
+		theOSStatus = OTInetAddressToName(dnsStatus.dns,theIP,theInetDomainName);
 		
 		/*	If successful, return the result */
 			
 		if (theOSStatus == kOTNoError)
 		{
+			while( dnsStatus.stat != dnsResolved )
+				{ /*should we yield or what ? */ }
 			return(theInetDomainName);
 		}
 	}
