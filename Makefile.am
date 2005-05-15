@@ -17,6 +17,7 @@ EXTRA_DIST =			\
 	CHANGES			\
 	autogen.sh		\
 	VisualC.zip		\
+	Xcode.tar.gz		\
 	PBProjects.tar.gz	\
 	MPWmake.sea.bin		\
 	quit.bmp		\
