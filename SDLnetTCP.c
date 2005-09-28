@@ -740,10 +740,17 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 		sock_addr.sin_addr.s_addr = INADDR_ANY;
 		sock_addr.sin_port = ip->port;
 
+/*
+ * Windows gets bad mojo with SO_REUSEADDR:
+ * http://www.devolution.com/pipermail/sdl/2005-September/070491.html
+ *   --ryan.
+ */
+#ifndef WIN32
 		/* allow local address reuse */
 		{ int yes = 1;
 			setsockopt(sock->channel, SOL_SOCKET, SO_REUSEADDR, (char*)&yes, sizeof(yes));
 		}
+#endif
 
 		/* Bind the socket for listening */
 		if ( bind(sock->channel, (struct sockaddr *)&sock_addr,
