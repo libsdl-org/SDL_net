@@ -773,7 +773,15 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 		  ioctlsocket (sock->channel, FIONBIO, &mode);
 		}
 #else
+#ifdef __OS2__
+		{
+			/* Set socket mode to nonblocking */
+			int dontblock = 1;
+			ioctl(sock->channel, FIONBIO, &dontblock);
+		}
+#else
 #warning How do we set non-blocking mode on other operating systems?
+#endif /* __OS2__ */
 #endif /* WIN32 */
 #endif /* O_NONBLOCK */
 

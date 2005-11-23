@@ -44,6 +44,10 @@
 #define __USE_W32_SOCKETS
 #include <windows.h>
 #else /* UNIX */
+#ifdef __OS2__
+#include <types.h>
+#include <sys/ioctl.h>
+#endif
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -67,7 +71,11 @@
 #define INVALID_SOCKET	kOTInvalidEndpointRef
 #else
 #ifndef __USE_W32_SOCKETS
+#ifdef __OS2__
+#define closesocket     soclose
+#else  /* !__OS2__ */
 #define closesocket	close
+#endif /* __OS2__ */
 #define SOCKET	int
 #define INVALID_SOCKET	-1
 #define SOCKET_ERROR	-1

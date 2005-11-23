@@ -1,0 +1,26 @@
+#=============================================================================
+#           This is a linker file to build SDLNET.DLL for OS/2
+#
+#
+#=============================================================================
+
+system 386 LX DLL INITINSTANCE TERMINSTANCE
+name SDLNET
+
+# Object files from \.
+
+file SDLnet
+file SDLnetselect
+file SDLnetTCP
+file SDLnetUDP
+
+OPTION MAP=SDLNET
+OPTION DESCRIPTION 'Simple DirectMedia Layer Network Library v1.2.5'
+OPTION ELIMINATE
+OPTION MANYAUTODATA
+OPTION OSNAME='OS/2 and eComStation'
+OPTION SHOWDEAD
+LIBPATH %os2tk%\lib
+LIBPATH %sdlhome%\src
+lib sdl
+lib tcpip32.lib
