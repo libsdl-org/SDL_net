@@ -762,29 +762,31 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 			SDLNet_SetError("Couldn't listen to local port");
 			goto error_return;
 		}
-#ifdef O_NONBLOCK
+
 		/* Set the socket to non-blocking mode for accept() */
-		fcntl(sock->channel, F_SETFL, O_NONBLOCK);
-#else
-#ifdef WIN32
+#if defined(__BEOS__) && defined(SO_NONBLOCK)
+		/* On BeOS r5 there is O_NONBLOCK but it's for files only */
 		{
-		  /* passing a non-zero value, socket mode set non-blocking */
-		  unsigned long mode = 1;
-		  ioctlsocket (sock->channel, FIONBIO, &mode);
+			long b = 1;
+			setsockopt(sock->channel, SOL_SOCKET, SO_NONBLOCK, &b, sizeof(b));
 		}
-#else
-#ifdef __OS2__
+#elif defined(O_NONBLOCK)
 		{
-			/* Set socket mode to nonblocking */
+			fcntl(sock->channel, F_SETFL, O_NONBLOCK);
+		}
+#elif defined(WIN32)
+		{
+			unsigned long mode = 1;
+			ioctlsocket (sock->channel, FIONBIO, &mode);
+		}
+#elif defined(__OS2__)
+		{
 			int dontblock = 1;
 			ioctl(sock->channel, FIONBIO, &dontblock);
 		}
 #else
 #warning How do we set non-blocking mode on other operating systems?
-#endif /* __OS2__ */
-#endif /* WIN32 */
-#endif /* O_NONBLOCK */
-
+#endif
 		sock->sflag = 1;
 	}
 	sock->ready = 0;
