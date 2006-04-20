@@ -275,6 +275,10 @@ const char *SDLNet_ResolveIP(IPaddress *ip)
 
 #else /* !MACOS_OPENTRANSPORT */
 
+#ifndef __USE_W32_SOCKETS
+#include <signal.h>
+#endif
+
 /* Initialize/Cleanup the network API */
 int  SDLNet_Init(void)
 {
@@ -289,7 +293,12 @@ int  SDLNet_Init(void)
 			return(-1);
 		}
 #else
-		;
+		/* SIGPIPE is generated when a remote socket is closed */
+		void (*handler)(int);
+		handler = signal(SIGPIPE, SIG_IGN);
+		if ( handler != SIG_DFL ) {
+			signal(SIGPIPE, handler);
+		}
 #endif
 	}
 	++SDLNet_started;
@@ -310,7 +319,12 @@ void SDLNet_Quit(void)
 			}
 		}
 #else
-		;
+		/* Restore the SIGPIPE handler */
+		void (*handler)(int);
+		handler = signal(SIGPIPE, SIG_DFL);
+		if ( handler != SIG_IGN ) {
+			signal(SIGPIPE, handler);
+		}
 #endif
 	}
 }
