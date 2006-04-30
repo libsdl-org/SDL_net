@@ -15,15 +15,16 @@ libSDL_net_la_SOURCES =		\
 
 EXTRA_DIST =			\
 	CHANGES			\
-	autogen.sh		\
 	VisualC.zip		\
 	Xcode.tar.gz		\
 	MPWmake.sea.bin		\
 	quit.bmp		\
 	scroll_dn.bmp		\
 	scroll_up.bmp		\
+	SDL_net.spec		\
 	SDL_net.spec.in		\
-	SDL_net.spec
+	gcc-fat			\
+	autogen.sh
 
 libSDL_net_la_LIBADD = @INETLIB@
 libSDL_net_la_LDFLAGS = 	\
