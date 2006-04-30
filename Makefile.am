@@ -18,8 +18,6 @@ EXTRA_DIST =			\
 	autogen.sh		\
 	VisualC.zip		\
 	Xcode.tar.gz		\
-	XcodeUniversal.tar.gz	\
-	PBProjects.tar.gz	\
 	MPWmake.sea.bin		\
 	quit.bmp		\
 	scroll_dn.bmp		\
