@@ -23,7 +23,7 @@ EXTRA_DIST =			\
 	scroll_up.bmp		\
 	SDL_net.spec		\
 	SDL_net.spec.in		\
-	gcc-fat			\
+	gcc-fat.sh		\
 	autogen.sh
 
 libSDL_net_la_LIBADD = @INETLIB@
