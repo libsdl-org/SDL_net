@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(SDLnet.c)
+AC_INIT(README)
 
 dnl Set various version strings - taken gratefully from the GTk sources
 
