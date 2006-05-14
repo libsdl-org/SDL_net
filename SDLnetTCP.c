@@ -604,7 +604,7 @@ int SDLNet_TCP_Send(TCPsocket sock, const void *datap, int len)
 	sent = 0;
 	errno = 0;
 	do {
-		len = OTSnd(sock->channel, data, left, 0);
+		len = OTSnd(sock->channel, (void *)data, left, 0);
 		if (len == kOTFlowErr)
 			len = 0;
 		if ( len > 0 ) {
