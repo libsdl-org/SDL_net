@@ -339,7 +339,7 @@ void InitGUI(SDL_Surface *screen)
 }
 
 extern "C"
-void cleanup(void)
+void cleanup(int exitcode)
 {
 	int i;
 
@@ -372,6 +372,9 @@ void cleanup(void)
 		SDLNet_FreePacketV(packets);
 		packets = NULL;
 	}
+	SDLNet_Quit();
+	SDL_Quit();
+	exit(exitcode);
 }
 
 main(int argc, char *argv[])
@@ -392,12 +395,12 @@ main(int argc, char *argv[])
                 fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
                 exit(1);
 	}
-	atexit(SDL_Quit);
 
 	/* Set a 640x480 video mode -- allows 80x50 window using 8x8 font */
 	screen = SDL_SetVideoMode(640, 480, 0, SDL_SWSURFACE);
 	if ( screen == NULL ) {
                 fprintf(stderr, "Couldn't set video mode: %s\n",SDL_GetError());
+		SDL_Quit();
                 exit(1);
 	}
 
@@ -405,12 +408,11 @@ main(int argc, char *argv[])
 	if ( SDLNet_Init() < 0 ) {
 		fprintf(stderr, "Couldn't initialize net: %s\n",
 						SDLNet_GetError());
+		SDL_Quit();
 		exit(1);
 	}
-	atexit(SDLNet_Quit);
 
 	/* Get ready to initialize all of our data */
-	atexit(cleanup);
 
 	/* Load the display font and other images */
 	for ( i=0; i<NUM_IMAGES; ++i ) {
@@ -421,7 +423,7 @@ main(int argc, char *argv[])
 		if ( images[i] == NULL ) {
 			fprintf(stderr, "Couldn't load '%s': %s\n",
 					image_files[i], SDL_GetError());
-			exit(2);
+			cleanup(2);
 		}
 	}
 
@@ -432,7 +434,7 @@ main(int argc, char *argv[])
 	packets = SDLNet_AllocPacketV(4, CHAT_PACKETSIZE);
 	if ( packets == NULL ) {
 		fprintf(stderr, "Couldn't allocate packets: Out of memory\n");
-		exit(2);
+		cleanup(2);
 	}
 
 	/* Connect to remote host and create UDP endpoint */
@@ -466,7 +468,7 @@ main(int argc, char *argv[])
 	if ( socketset == NULL ) {
 		fprintf(stderr, "Couldn't create socket set: %s\n",
 						SDLNet_GetError());
-		exit(2);
+		cleanup(2);
 	}
 	SDLNet_TCP_AddSocket(socketset, tcpsock);
 	SDLNet_UDP_AddSocket(socketset, udpsock);
@@ -474,7 +476,7 @@ main(int argc, char *argv[])
 	/* Run the GUI, handling network data */
 	SendHello(argv[2]);
 	gui->Run(HandleNet);
-	exit(0);
+	cleanup(0);
 
 	/* Keep the compiler happy */
 	return(0);

@@ -176,7 +176,7 @@ void HandleClient(int which)
 	}
 }
 
-void cleanup(void)
+static void cleanup(int exitcode)
 {
 	if ( servsock != NULL ) {
 		SDLNet_TCP_Close(servsock);
@@ -187,6 +187,8 @@ void cleanup(void)
 		socketset = NULL;
 	}
 	SDLNet_Quit();
+	SDL_Quit();
+	exit(exitcode);
 }
 
 main(int argc, char *argv[])
@@ -199,15 +201,14 @@ main(int argc, char *argv[])
                 fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
                 exit(1);
 	}
-	atexit(SDL_Quit);
 
 	/* Initialize the network */
 	if ( SDLNet_Init() < 0 ) {
 		fprintf(stderr, "Couldn't initialize net: %s\n",
 						SDLNet_GetError());
+		SDL_Quit();
 		exit(1);
 	}
-	atexit(cleanup);
 
 	/* Initialize the channels */
 	for ( i=0; i<CHAT_MAXPEOPLE; ++i ) {
@@ -220,7 +221,7 @@ main(int argc, char *argv[])
 	if ( socketset == NULL ) {
 		fprintf(stderr, "Couldn't create socket set: %s\n",
 						SDLNet_GetError());
-		exit(2);
+		cleanup(2);
 	}
 		
 	/* Create the server socket */
@@ -228,10 +229,9 @@ main(int argc, char *argv[])
 printf("Server IP: %x, %d\n", serverIP.host, serverIP.port);
 	servsock = SDLNet_TCP_Open(&serverIP);
 	if ( servsock == NULL ) {
-		cleanup();
 		fprintf(stderr, "Couldn't create server socket: %s\n",
 						SDLNet_GetError());
-		exit(2);
+		cleanup(2);
 	}
 	SDLNet_TCP_AddSocket(socketset, servsock);
 
@@ -252,6 +252,9 @@ printf("Server IP: %x, %d\n", serverIP.host, serverIP.port);
 			}
 		}
 	}
-	exit(0);
+	cleanup(0);
+
+	/* Not reached, but fixes compiler warnings */
+	return 0;
 }
 
