@@ -8,7 +8,7 @@ Version: %{version}
 Release: %{release}
 Source0: %{name}-%{version}.tar.gz
 URL: http://www.libsdl.org/projects/SDL_net/
-Copyright: LGPL
+License: LGPL
 Group: System Environment/Libraries
 BuildRoot: /var/tmp/%{name}-buildroot
 Prefix: %{_prefix}
