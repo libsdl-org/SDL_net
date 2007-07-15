@@ -1,3 +1,7 @@
+1.2.7:
+Joakim L. Gilje - Sat Jul 14 22:54:37 PDT 2007
+ * Set server TCP sockets to blocking mode on Mac OS X, Solaris, etc.
+
 1.2.6:
 Sam Lantinga - Sun Apr 30 01:48:40 PDT 2006
  * Added gcc-fat.sh for generating Universal binaries on Mac OS X

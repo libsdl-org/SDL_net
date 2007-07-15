@@ -846,11 +846,16 @@ TCPsocket SDLNet_TCP_Accept(TCPsocket server)
 		goto error_return;
 	}
 #ifdef WIN32
-      {
-              /* passing a zero value, socket mode set to block on */
-              unsigned long mode = 0;
-              ioctlsocket (sock->channel, FIONBIO, &mode);
-      }
+	{
+		/* passing a zero value, socket mode set to block on */
+		unsigned long mode = 0;
+		ioctlsocket (sock->channel, FIONBIO, &mode);
+	}
+#elif defined(O_NONBLOCK)
+	{
+		int flags = fcntl(sock->channel, F_GETFL, 0);
+		fcntl(sock->channel, F_SETFL, flags & ~O_NONBLOCK);
+	}
 #endif /* WIN32 */
 	sock->remoteAddress.host = sock_addr.sin_addr.s_addr;
 	sock->remoteAddress.port = sock_addr.sin_port;
