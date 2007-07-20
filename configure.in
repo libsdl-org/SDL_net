@@ -44,10 +44,18 @@ AM_INIT_AUTOMAKE(SDL_net, $VERSION)
 
 dnl Check for tools
 
-AC_PROG_CC
-AC_PROG_CXX
 AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+if test -z "$host_alias"; then
+    hostaliaswindres=
+else
+    hostaliaswindres="$host_alias-windres"
+fi
+AC_CHECK_PROGS(WINDRES, [windres $hostaliaswindres $host_os-windres])
 
 case "$host" in
     *-*-beos*)
@@ -63,8 +71,12 @@ case "$host" in
                 ac_default_prefix=$BUILD_PREFIX
             fi
         fi
+        if test x$WINDRES != x; then
+            use_version_rc=true
+        fi
         ;;
 esac
+AM_CONDITIONAL(USE_VERSION_RC, test x$use_version_rc = xtrue)
 
 dnl Figure out which networking libraries to use
 case "$host" in
@@ -113,6 +125,8 @@ AM_CONDITIONAL(HAVE_GUI_LIB, test x$have_GUI = xyes)
 
 dnl C++ flags are the same as the C flags
 CXXFLAGS="$CXXFLAGS $CFLAGS"
+
+AC_SUBST([WINDRES])
 
 # Finally create all the generated files
 AC_OUTPUT([
