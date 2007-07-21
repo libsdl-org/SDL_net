@@ -15,6 +15,7 @@ libSDL_net_la_SOURCES =		\
 
 EXTRA_DIST =			\
 	CHANGES			\
+	version.rc		\
 	VisualC.zip		\
 	Xcode.tar.gz		\
 	MPWmake.sea.bin		\
