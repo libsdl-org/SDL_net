@@ -388,6 +388,24 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 		setsockopt(sock->channel, SOL_SOCKET, SO_BROADCAST, (char*)&yes, sizeof(yes));
 	}
 #endif
+#ifdef IP_ADD_MEMBERSHIP
+	/* Receive LAN multicast packets on 224.0.0.1
+	   This automatically works on Mac OS X, Linux and BSD, but needs
+	   this code on Windows.
+	*/
+	/* A good description of multicast can be found here:
+		http://www.docs.hp.com/en/B2355-90136/ch05s05.html
+	*/
+	/* FIXME: Add support for joining arbitrary groups to the API */
+	{
+		struct ip_mreq	g;
+
+		g.imr_multiaddr.s_addr = inet_addr("224.0.0.1");
+		g.imr_interface.s_addr = INADDR_ANY;
+		setsockopt(sock->channel, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+			   (char*)&g, sizeof(g));
+	}
+#endif
 #endif /* MACOS_OPENTRANSPORT */
 
 	/* The socket is ready */
