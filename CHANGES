@@ -1,5 +1,5 @@
 1.2.7:
-Martin Fuhrer - Fri Jan  4 08:44:22 PST 2008
+Matthew Mondor - Fri Jan  4 08:44:22 PST 2008
  * Enable multicast receiving on 224.0.0.1 on Windows (already worked on UNIX)
 Joakim L. Gilje - Sat Jul 14 22:54:37 PDT 2007
  * Set server TCP sockets to blocking mode on Mac OS X, Solaris, etc.
