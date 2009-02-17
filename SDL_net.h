@@ -281,16 +281,16 @@ extern DECLSPEC SDLNet_SocketSet SDLCALL SDLNet_AllocSocketSet(int maxsockets);
 
 /* Add a socket to a set of sockets to be checked for available data */
 #define SDLNet_TCP_AddSocket(set, sock) \
-			SDLNet_AddSocket(set, (SDLNet_GenericSocket)sock)
+			SDLNet_AddSocket(set, SDL_reinterpret_cast(SDLNet_GenericSocket, sock))
 #define SDLNet_UDP_AddSocket(set, sock) \
-			SDLNet_AddSocket(set, (SDLNet_GenericSocket)sock)
+			SDLNet_AddSocket(set, SDL_reinterpret_cast(SDLNet_GenericSocket, sock))
 extern DECLSPEC int SDLCALL SDLNet_AddSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock);
 
 /* Remove a socket from a set of sockets to be checked for available data */
 #define SDLNet_TCP_DelSocket(set, sock) \
-			SDLNet_DelSocket(set, (SDLNet_GenericSocket)sock)
+			SDLNet_DelSocket(set, SDL_reinterpret_cast(SDLNet_GenericSocket, sock))
 #define SDLNet_UDP_DelSocket(set, sock) \
-			SDLNet_DelSocket(set, (SDLNet_GenericSocket)sock)
+			SDLNet_DelSocket(set, SDL_reinterpret_cast(SDLNet_GenericSocket, sock))
 extern DECLSPEC int SDLCALL SDLNet_DelSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock);
 
 /* This function checks to see if data is available for reading on the
@@ -307,7 +307,7 @@ extern DECLSPEC int SDLCALL SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 tim
    for reading.
 */
 #define SDLNet_SocketReady(sock) \
-		((sock != NULL) && ((SDLNet_GenericSocket)sock)->ready)
+		((sock != NULL) && SDL_reinterpret_cast(SDLNet_GenericSocket, sock)->ready)
 
 /* Free a set of sockets allocated by SDL_NetAllocSocketSet() */
 extern DECLSPEC void SDLCALL SDLNet_FreeSocketSet(SDLNet_SocketSet set);
@@ -354,13 +354,13 @@ extern no_parse_DECLSPEC char * SDLCALL SDLNet_GetError(void);
 /* Write a 16 bit value to network packet buffer */
 #if !SDL_DATA_ALIGNED
 #define SDLNet_Write16(value, areap)	\
-	(*(Uint16 *)(areap) = SDL_SwapBE16(value))
+	(*SDL_reinterpret_cast(Uint16 *, areap) = SDL_SwapBE16(value))
 #else
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Write16(value, areap)	\
 do 					\
 {					\
-	Uint8 *area = (Uint8 *)(areap);	\
+	Uint8 *area = SDL_reinterpret_cast(Uint8 *, areap);	\
 	area[0] = (value >>  8) & 0xFF;	\
 	area[1] =  value        & 0xFF;	\
 } while ( 0 )
@@ -368,7 +368,7 @@ do 					\
 #define SDLNet_Write16(value, areap)	\
 do 					\
 {					\
-	Uint8 *area = (Uint8 *)(areap);	\
+	Uint8 *area = SDL_reinterpret_cast(Uint8 *, areap);	\
 	area[1] = (value >>  8) & 0xFF;	\
 	area[0] =  value        & 0xFF;	\
 } while ( 0 )
@@ -378,13 +378,13 @@ do 					\
 /* Write a 32 bit value to network packet buffer */
 #if !SDL_DATA_ALIGNED
 #define SDLNet_Write32(value, areap) 	\
-	*(Uint32 *)(areap) = SDL_SwapBE32(value);
+	*SDL_reinterpret_cast(Uint32 *, areap) = SDL_SwapBE32(value);
 #else
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Write32(value, areap) 	\
 do					\
 {					\
-	Uint8 *area = (Uint8 *)(areap);	\
+	Uint8 *area = SDL_reinterpret_cast(Uint8 *, areap);	\
 	area[0] = (value >> 24) & 0xFF;	\
 	area[1] = (value >> 16) & 0xFF;	\
 	area[2] = (value >>  8) & 0xFF;	\
@@ -394,7 +394,7 @@ do					\
 #define SDLNet_Write32(value, areap) 	\
 do					\
 {					\
-	Uint8 *area = (Uint8 *)(areap);	\
+	Uint8 *area = SDL_reinterpret_cast(Uint8 *, areap);	\
 	area[3] = (value >> 24) & 0xFF;	\
 	area[2] = (value >> 16) & 0xFF;	\
 	area[1] = (value >>  8) & 0xFF;	\
@@ -406,30 +406,30 @@ do					\
 /* Read a 16 bit value from network packet buffer */
 #if !SDL_DATA_ALIGNED
 #define SDLNet_Read16(areap) 		\
-	(SDL_SwapBE16(*(Uint16 *)(areap)))
+	(SDL_SwapBE16(*SDL_reinterpret_cast(Uint16 *, areap)))
 #else
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Read16(areap) 		\
-	((((Uint8 *)areap)[0] <<  8) | ((Uint8 *)areap)[1] <<  0)
+	(((SDL_reinterpret_cast(Uint8 *, areap))[0] <<  8) | (SDL_reinterpret_cast(Uint8 *, areap))[1] <<  0)
 #else
 #define SDLNet_Read16(areap) 		\
-	((((Uint8 *)areap)[1] <<  8) | ((Uint8 *)areap)[0] <<  0)
+	(((SDL_reinterpret_cast(Uint8 *, areap))[1] <<  8) | (SDL_reinterpret_cast(Uint8 *, areap))[0] <<  0)
 #endif
 #endif /* !SDL_DATA_ALIGNED */
 
 /* Read a 32 bit value from network packet buffer */
 #if !SDL_DATA_ALIGNED
 #define SDLNet_Read32(areap) 		\
-	(SDL_SwapBE32(*(Uint32 *)(areap)))
+	(SDL_SwapBE32(*SDL_reinterpret_cast(Uint32 *, areap)))
 #else
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Read32(areap) 		\
-	((((Uint8 *)areap)[0] << 24) | (((Uint8 *)areap)[1] << 16) | \
-	 (((Uint8 *)areap)[2] <<  8) |  ((Uint8 *)areap)[3] <<  0)
+	(((SDL_reinterpret_cast(Uint8 *, areap))[0] << 24) | ((SDL_reinterpret_cast(Uint8 *, areap))[1] << 16) | \
+	 ((SDL_reinterpret_cast(Uint8 *, areap))[2] <<  8) |  (SDL_reinterpret_cast(Uint8 *, areap))[3] <<  0)
 #else
 #define SDLNet_Read32(areap) 		\
-	((((Uint8 *)areap)[3] << 24) | (((Uint8 *)areap)[2] << 16) | \
-	 (((Uint8 *)areap)[1] <<  8) |  ((Uint8 *)areap)[0] <<  0)
+	(((SDL_reinterpret_cast(Uint8 *, areap))[3] << 24) | ((SDL_reinterpret_cast(Uint8 *, areap))[2] << 16) | \
+	 ((SDL_reinterpret_cast(Uint8 *, areap))[1] <<  8) |  (SDL_reinterpret_cast(Uint8 *, areap))[0] <<  0)
 #endif
 #endif /* !SDL_DATA_ALIGNED */
 
