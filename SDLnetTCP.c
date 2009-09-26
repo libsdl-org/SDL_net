@@ -841,7 +841,7 @@ TCPsocket SDLNet_TCP_Accept(TCPsocket server)
 #else
 								&sock_alen);
 #endif
-	if ( sock->channel == SOCKET_ERROR ) {
+	if ( sock->channel == INVALID_SOCKET ) {
 		SDLNet_SetError("accept() failed");
 		goto error_return;
 	}
