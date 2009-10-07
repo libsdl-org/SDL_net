@@ -92,6 +92,9 @@ case "$host" in
     *-*-beos*)
         INETLIB=""
         ;;
+    *-*-haiku*)
+    	INETLIB="-lnetwork"
+    	;;
     *)
         INETLIB=""
         ;;
