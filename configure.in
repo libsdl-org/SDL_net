@@ -84,7 +84,7 @@ case "$host" in
         INETLIB="-lwsock32"
         ;;
     sparc*-*-solaris*)
-        INETLIB="-lsocket -lnsl"	
+        INETLIB="-lsocket -lnsl"
         ;;
     *-*-qnx*)
         INETLIB="-lsocket"
@@ -93,8 +93,8 @@ case "$host" in
         INETLIB=""
         ;;
     *-*-haiku*)
-    	INETLIB="-lnetwork"
-    	;;
+        INETLIB="-lnetwork"
+        ;;
     *)
         INETLIB=""
         ;;
@@ -102,7 +102,7 @@ esac
 AC_SUBST(INETLIB)
 
 dnl Check for SDL
-SDL_VERSION=1.2.4
+SDL_VERSION=1.2.14
 AM_PATH_SDL($SDL_VERSION,
             :,
 	    AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
@@ -116,7 +116,9 @@ AC_ARG_ENABLE(gui,
 [  --enable-gui            Try to build the GUI test programs [default=yes]],
               , enable_gui=yes)
 if test x$enable_gui = xyes; then
+    AC_LANG_PUSH(C++)
     AC_CHECK_LIB(GUI, GUI_Create, have_GUI=yes)
+    AC_LANG_POP(C++)
     if test x$have_GUI != xyes; then
         AC_MSG_WARN([*** Can't find the GUI library - not building test programs
 The GUI library can be found at:
