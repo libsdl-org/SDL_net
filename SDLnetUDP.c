@@ -696,7 +696,7 @@ extern int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
 	OTFlags flags;
 	InetAddress address;
 #else
-	int sock_len;
+	socklen_t sock_len;
 	struct sockaddr_in sock_addr;
 #endif
 

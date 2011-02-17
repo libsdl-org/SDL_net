@@ -1,4 +1,6 @@
 1.2.8:
+C.W. Betts - Thu Feb 17 12:52:47 PST 2011
+ * Fixed the code to use socklen_t where appropriate
 Evan Nemerson - Thu Feb 17 12:47:13 PST 2011
  * Added pkg-config support
 esigra - Mon Feb 16 20:59:55 PST 2009

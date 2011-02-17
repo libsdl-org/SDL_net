@@ -71,6 +71,11 @@
 #endif /* WIN32 */
 #endif /* Open Transport */
 
+#ifndef _SOCKLEN_T
+#define _SOCKLEN_T
+typedef	Uint32	socklen_t;
+#endif
+
 /* System-dependent definitions */
 #ifdef MACOS_OPENTRANSPORT
 //#define closesocket	OTCloseProvider
