@@ -817,7 +817,7 @@ TCPsocket SDLNet_TCP_Accept(TCPsocket server)
 {
 	TCPsocket sock;
 	struct sockaddr_in sock_addr;
-	int sock_alen;
+	socklen_t sock_alen;
 
 	/* Only server sockets can accept */
 	if ( ! server->sflag ) {
