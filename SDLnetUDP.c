@@ -662,7 +662,7 @@ static int SocketReady(SOCKET sock)
 #else
 	/* Check the file descriptors for available data */
 	do {
-		errno = 0;
+		SDLNet_SetLastError(0);
 
 		/* Set up the mask of file descriptors */
 		FD_ZERO(&mask);
@@ -674,7 +674,7 @@ static int SocketReady(SOCKET sock)
 
 		/* Look! */
 		retval = select(sock+1, &mask, NULL, NULL, &tv);
-	} while ( errno == EINTR );
+	} while ( SDLNet_GetLastError() == EINTR );
 #endif /* MACOS_OPENTRANSPORT */
 
 	return(retval == 1);

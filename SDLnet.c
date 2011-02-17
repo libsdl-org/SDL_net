@@ -279,6 +279,20 @@ const char *SDLNet_ResolveIP(IPaddress *ip)
 #include <signal.h>
 #endif
 
+#ifndef __USE_W32_SOCKETS
+
+int SDLNet_GetLastError(void)
+{
+	return errno;
+}
+
+void SDLNet_SetLastError(int err)
+{
+	errno = err;
+}
+
+#endif
+
 /* Initialize/Cleanup the network API */
 int  SDLNet_Init(void)
 {
@@ -314,7 +328,9 @@ void SDLNet_Quit(void)
 		/* Clean up windows networking */
 		if ( WSACleanup() == SOCKET_ERROR ) {
 			if ( WSAGetLastError() == WSAEINPROGRESS ) {
+#ifndef _WIN32_WCE
 				WSACancelBlockingCall();
+#endif
 				WSACleanup();
 			}
 		}

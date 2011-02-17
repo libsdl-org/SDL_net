@@ -26,7 +26,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef _WIN32_WCE
 #include <errno.h>
+#endif
 
 #ifdef macintosh
 #ifndef USE_GUSI_SOCKETS
@@ -86,4 +89,15 @@
 #define SOCKET_ERROR	-1
 #endif /* __USE_W32_SOCKETS */
 #endif /* Open Transport */
+
+#ifdef __USE_W32_SOCKETS
+#define SDLNet_GetLastError WSAGetLastError
+#define SDLNet_SetLastError WSASetLastError
+#ifndef EINTR
+#define EINTR WSAEINTR
+#endif
+#else
+int SDLNet_GetLastError(void);
+void SDLNet_SetLastError(int err);
+#endif
 
