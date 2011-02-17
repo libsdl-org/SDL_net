@@ -187,7 +187,7 @@ int SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout)
 
 	/* Check the file descriptors for available data */
 	do {
-		errno = 0;
+		SDLNet_SetLastError(0);
 
 		/* Set up the mask of file descriptors */
 		FD_ZERO(&mask);
@@ -201,7 +201,7 @@ int SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout)
 
 		/* Look! */
 		retval = select(maxfd+1, &mask, NULL, NULL, &tv);
-	} while ( errno == EINTR );
+	} while ( SDLNet_GetLastError() == EINTR );
 
 	/* Mark all file descriptors ready that have data available */
 	if ( retval > 0 ) {

@@ -602,7 +602,7 @@ int SDLNet_TCP_Send(TCPsocket sock, const void *datap, int len)
 	/* Keep sending data until it's sent or an error occurs */
 	left = len;
 	sent = 0;
-	errno = 0;
+	SDLNet_SetLastError(0);
 	do {
 		len = OTSnd(sock->channel, (void *)data, left, 0);
 		if (len == kOTFlowErr)
@@ -901,7 +901,7 @@ int SDLNet_TCP_Send(TCPsocket sock, const void *datap, int len)
 	/* Keep sending data until it's sent or an error occurs */
 	left = len;
 	sent = 0;
-	errno = 0;
+	SDLNet_SetLastError(0);
 	do {
 		len = send(sock->channel, (const char *) data, left, 0);
 		if ( len > 0 ) {
@@ -909,7 +909,7 @@ int SDLNet_TCP_Send(TCPsocket sock, const void *datap, int len)
 			left -= len;
 			data += len;
 		}
-	} while ( (left > 0) && ((len > 0) || (errno == EINTR)) );
+	} while ( (left > 0) && ((len > 0) || (SDLNet_GetLastError() == EINTR)) );
 
 	return(sent);
 }
@@ -930,10 +930,10 @@ int SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxlen)
 		return(-1);
 	}
 
-	errno = 0;
+	SDLNet_SetLastError(0);
 	do {
 		len = recv(sock->channel, (char *) data, maxlen, 0);
-	} while ( errno == EINTR );
+	} while ( SDLNet_GetLastError() == EINTR );
 
 	sock->ready = 0;
 	return(len);
