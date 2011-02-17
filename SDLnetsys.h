@@ -42,7 +42,12 @@
 #else
 #if defined(__WIN32__) || defined(WIN32)
 #define __USE_W32_SOCKETS
+#ifdef _WIN64
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <winsock.h>
+#endif /* W64 */
 #else /* UNIX */
 #ifdef __OS2__
 #include <types.h>

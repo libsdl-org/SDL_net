@@ -80,6 +80,9 @@ AM_CONDITIONAL(USE_VERSION_RC, test x$use_version_rc = xtrue)
 
 dnl Figure out which networking libraries to use
 case "$host" in
+    x86_64-*-mingw32*)
+        INETLIB="-lws2_32"
+        ;;
     *-*-cygwin* | *-*-mingw32*)
         INETLIB="-lwsock32"
         ;;
