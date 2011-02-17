@@ -1,4 +1,6 @@
 1.2.8:
+Evan Nemerson - Thu Feb 17 12:47:13 PST 2011
+ * Added pkg-config support
 esigra - Mon Feb 16 20:59:55 PST 2009
  * Fixed C++ compilation with -Wold-style-cast
 

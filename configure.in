@@ -109,6 +109,7 @@ AC_SUBST(INETLIB)
 
 dnl Check for SDL
 SDL_VERSION=1.2.14
+AC_SUBST(SDL_VERSION)
 AM_PATH_SDL($SDL_VERSION,
             :,
 	    AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
@@ -141,5 +142,5 @@ AC_SUBST([WINDRES])
 
 # Finally create all the generated files
 AC_OUTPUT([
-Makefile SDL_net.spec SDL_net.qpg
+Makefile SDL_net.spec SDL_net.qpg SDL_net.pc
 ])

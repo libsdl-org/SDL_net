@@ -65,3 +65,5 @@ $(PACKAGE)-$(VERSION).tar.gz: distcheck
 rpm: $(PACKAGE)-$(VERSION).tar.gz
 	rpmbuild -ta $(PACKAGE)-$(VERSION).tar.gz
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = SDL_net.pc
