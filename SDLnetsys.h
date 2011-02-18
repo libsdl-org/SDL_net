@@ -71,12 +71,9 @@
 #endif /* WIN32 */
 #endif /* Open Transport */
 
-#ifdef _SOCKLEN_T
-#define __socklen_t_defined
-#endif
-#ifndef __socklen_t_defined
+/* FIXME: What platforms need this? */
+#if 0
 typedef Uint32 socklen_t;
-#define __socklen_t_defined
 #endif
 
 /* System-dependent definitions */
