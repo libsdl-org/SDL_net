@@ -50,6 +50,9 @@
 #include <ws2tcpip.h>
 #else
 #include <winsock.h>
+/* NOTE: windows socklen_t is signed
+ * and is defined only for winsock2. */
+typedef int socklen_t;
 #endif /* W64 */
 #else /* UNIX */
 #ifdef __OS2__
