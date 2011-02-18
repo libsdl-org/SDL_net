@@ -71,9 +71,12 @@
 #endif /* WIN32 */
 #endif /* Open Transport */
 
-#ifndef _SOCKLEN_T
-#define _SOCKLEN_T
-typedef	Uint32	socklen_t;
+#ifdef _SOCKLEN_T
+#define __socklen_t_defined
+#endif
+#ifndef __socklen_t_defined
+typedef Uint32 socklen_t;
+#define __socklen_t_defined
 #endif
 
 /* System-dependent definitions */
