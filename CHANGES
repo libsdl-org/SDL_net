@@ -1,4 +1,6 @@
 1.2.8:
+Sam Lantinga - Sun Feb 27 10:00:53 PST 2011
+ * Fixed to compile cleanly with g++
 C.W. Betts - Thu Feb 17 12:52:47 PST 2011
  * Fixed the code to use socklen_t where appropriate
 Evan Nemerson - Thu Feb 17 12:47:13 PST 2011
