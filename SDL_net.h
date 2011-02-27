@@ -269,7 +269,7 @@ extern DECLSPEC void SDLCALL SDLNet_UDP_Close(UDPsocket sock);
 typedef struct _SDLNet_SocketSet *SDLNet_SocketSet;
 
 /* Any network socket can be safely cast to this socket type */
-typedef struct {
+typedef struct _SDLNet_GenericSocket {
 	int ready;
 } *SDLNet_GenericSocket;
 

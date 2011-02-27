@@ -28,6 +28,12 @@
 #include <Events.h>
 #endif
 
+
+struct UDP_channel {
+	int numbound;
+	IPaddress address[SDLNET_MAX_UDPADDRESSES];
+};
+
 struct _UDPsocket {
 	int ready;
 	SOCKET channel;
@@ -47,10 +53,7 @@ struct _UDPsocket {
 	OTConfigurationRef	config;		// Master configuration. you can clone this.
 #endif /* MACOS_OPENTRANSPORT */
 
-	struct UDP_channel {
-		int numbound;
-		IPaddress address[SDLNET_MAX_UDPADDRESSES];
-	} binding[SDLNET_MAX_UDPCHANNELS];
+	struct UDP_channel binding[SDLNET_MAX_UDPCHANNELS];
 };
 
 #ifdef MACOS_OPENTRANSPORT
