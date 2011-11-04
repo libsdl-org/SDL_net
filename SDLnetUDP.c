@@ -132,6 +132,8 @@ void SDLNet_FreePacketV(UDPpacket **packetV)
 extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 {
 	UDPsocket sock;
+	struct sockaddr_in sock_addr;
+	int sock_len;
 
 	/* Allocate a UDP socket structure */
 	sock = (UDPsocket)malloc(sizeof(*sock));
@@ -140,6 +142,7 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 		goto error_return;
 	}
 	memset(sock, 0, sizeof(*sock));
+	memset(&sock_addr, 0, sizeof(sock_addr));
 	
 	/* Open the socket */
 	sock->channel = socket(AF_INET, SOCK_DGRAM, 0);
@@ -150,24 +153,28 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 	}
 
 	/* Bind locally, if appropriate */
-	if ( port )
-	{
-		struct sockaddr_in sock_addr;
-		memset(&sock_addr, 0, sizeof(sock_addr));
-		sock_addr.sin_family = AF_INET;
-		sock_addr.sin_addr.s_addr = INADDR_ANY;
-		sock_addr.sin_port = SDL_SwapBE16(port);
+	sock_addr.sin_family = AF_INET;
+	sock_addr.sin_addr.s_addr = INADDR_ANY;
+	sock_addr.sin_port = SDL_SwapBE16(port);
 
-		/* Bind the socket for listening */
-		if ( bind(sock->channel, (struct sockaddr *)&sock_addr,
-				sizeof(sock_addr)) == SOCKET_ERROR ) {
-			SDLNet_SetError("Couldn't bind to local port");
-			goto error_return;
-		}
-		/* Fill in the channel host address */
-		sock->address.host = sock_addr.sin_addr.s_addr;
-		sock->address.port = sock_addr.sin_port;
+	/* Bind the socket for listening */
+	if ( bind(sock->channel, (struct sockaddr *)&sock_addr,
+			sizeof(sock_addr)) == SOCKET_ERROR ) {
+		SDLNet_SetError("Couldn't bind to local port");
+		goto error_return;
 	}
+
+	/* Get the bound address and port */
+	sock_len = sizeof(sock_addr);
+	if ( getsockname(sock->channel, (struct sockaddr *)&sock_addr, &sock_len) < 0 ) {
+perror("getsockname");
+		SDLNet_SetError("Couldn't get socket address");
+		goto error_return;
+	}
+
+	/* Fill in the channel host address */
+	sock->address.host = sock_addr.sin_addr.s_addr;
+	sock->address.port = sock_addr.sin_port;
 
 #ifdef SO_BROADCAST
 	/* Allow LAN broadcasts with the socket */
