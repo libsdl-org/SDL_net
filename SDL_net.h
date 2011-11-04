@@ -433,8 +433,6 @@ do					\
 #endif
 #endif /* !SDL_DATA_ALIGNED */
 
-#ifdef MACOS_OPENTRANSPORT
-#endif
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

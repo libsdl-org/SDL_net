@@ -1,4 +1,6 @@
 1.2.8:
+Sam Lantinga - Fri Nov  4 04:05:03 EDT 2011
+ * Removed obsolete OpenTransport code
 Sam Lantinga - Sun Feb 27 10:00:53 PST 2011
  * Fixed to compile cleanly with g++
 C.W. Betts - Thu Feb 17 12:52:47 PST 2011
