@@ -405,11 +405,7 @@ extern int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
 		packet->status = recvfrom(sock->channel,
 				packet->data, packet->maxlen, 0,
 				(struct sockaddr *)&sock_addr,
-#ifdef USE_GUSI_SOCKETS
-				(unsigned int *)&sock_len);
-#else
 						&sock_len);
-#endif
 		if ( packet->status >= 0 ) {
 			packet->len = packet->status;
 			packet->address.host = sock_addr.sin_addr.s_addr;
