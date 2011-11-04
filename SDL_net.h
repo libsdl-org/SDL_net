@@ -99,6 +99,10 @@ extern DECLSPEC int SDLCALL SDLNet_ResolveHost(IPaddress *address, const char *h
 */
 extern DECLSPEC const char * SDLCALL SDLNet_ResolveIP(IPaddress *ip);
 
+/* Get the addresses of network interfaces on this system.
+   This returns the number of addresses saved in 'addresses'
+ */
+extern DECLSPEC int SDLCALL SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount);
 
 /***********************************************************************/
 /* TCP network API                                                     */

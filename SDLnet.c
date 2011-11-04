@@ -190,22 +190,3 @@ Uint32 SDLNet_Read32(void *areap)
 }
 
 #endif /* !SDL_DATA_ALIGNED */
-
-
-#ifdef USE_GUSI_SOCKETS
-
-/* Configure Socket Factories */
-
-void GUSISetupFactories()
-{
-	GUSIwithInetSockets();
-}
-
-/* Configure File Devices */
-
-void GUSISetupDevices()
-{
-	return;
-}
-
-#endif /* USE_GUSI_SOCKETS */
