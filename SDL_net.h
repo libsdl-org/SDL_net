@@ -97,7 +97,7 @@ extern DECLSPEC int SDLCALL SDLNet_ResolveHost(IPaddress *address, const char *h
    otherwise a pointer to a static buffer containing the hostname
    is returned.  Note that this function is not thread-safe.
 */
-extern DECLSPEC const char * SDLCALL SDLNet_ResolveIP(IPaddress *ip);
+extern DECLSPEC const char * SDLCALL SDLNet_ResolveIP(const IPaddress *ip);
 
 /* Get the addresses of network interfaces on this system.
    This returns the number of addresses saved in 'addresses'

@@ -148,15 +148,59 @@ int SDLNet_ResolveHost(IPaddress *address, const char *host, Uint16 port)
  * Main Programmer of Arianne RPG.
  * http://come.to/arianne_rpg
  */
-const char *SDLNet_ResolveIP(IPaddress *ip)
+const char *SDLNet_ResolveIP(const IPaddress *ip)
 {
 	struct hostent *hp;
+	struct in_addr in;
 
-	hp = gethostbyaddr((char *)&ip->host, 4, AF_INET);
+	hp = gethostbyaddr(&ip->host, sizeof(ip->host), AF_INET);
 	if ( hp != NULL ) {
 		return hp->h_name;
 	}
-  	return NULL;
+
+	in.s_addr = ip->host;
+	return inet_ntoa(in);
+}
+
+int SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount)
+{
+	int count = 0;
+#ifdef SIOCGIFCONF
+/* Defined on Mac OS X */
+#ifndef _SIZEOF_ADDR_IFREQ
+#define _SIZEOF_ADDR_IFREQ sizeof
+#endif
+	SOCKET sock;
+	struct ifconf conf;
+	char data[4096];
+	struct ifreq *ifr;
+	struct sockaddr_in *sock_addr;
+
+	sock = socket(AF_INET, SOCK_DGRAM, 0);
+	if ( sock == INVALID_SOCKET ) {
+		return 0;
+	}
+
+	conf.ifc_len = sizeof(data);
+	conf.ifc_buf = (caddr_t) data;
+	if ( ioctl(sock, SIOCGIFCONF, &conf) < 0 ) {
+		closesocket(sock);
+		return 0;
+	}
+
+	ifr = (struct ifreq*)data;
+	while ((char*)ifr < data+conf.ifc_len && count < maxcount) {
+		if (ifr->ifr_addr.sa_family == AF_INET) {
+			sock_addr = (struct sockaddr_in*)&ifr->ifr_addr;
+			addresses[count].host = sock_addr->sin_addr.s_addr;
+			addresses[count].port = sock_addr->sin_port;
+			++count;
+		}
+		ifr = (struct ifreq*)((char*)ifr + _SIZEOF_ADDR_IFREQ(*ifr));
+	}
+	closesocket(sock);
+#endif
+	return count;
 }
 
 #if !SDL_DATA_ALIGNED /* function versions for binary compatibility */

@@ -44,10 +44,8 @@
 typedef int socklen_t;
 #endif /* W64 */
 #else /* UNIX */
-#ifdef __OS2__
-#include <types.h>
+#include <sys/types.h>
 #include <sys/ioctl.h>
-#endif
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -58,6 +56,7 @@ typedef int socklen_t;
 #ifdef linux /* FIXME: what other platforms have this? */
 #include <netinet/tcp.h>
 #endif
+#include <net/if.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #endif /* WIN32 */

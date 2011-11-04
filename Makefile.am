@@ -47,12 +47,14 @@ endif
 	$(WINDRES) $< $@
 
 if HAVE_GUI_LIB
-EXAMPLES = chat chatd
+EXAMPLES = showinterfaces chat chatd
 else
-EXAMPLES =
+EXAMPLES = showinterfaces
 endif
 noinst_PROGRAMS = $(EXAMPLES)
 
+showinterfaces_SOURCES = showinterfaces.c
+showinterfaces_LDADD = libSDL_net.la
 chat_SOURCES = chat.cpp chat.h
 chat_LDADD = libSDL_net.la -lGUI
 chatd_SOURCES = chatd.c
