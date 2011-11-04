@@ -30,9 +30,6 @@
 struct SDLNet_Socket {
 	int ready;
 	SOCKET channel;
-#ifdef MACOS_OPENTRANSPORT
-	OTEventCode curEvent;
-#endif
 };
 
 struct _SDLNet_SocketSet {
@@ -111,64 +108,6 @@ int SDLNet_DelSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock)
    first.  This function returns the number of sockets ready for reading,
    or -1 if there was an error with the select() system call.
 */
-#ifdef MACOS_OPENTRANSPORT
-int SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout)
-{
-Uint32	stop;
-int 	numReady;
-
-	/* Loop, polling the network devices */
-	
-	stop = SDL_GetTicks() + timeout;
-	
-	do 
-	{
-	OTResult status;
-	size_t	numBytes;
-	int 	i;
-		
-		numReady = 0;
-	
-		for (i = set->numsockets-1;i >= 0;--i) 
-		{
-			status = OTLook( set->sockets[i]->channel );
-			if( status > 0 )
-			{
-				switch( status )
-				{
-					case T_UDERR:
-						OTRcvUDErr( set->sockets[i]->channel , nil);
-						break;
-					case T_DISCONNECT:
-						OTRcvDisconnect( set->sockets[i]->channel, nil );
-						break;
-					case T_ORDREL:
-						OTRcvOrderlyDisconnect(set->sockets[i]->channel );
-						break;
-					case T_CONNECT:
-						OTRcvConnect( set->sockets[i]->channel, nil );
-						break;
-					
-				
-					default:
-						set->sockets[i]->ready = 1;
-						++numReady;
-				}
-			}
-			else if( OTCountDataBytes(set->sockets[i]->channel, &numBytes ) != kOTNoDataErr )
-			{
-				set->sockets[i]->ready = 1;
-				++numReady;
-			}
-			else
-				set->sockets[i]->ready = 0;
-		}
-		
-	} while (!numReady && (SDL_GetTicks() < stop));
-
-	return(numReady);
-}
-#else
 int SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout)
 {
 	int i;
@@ -213,8 +152,7 @@ int SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout)
 	}
 	return(retval);
 }
-#endif /* MACOS_OPENTRANSPORT */
-   
+ 
 /* Free a set of sockets allocated by SDL_NetAllocSocketSet() */
 extern void SDLNet_FreeSocketSet(SDLNet_SocketSet set)
 {

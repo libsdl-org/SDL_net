@@ -31,18 +31,7 @@
 #include <errno.h>
 #endif
 
-#ifdef macintosh
-#ifndef USE_GUSI_SOCKETS
-#define MACOS_OPENTRANSPORT
-//#error Open Transport driver is broken
-#endif
-#endif /* macintosh */
-
 /* Include system network headers */
-#ifdef MACOS_OPENTRANSPORT
-#include <OpenTransport.h>
-#include <OpenTptInternet.h>
-#else
 #if defined(__WIN32__) || defined(WIN32)
 #define __USE_W32_SOCKETS
 #ifdef _WIN64
@@ -72,7 +61,6 @@ typedef int socklen_t;
 #include <netdb.h>
 #include <sys/socket.h>
 #endif /* WIN32 */
-#endif /* Open Transport */
 
 /* FIXME: What platforms need this? */
 #if 0
@@ -80,12 +68,6 @@ typedef Uint32 socklen_t;
 #endif
 
 /* System-dependent definitions */
-#ifdef MACOS_OPENTRANSPORT
-//#define closesocket	OTCloseProvider
-#define closesocket OTSndOrderlyDisconnect
-#define SOCKET		EndpointRef
-#define INVALID_SOCKET	kOTInvalidEndpointRef
-#else
 #ifndef __USE_W32_SOCKETS
 #ifdef __OS2__
 #define closesocket     soclose
@@ -96,7 +78,6 @@ typedef Uint32 socklen_t;
 #define INVALID_SOCKET	-1
 #define SOCKET_ERROR	-1
 #endif /* __USE_W32_SOCKETS */
-#endif /* Open Transport */
 
 #ifdef __USE_W32_SOCKETS
 #define SDLNet_GetLastError WSAGetLastError
