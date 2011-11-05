@@ -58,6 +58,7 @@ extern UDPpacket *SDLNet_AllocPacket(int size)
 		}
 	}
 	if ( error ) {
+		SDLNet_SetError("Out of memory");
 		SDLNet_FreePacket(packet);
 		packet = NULL;
 	}
@@ -105,6 +106,7 @@ UDPpacket **SDLNet_AllocPacketV(int howmany, int size)
 		packetV[i] = NULL;
 
 		if ( i != howmany ) {
+			SDLNet_SetError("Out of memory");
 			SDLNet_FreePacketV(packetV);
 			packetV = NULL;
 		}
@@ -404,7 +406,7 @@ extern int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
 	numrecv = 0;
 	while ( packets[numrecv] && SocketReady(sock->channel) ) 
 	{
-	UDPpacket *packet;
+		UDPpacket *packet;
 
 		packet = packets[numrecv];
 		
