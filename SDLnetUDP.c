@@ -135,7 +135,7 @@ extern UDPsocket SDLNet_UDP_Open(Uint16 port)
 {
 	UDPsocket sock;
 	struct sockaddr_in sock_addr;
-	int sock_len;
+	socklen_t sock_len;
 
 	/* Allocate a UDP socket structure */
 	sock = (UDPsocket)malloc(sizeof(*sock));
