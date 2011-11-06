@@ -236,6 +236,11 @@ int SDLNet_UDP_Bind(UDPsocket sock, int channel, IPaddress *address)
 {
 	struct UDP_channel *binding;
 
+	if ( sock == NULL ) {
+		SDLNet_SetError("Passed a NULL socket");
+		return(-1);
+	}
+
 	if ( channel == -1 ) {
 		for ( channel=0; channel < SDLNET_MAX_UDPCHANNELS; ++channel ) {
 			binding = &sock->binding[channel];
@@ -304,6 +309,11 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 	int status;
 	int sock_len;
 	struct sockaddr_in sock_addr;
+
+	if ( sock == NULL ) {
+		SDLNet_SetError("Passed a NULL socket");
+		return(0);
+	}
 
 	/* Set up the variables to send packets */
 	sock_len = sizeof(sock_addr);
@@ -402,6 +412,10 @@ extern int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
 	struct UDP_channel *binding;
 	socklen_t sock_len;
 	struct sockaddr_in sock_addr;
+
+	if ( sock == NULL ) {
+		return(0);
+	}
 
 	numrecv = 0;
 	while ( packets[numrecv] && SocketReady(sock->channel) ) 
