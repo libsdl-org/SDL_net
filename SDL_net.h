@@ -202,7 +202,7 @@ extern DECLSPEC UDPsocket SDLCALL SDLNet_UDP_Open(Uint16 port);
    address, to which all outbound packets on the channel are sent.
    This function returns the channel which was bound, or -1 on error.
 */
-extern DECLSPEC int SDLCALL SDLNet_UDP_Bind(UDPsocket sock, int channel, IPaddress *address);
+extern DECLSPEC int SDLCALL SDLNet_UDP_Bind(UDPsocket sock, int channel, const IPaddress *address);
 
 /* Unbind all addresses from the given channel */
 extern DECLSPEC void SDLCALL SDLNet_UDP_Unbind(UDPsocket sock, int channel);
