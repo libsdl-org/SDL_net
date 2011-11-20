@@ -232,7 +232,7 @@ static int ValidChannel(int channel)
    address, to which all outbound packets on the channel are sent.
    This function returns the channel which was bound, or -1 on error.
 */
-int SDLNet_UDP_Bind(UDPsocket sock, int channel, IPaddress *address)
+int SDLNet_UDP_Bind(UDPsocket sock, int channel, const IPaddress *address)
 {
 	struct UDP_channel *binding;
 
