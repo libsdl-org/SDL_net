@@ -193,6 +193,10 @@ extern DECLSPEC void SDLCALL SDLNet_FreePacketV(UDPpacket **packetV);
 */
 extern DECLSPEC UDPsocket SDLCALL SDLNet_UDP_Open(Uint16 port);
 
+/* Set the percentage of simulated packet loss for packets sent on the socket.
+*/
+extern DECLSPEC void SDLCALL SDLNet_UDP_SetPacketLoss(UDPsocket sock, int percent);
+
 /* Bind the address 'address' to the requested channel on the UDP socket.
    If the channel is -1, then the first unbound channel will be bound with
    the given address as it's primary address.
