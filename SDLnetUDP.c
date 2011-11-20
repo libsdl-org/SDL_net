@@ -37,6 +37,9 @@ struct _UDPsocket {
 	IPaddress address;
 
 	struct UDP_channel binding[SDLNET_MAX_UDPCHANNELS];
+
+	/* For debugging purposes */
+	int packetloss;
 };
 
 /* Allocate/free a single UDP packet 'size' bytes long.
@@ -131,7 +134,7 @@ void SDLNet_FreePacketV(UDPpacket **packetV)
 /* Open a UDP network socket
    If 'port' is non-zero, the UDP socket is bound to a fixed local port.
 */
-extern UDPsocket SDLNet_UDP_Open(Uint16 port)
+UDPsocket SDLNet_UDP_Open(Uint16 port)
 {
 	UDPsocket sock;
 	struct sockaddr_in sock_addr;
@@ -211,6 +214,22 @@ error_return:
 	SDLNet_UDP_Close(sock);
 	
 	return(NULL);
+}
+
+void SDLNet_UDP_SetPacketLoss(UDPsocket sock, int percent)
+{
+	/* FIXME: We may want this behavior to be reproducible
+		  but there isn't a portable reentrant random
+		  number generator with good randomness.
+	*/
+	srandom(SDL_GetTicks());
+
+	if (percent < 0) {
+		percent = 0;
+	} else if (percent > 100) {
+		percent = 100;
+	}
+	sock->packetloss = percent;
 }
 
 /* Verify that the channel is in the valid range */
@@ -321,6 +340,15 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 	numsent = 0;
 	for ( i=0; i<npackets; ++i ) 
 	{
+		/* Simulate packet loss, if desired */
+		if (sock->packetloss) {
+			if ((random()%100) <= sock->packetloss) {
+				packets[i]->status = packets[i]->len;
+				++numsent;
+				continue;
+			}
+		}
+
 		/* if channel is < 0, then use channel specified in sock */
 		
 		if ( packets[i]->channel < 0 ) 

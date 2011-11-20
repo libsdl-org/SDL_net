@@ -1,4 +1,6 @@
 1.2.8:
+Sam Lantinga - Sun Nov 20 01:29:33 EST 2011
+ * Added SDLNet_UDP_SetPacketLoss() to simulate random packet loss
 Sam Lantinga - Fri Nov  4 04:05:03 EDT 2011
  * Removed obsolete OpenTransport code
 Sam Lantinga - Sun Feb 27 10:00:53 PST 2011
