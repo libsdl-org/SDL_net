@@ -25,6 +25,10 @@
 #include "SDLnetsys.h"
 #include "SDL_net.h"
 
+#ifdef __WIN32__
+#define srandom	srand
+#define random	rand
+#endif
 
 struct UDP_channel {
 	int numbound;

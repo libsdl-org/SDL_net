@@ -153,7 +153,7 @@ const char *SDLNet_ResolveIP(const IPaddress *ip)
 	struct hostent *hp;
 	struct in_addr in;
 
-	hp = gethostbyaddr(&ip->host, sizeof(ip->host), AF_INET);
+	hp = gethostbyaddr((const char *)&ip->host, sizeof(ip->host), AF_INET);
 	if ( hp != NULL ) {
 		return hp->h_name;
 	}
