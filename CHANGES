@@ -1,4 +1,6 @@
 1.2.8:
+Sam Lantinga - Sat Dec 31 10:28:12 EST 2011
+ * SDL_net is now under the zlib license
 Sam Lantinga - Sun Nov 20 01:29:33 EST 2011
  * Added SDLNet_UDP_SetPacketLoss() to simulate random packet loss
 Sam Lantinga - Fri Nov  4 04:05:03 EDT 2011
