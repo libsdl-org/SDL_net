@@ -16,8 +16,8 @@ libSDL_net_la_SOURCES =		\
 EXTRA_DIST =			\
 	CHANGES			\
 	version.rc		\
-	VisualC.zip		\
-	Xcode.tar.gz		\
+	VisualC			\
+	Xcode			\
 	MPWmake.sea.bin		\
 	Watcom-OS2.zip		\
 	quit.bmp		\
