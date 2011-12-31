@@ -346,7 +346,7 @@
 				INFOPLIST_FILE = "Info-Framework__Upgraded_.plist";
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				OTHER_CFLAGS = "";
-				PRODUCT_NAME = SDL_net;
+				PRODUCT_NAME = SDLnet;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wall",
@@ -368,7 +368,7 @@
 				INFOPLIST_FILE = "Info-Framework__Upgraded_.plist";
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				OTHER_CFLAGS = "";
-				PRODUCT_NAME = SDL_net;
+				PRODUCT_NAME = SDLnet;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wall",
@@ -389,7 +389,7 @@
 				INFOPLIST_FILE = "Info-Framework__Upgraded_.plist";
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				OTHER_CFLAGS = "";
-				PRODUCT_NAME = SDL_net;
+				PRODUCT_NAME = SDLnet;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wall",
@@ -409,7 +409,7 @@
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = SDL_net;
+				PRODUCT_NAME = SDLnet;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
@@ -430,7 +430,7 @@
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = SDL_net;
+				PRODUCT_NAME = SDLnet;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
@@ -451,7 +451,7 @@
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = SDL_net;
+				PRODUCT_NAME = SDLnet;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
