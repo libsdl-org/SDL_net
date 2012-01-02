@@ -1,0 +1,12 @@
+syntax:glob
+autom4te*
+config.cache
+config.log
+config.status
+Makefile
+libtool
+.deps
+.libs
+SDL_net.pc
+SDL_net.spec
+SDL_net.qpg
