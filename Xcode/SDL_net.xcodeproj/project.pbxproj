@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 42;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -43,8 +43,8 @@
 		1014BAED010A4B677F000001 /* SDLnetTCP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetTCP.c; path = ../SDLnetTCP.c; sourceTree = SOURCE_ROOT; };
 		1014BAEE010A4B677F000001 /* SDLnetUDP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetUDP.c; path = ../SDLnetUDP.c; sourceTree = SOURCE_ROOT; };
 		BE48FF6307AFA9A800BB41DA /* Info-Framework__Upgraded_.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-Framework__Upgraded_.plist"; sourceTree = "<group>"; };
-		BE48FF6407AFA9A800BB41DA /* SDL_net.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDL_net.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		BE48FF6F07AFA9A900BB41DA /* libSDL_net.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSDL_net.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE48FF6407AFA9A800BB41DA /* SDLnet.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDLnet.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE48FF6F07AFA9A900BB41DA /* libSDLnet.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSDLnet.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE48FF7307AFA9A900BB41DA /* Create DMG */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Create DMG"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE48FF8207AFAA6F00BB41DA /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = /Library/Frameworks/SDL.framework; sourceTree = "<absolute>"; };
 		F59C710300D5CB5801000001 /* ReadMe.txt */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = ReadMe.txt; sourceTree = "<group>"; };
@@ -83,8 +83,8 @@
 			isa = PBXGroup;
 			children = (
 				089C1665FE841158C02AAC07 /* Resources */,
-				BE48FF6407AFA9A800BB41DA /* SDL_net.framework */,
-				BE48FF6F07AFA9A900BB41DA /* libSDL_net.a */,
+				BE48FF6407AFA9A800BB41DA /* SDLnet.framework */,
+				BE48FF6F07AFA9A900BB41DA /* libSDLnet.a */,
 				BE48FF7307AFA9A900BB41DA /* Create DMG */,
 			);
 			name = Products;
@@ -201,7 +201,7 @@
 			name = Framework;
 			productInstallPath = "@executable_path/../Frameworks";
 			productName = SDL_net;
-			productReference = BE48FF6407AFA9A800BB41DA /* SDL_net.framework */;
+			productReference = BE48FF6407AFA9A800BB41DA /* SDLnet.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		BE48FF6507AFA9A800BB41DA /* Static Library */ = {
@@ -220,7 +220,7 @@
 			name = "Static Library";
 			productInstallPath = /usr/local/lib;
 			productName = "Static Library";
-			productReference = BE48FF6F07AFA9A900BB41DA /* libSDL_net.a */;
+			productReference = BE48FF6F07AFA9A900BB41DA /* libSDLnet.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		BE48FF7007AFA9A900BB41DA /* Create DMG */ = {
@@ -245,9 +245,16 @@
 /* Begin PBXProject section */
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+			};
 			buildConfigurationList = 00F072090992C7C800D99510 /* Build configuration list for PBXProject "SDL_net" */;
-			compatibilityVersion = "Xcode 2.4";
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+			);
 			mainGroup = 0867D691FE84028FC02AAC07 /* SDL_netFramework */;
 			productRefGroup = 034768DDFF38A45A11DB9C8B /* Products */;
 			projectDirPath = "";
@@ -295,7 +302,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# clean up the framework, remove headers, extra files\nmkdir -p build/dmg-tmp\n/Developer/Tools/CpMac -r $TARGET_BUILD_DIR/SDL_net.framework build/dmg-tmp/\ncp pkg-support/resources/ReadMe.txt build/dmg-tmp\n\n# remove the .DS_Store files if any (we may want to provide one in the future for fancy .dmgs)\nrm -rf build/dmg-tmp/.DS_Store\n\n# create the dmg\nhdiutil create -ov -fs HFS+ -volname SDL_net -srcfolder build/dmg-tmp build/SDL_net.dmg\n\n# clean up\nrm -rf build/dmg-tmp\n\n# compress it???\n#(cd build; gnutar -zcvf SDL_net.dmg.tar.gz SDL_net.dmg)";
+			shellScript = "# clean up the framework, remove headers, extra files\nmkdir -p build/dmg-tmp\n/Developer/Tools/CpMac -r $TARGET_BUILD_DIR/SDLnet.framework build/dmg-tmp/\ncp pkg-support/resources/ReadMe.txt build/dmg-tmp\n\n# remove the .DS_Store files if any (we may want to provide one in the future for fancy .dmgs)\nrm -rf build/dmg-tmp/.DS_Store\n\n# create the dmg\nhdiutil create -ov -fs HFS+ -volname SDL_net -srcfolder build/dmg-tmp build/SDL_net.dmg\n\n# clean up\nrm -rf build/dmg-tmp\n\n# compress it???\n#(cd build; gnutar -zcvf SDL_net.dmg.tar.gz SDL_net.dmg)";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -333,140 +340,62 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		00F071FE0992C7C800D99510 /* Development */ = {
+		00F071FE0992C7C800D99510 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_COMPATIBILITY_VERSION = 9;
+				DYLIB_CURRENT_VERSION = 9;
 				FRAMEWORK_VERSION = A;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INFOPLIST_FILE = "Info-Framework__Upgraded_.plist";
-				INSTALL_PATH = "@executable_path/../Frameworks";
-				OTHER_CFLAGS = "";
-				PRODUCT_NAME = SDLnet;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wno-four-char-constants",
-				);
+				INSTALL_PATH = "@rpath";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/Frameworks";
 				WRAPPER_EXTENSION = framework;
 			};
-			name = Development;
+			name = Debug;
 		};
-		00F071FF0992C7C800D99510 /* Deployment */ = {
+		00F071FF0992C7C800D99510 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_COMPATIBILITY_VERSION = 9;
+				DYLIB_CURRENT_VERSION = 9;
 				FRAMEWORK_VERSION = A;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INFOPLIST_FILE = "Info-Framework__Upgraded_.plist";
-				INSTALL_PATH = "@executable_path/../Frameworks";
-				OTHER_CFLAGS = "";
-				PRODUCT_NAME = SDLnet;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wno-four-char-constants",
-				);
+				INSTALL_PATH = "@rpath";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/Frameworks";
 				WRAPPER_EXTENSION = framework;
 			};
-			name = Deployment;
+			name = Release;
 		};
-		00F072000992C7C800D99510 /* Default */ = {
+		00F072020992C7C800D99510 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
-				FRAMEWORK_VERSION = A;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				INFOPLIST_FILE = "Info-Framework__Upgraded_.plist";
-				INSTALL_PATH = "@executable_path/../Frameworks";
-				OTHER_CFLAGS = "";
-				PRODUCT_NAME = SDLnet;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wno-four-char-constants",
-				);
-				WRAPPER_EXTENSION = framework;
-			};
-			name = Default;
-		};
-		00F072020992C7C800D99510 /* Development */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				LIBRARY_STYLE = STATIC;
-				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = SDLnet;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
 			};
-			name = Development;
+			name = Debug;
 		};
-		00F072030992C7C800D99510 /* Deployment */ = {
+		00F072030992C7C800D99510 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				LIBRARY_STYLE = STATIC;
-				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = SDLnet;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
 			};
-			name = Deployment;
+			name = Release;
 		};
-		00F072040992C7C800D99510 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				LIBRARY_STYLE = STATIC;
-				OTHER_LDFLAGS = "";
-				OTHER_LIBTOOL_FLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = SDLnet;
-				REZ_EXECUTABLE = YES;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Default;
-		};
-		00F072060992C7C800D99510 /* Development */ = {
+		00F072060992C7C800D99510 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				OTHER_CFLAGS = "";
@@ -482,12 +411,11 @@
 				);
 				ZERO_LINK = YES;
 			};
-			name = Development;
+			name = Debug;
 		};
-		00F072070992C7C800D99510 /* Deployment */ = {
+		00F072070992C7C800D99510 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -501,102 +429,55 @@
 				);
 				ZERO_LINK = NO;
 			};
-			name = Deployment;
+			name = Release;
 		};
-		00F072080992C7C800D99510 /* Default */ = {
+		00F0720A0992C7C800D99510 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = "Create DMG";
-				REZ_EXECUTABLE = YES;
-				SECTORDER_FLAGS = "";
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(HOME)/Library/Frameworks",
+					/Library/Frameworks,
+				);
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(HOME)/Library/Frameworks/SDL.framework/Headers",
+					/Library/Frameworks/SDL.framework/Headers,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				PRODUCT_NAME = SDLnet;
+				SDKROOT = macosx;
 				WARNING_CFLAGS = (
-					"-Wmost",
+					"-Wall",
 					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
 				);
 			};
-			name = Default;
+			name = Debug;
 		};
-		00F0720A0992C7C800D99510 /* Development */ = {
+		00F0720B0992C7C800D99510 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1)";
-				ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1 = "x86_64 i386 ppc";
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(HOME)/Library/Frameworks",
 					/Library/Frameworks,
 				);
-				GCC_VERSION_i386 = 4.0;
-				GCC_VERSION_ppc = 4.0;
-				GCC_VERSION_x86_64 = 4.2;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(HOME)/Library/Frameworks/SDL.framework/Headers",
 					/Library/Frameworks/SDL.framework/Headers,
 				);
-				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
-				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				MACOSX_DEPLOYMENT_TARGET_x86_64 = 10.6;
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
-				SDKROOT_i386 = /Developer/SDKs/MacOSX10.4u.sdk;
-				SDKROOT_ppc = /Developer/SDKs/MacOSX10.4u.sdk;
-				SDKROOT_x86_64 = /Developer/SDKs/MacOSX10.6.sdk;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				PRODUCT_NAME = SDLnet;
+				SDKROOT = macosx;
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wno-four-char-constants",
+				);
 			};
-			name = Development;
-		};
-		00F0720B0992C7C800D99510 /* Deployment */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1)";
-				ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1 = "x86_64 i386 ppc";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(HOME)/Library/Frameworks",
-					/Library/Frameworks,
-				);
-				GCC_VERSION_i386 = 4.0;
-				GCC_VERSION_ppc = 4.0;
-				GCC_VERSION_x86_64 = 4.2;
-				HEADER_SEARCH_PATHS = (
-					"$(HOME)/Library/Frameworks/SDL.framework/Headers",
-					/Library/Frameworks/SDL.framework/Headers,
-				);
-				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
-				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				MACOSX_DEPLOYMENT_TARGET_x86_64 = 10.6;
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
-				SDKROOT_i386 = /Developer/SDKs/MacOSX10.4u.sdk;
-				SDKROOT_ppc = /Developer/SDKs/MacOSX10.4u.sdk;
-				SDKROOT_x86_64 = /Developer/SDKs/MacOSX10.6.sdk;
-			};
-			name = Deployment;
-		};
-		00F0720C0992C7C800D99510 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1)";
-				ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1 = "x86_64 i386 ppc";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(HOME)/Library/Frameworks",
-					/Library/Frameworks,
-				);
-				GCC_VERSION_i386 = 4.0;
-				GCC_VERSION_ppc = 4.0;
-				GCC_VERSION_x86_64 = 4.2;
-				HEADER_SEARCH_PATHS = (
-					"$(HOME)/Library/Frameworks/SDL.framework/Headers",
-					/Library/Frameworks/SDL.framework/Headers,
-				);
-				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
-				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				MACOSX_DEPLOYMENT_TARGET_x86_64 = 10.6;
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
-				SDKROOT_i386 = /Developer/SDKs/MacOSX10.4u.sdk;
-				SDKROOT_ppc = /Developer/SDKs/MacOSX10.4u.sdk;
-				SDKROOT_x86_64 = /Developer/SDKs/MacOSX10.6.sdk;
-			};
-			name = Default;
+			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
@@ -604,42 +485,38 @@
 		00F071FD0992C7C800D99510 /* Build configuration list for PBXNativeTarget "Framework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				00F071FE0992C7C800D99510 /* Development */,
-				00F071FF0992C7C800D99510 /* Deployment */,
-				00F072000992C7C800D99510 /* Default */,
+				00F071FE0992C7C800D99510 /* Debug */,
+				00F071FF0992C7C800D99510 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Debug;
 		};
 		00F072010992C7C800D99510 /* Build configuration list for PBXNativeTarget "Static Library" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				00F072020992C7C800D99510 /* Development */,
-				00F072030992C7C800D99510 /* Deployment */,
-				00F072040992C7C800D99510 /* Default */,
+				00F072020992C7C800D99510 /* Debug */,
+				00F072030992C7C800D99510 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Debug;
 		};
 		00F072050992C7C800D99510 /* Build configuration list for PBXNativeTarget "Create DMG" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				00F072060992C7C800D99510 /* Development */,
-				00F072070992C7C800D99510 /* Deployment */,
-				00F072080992C7C800D99510 /* Default */,
+				00F072060992C7C800D99510 /* Debug */,
+				00F072070992C7C800D99510 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Debug;
 		};
 		00F072090992C7C800D99510 /* Build configuration list for PBXProject "SDL_net" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				00F0720A0992C7C800D99510 /* Development */,
-				00F0720B0992C7C800D99510 /* Deployment */,
-				00F0720C0992C7C800D99510 /* Default */,
+				00F0720A0992C7C800D99510 /* Debug */,
+				00F0720B0992C7C800D99510 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
