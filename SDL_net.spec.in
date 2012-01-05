@@ -55,6 +55,7 @@ rm -rf $RPM_BUILD_ROOT
 %{prefix}/lib/lib*.la
 %{prefix}/lib/lib*.so
 %{prefix}/include/SDL/
+%{prefix}/lib/pkgconfig/*.pc
 
 %changelog
 * Sat Feb  3 2001 Paul S Jenner <psj@firstlinux.net>
