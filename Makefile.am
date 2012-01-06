@@ -18,6 +18,7 @@ EXTRA_DIST =			\
 	version.rc		\
 	VisualC			\
 	Xcode			\
+	Xcode-iOS		\
 	MPWmake.sea.bin		\
 	Watcom-OS2.zip		\
 	quit.bmp		\
