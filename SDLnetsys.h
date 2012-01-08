@@ -44,6 +44,9 @@ typedef int socklen_t;
 #endif /* W64 */
 #else /* UNIX */
 #include <sys/types.h>
+#ifdef __FreeBSD__
+#include <sys/socket.h>
+#endif
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <unistd.h>
