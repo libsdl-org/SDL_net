@@ -459,6 +459,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				DEPLOYMENT_POSTPROCESSING = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(HOME)/Library/Frameworks",
 					/Library/Frameworks,
@@ -472,6 +473,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				PRODUCT_NAME = SDLnet;
 				SDKROOT = macosx;
+				SEPARATE_STRIP = YES;
+				STRIP_STYLE = "non-global";
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wno-four-char-constants",
