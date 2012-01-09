@@ -43,8 +43,8 @@
 		1014BAED010A4B677F000001 /* SDLnetTCP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetTCP.c; path = ../SDLnetTCP.c; sourceTree = SOURCE_ROOT; };
 		1014BAEE010A4B677F000001 /* SDLnetUDP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetUDP.c; path = ../SDLnetUDP.c; sourceTree = SOURCE_ROOT; };
 		BE48FF6307AFA9A800BB41DA /* Info-Framework__Upgraded_.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-Framework__Upgraded_.plist"; sourceTree = "<group>"; };
-		BE48FF6407AFA9A800BB41DA /* SDLnet.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDLnet.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		BE48FF6F07AFA9A900BB41DA /* libSDLnet.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSDLnet.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE48FF6407AFA9A800BB41DA /* SDL_net.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDL_net.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE48FF6F07AFA9A900BB41DA /* libSDL_net.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSDL_net.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE48FF7307AFA9A900BB41DA /* Create DMG */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Create DMG"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE48FF8207AFAA6F00BB41DA /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = /Library/Frameworks/SDL.framework; sourceTree = "<absolute>"; };
 		F59C710300D5CB5801000001 /* ReadMe.txt */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = ReadMe.txt; sourceTree = "<group>"; };
@@ -83,8 +83,8 @@
 			isa = PBXGroup;
 			children = (
 				089C1665FE841158C02AAC07 /* Resources */,
-				BE48FF6407AFA9A800BB41DA /* SDLnet.framework */,
-				BE48FF6F07AFA9A900BB41DA /* libSDLnet.a */,
+				BE48FF6407AFA9A800BB41DA /* SDL_net.framework */,
+				BE48FF6F07AFA9A900BB41DA /* libSDL_net.a */,
 				BE48FF7307AFA9A900BB41DA /* Create DMG */,
 			);
 			name = Products;
@@ -201,7 +201,7 @@
 			name = Framework;
 			productInstallPath = "@executable_path/../Frameworks";
 			productName = SDL_net;
-			productReference = BE48FF6407AFA9A800BB41DA /* SDLnet.framework */;
+			productReference = BE48FF6407AFA9A800BB41DA /* SDL_net.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		BE48FF6507AFA9A800BB41DA /* Static Library */ = {
@@ -220,7 +220,7 @@
 			name = "Static Library";
 			productInstallPath = /usr/local/lib;
 			productName = "Static Library";
-			productReference = BE48FF6F07AFA9A900BB41DA /* libSDLnet.a */;
+			productReference = BE48FF6F07AFA9A900BB41DA /* libSDL_net.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		BE48FF7007AFA9A900BB41DA /* Create DMG */ = {
@@ -302,7 +302,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# clean up the framework, remove headers, extra files\nmkdir -p build/dmg-tmp\n/Developer/Tools/CpMac -r $TARGET_BUILD_DIR/SDLnet.framework build/dmg-tmp/\ncp pkg-support/resources/ReadMe.txt build/dmg-tmp\n\n# remove the .DS_Store files if any (we may want to provide one in the future for fancy .dmgs)\nrm -rf build/dmg-tmp/.DS_Store\n\n# create the dmg\nhdiutil create -ov -fs HFS+ -volname SDL_net -srcfolder build/dmg-tmp build/SDL_net.dmg\n\n# clean up\nrm -rf build/dmg-tmp\n\n# compress it???\n#(cd build; gnutar -zcvf SDL_net.dmg.tar.gz SDL_net.dmg)";
+			shellScript = "# clean up the framework, remove headers, extra files\nmkdir -p build/dmg-tmp\n/Developer/Tools/CpMac -r $TARGET_BUILD_DIR/SDL_net.framework build/dmg-tmp/\ncp pkg-support/resources/ReadMe.txt build/dmg-tmp\n\n# remove the .DS_Store files if any (we may want to provide one in the future for fancy .dmgs)\nrm -rf build/dmg-tmp/.DS_Store\n\n# create the dmg\nhdiutil create -ov -fs HFS+ -volname SDL_net -srcfolder build/dmg-tmp build/SDL_net.dmg\n\n# clean up\nrm -rf build/dmg-tmp\n\n# compress it???\n#(cd build; gnutar -zcvf SDL_net.dmg.tar.gz SDL_net.dmg)";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -446,7 +446,7 @@
 					/Library/Frameworks/SDL.framework/Headers,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
-				PRODUCT_NAME = SDLnet;
+				PRODUCT_NAME = SDL_net;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -467,7 +467,7 @@
 					/Library/Frameworks/SDL.framework/Headers,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
-				PRODUCT_NAME = SDLnet;
+				PRODUCT_NAME = SDL_net;
 				SDKROOT = macosx;
 				SEPARATE_STRIP = YES;
 				STRIP_STYLE = "non-global";

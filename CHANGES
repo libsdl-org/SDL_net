@@ -1,6 +1,4 @@
 1.2.8:
-Sam Lantinga - Tue Jan  3 01:36:33 EST 2012
- * The Mac OS X framework name changed to SDLnet, to meet Apple's requirements
 Sam Lantinga - Sat Dec 31 10:28:12 EST 2011
  * SDL_net is now under the zlib license
 Sam Lantinga - Sun Nov 20 01:29:33 EST 2011
