@@ -79,9 +79,6 @@
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/SDL_net.pdb"
 				SubSystem="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				ImportLibrary=".\Debug/SDL_net.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -172,9 +169,6 @@
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/SDL_net.pdb"
 				SubSystem="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				ImportLibrary=".\Debug/SDL_net.lib"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -262,9 +256,6 @@
 				SuppressStartupBanner="true"
 				ProgramDatabaseFile=".\Release/SDL_net.pdb"
 				SubSystem="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				ImportLibrary=".\Release/SDL_net.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -352,9 +343,6 @@
 				SuppressStartupBanner="true"
 				ProgramDatabaseFile=".\Release/SDL_net.pdb"
 				SubSystem="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				ImportLibrary=".\Release/SDL_net.lib"
 				TargetMachine="17"
 			/>
 			<Tool
