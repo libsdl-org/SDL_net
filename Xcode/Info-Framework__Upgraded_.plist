@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>SDLnet</string>
+	<string>SDL_net</string>
 	<key>CFBundleGetInfoString</key>
 	<string>http://www.libsdl.org/projects/SDL_net</string>
 	<key>CFBundleIconFile</key>
