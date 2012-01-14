@@ -343,7 +343,7 @@
 		00F071FE0992C7C800D99510 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 9;
+				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 9;
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = "Info-Framework__Upgraded_.plist";
@@ -356,7 +356,7 @@
 		00F071FF0992C7C800D99510 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 9;
+				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 9;
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = "Info-Framework__Upgraded_.plist";
