@@ -30,7 +30,12 @@ int main(int argc, char *argv[])
 	count = SDLNet_GetLocalAddresses(addresses, MAX_ADDRESSES);
 	printf("Found %d local addresses\n", count);
 	for ( i = 0; i < count; ++i ) {
-		printf("%d: %s\n", i+1, SDLNet_ResolveIP(&addresses[i]));
+		printf("%d: %d.%d.%d.%d - %s\n", i+1,
+			(addresses[i].host >> 0) & 0xFF,
+			(addresses[i].host >> 8) & 0xFF,
+			(addresses[i].host >> 16) & 0xFF,
+			(addresses[i].host >> 24) & 0xFF,
+			SDLNet_ResolveIP(&addresses[i]));
 	}
 	return 0;
 }
