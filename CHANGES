@@ -1,10 +1,16 @@
 1.2.8:
+Sam Lantinga - Thu Jan 05 22:57:56 2012 -0500
+ * Added an Xcode project for iOS
 Sam Lantinga - Sat Dec 31 10:28:12 EST 2011
  * SDL_net is now under the zlib license
 Sam Lantinga - Sun Nov 20 01:29:33 EST 2011
  * Added SDLNet_UDP_SetPacketLoss() to simulate random packet loss
+Sam Lantinga - Fri Nov 04 04:52:12 2011 -0400
+ * Added SDLNet_GetLocalAddresses() to query local interfaces
 Sam Lantinga - Fri Nov  4 04:05:03 EDT 2011
  * Removed obsolete OpenTransport code
+Sam Lantinga - Tue Mar 08 16:52:59 2011 -0800
+ * Added Android.mk to build on the Android platform
 Sam Lantinga - Sun Feb 27 10:00:53 PST 2011
  * Fixed to compile cleanly with g++
 C.W. Betts - Thu Feb 17 12:52:47 PST 2011
@@ -13,10 +19,10 @@ Evan Nemerson - Thu Feb 17 12:47:13 PST 2011
  * Added pkg-config support
 esigra - Mon Feb 16 20:59:55 PST 2009
  * Fixed C++ compilation with -Wold-style-cast
-
-1.2.7:
 Matthew Mondor - Fri Jan  4 08:44:22 PST 2008
  * Enable multicast receiving on 224.0.0.1 on Windows (already worked on UNIX)
+
+1.2.7:
 Joakim L. Gilje - Sat Jul 14 22:54:37 PDT 2007
  * Set server TCP sockets to blocking mode on Mac OS X, Solaris, etc.
 
