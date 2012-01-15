@@ -86,6 +86,9 @@ typedef struct {
 #ifndef INADDR_NONE
 #define INADDR_NONE		0xFFFFFFFF
 #endif
+#ifndef INADDR_LOOPBACK
+#define INADDR_LOOPBACK		0x7f000001
+#endif
 #ifndef INADDR_BROADCAST
 #define INADDR_BROADCAST	0xFFFFFFFF
 #endif

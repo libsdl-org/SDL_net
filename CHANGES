@@ -1,4 +1,6 @@
 1.2.8:
+Sam Lantinga - Sun Jan 15 01:39:35 EST 2012
+ * Added the definition for INADDR_LOOPBACK
 Sam Lantinga - Thu Jan 05 22:57:56 2012 -0500
  * Added an Xcode project for iOS
 Sam Lantinga - Sat Dec 31 10:28:12 EST 2011
