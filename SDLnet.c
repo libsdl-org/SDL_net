@@ -188,16 +188,50 @@ int SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount)
 	}
 
 	ifr = (struct ifreq*)data;
-	while ((char*)ifr < data+conf.ifc_len && count < maxcount) {
+	while ((char*)ifr < data+conf.ifc_len) {
 		if (ifr->ifr_addr.sa_family == AF_INET) {
-			sock_addr = (struct sockaddr_in*)&ifr->ifr_addr;
-			addresses[count].host = sock_addr->sin_addr.s_addr;
-			addresses[count].port = sock_addr->sin_port;
+			if (count < maxcount) {
+				sock_addr = (struct sockaddr_in*)&ifr->ifr_addr;
+				addresses[count].host = sock_addr->sin_addr.s_addr;
+				addresses[count].port = sock_addr->sin_port;
+			}
 			++count;
 		}
 		ifr = (struct ifreq*)((char*)ifr + _SIZEOF_ADDR_IFREQ(*ifr));
 	}
 	closesocket(sock);
+#elif defined(__WIN32__)
+    PIP_ADAPTER_INFO pAdapterInfo;
+    PIP_ADAPTER_INFO pAdapter;
+	PIP_ADDR_STRING pAddress;
+    DWORD dwRetVal = 0;
+    ULONG ulOutBufLen = sizeof (IP_ADAPTER_INFO);
+
+    pAdapterInfo = (IP_ADAPTER_INFO *) SDL_malloc(sizeof (IP_ADAPTER_INFO));
+    if (pAdapterInfo == NULL) {
+		return 0;
+    }
+
+    if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == ERROR_BUFFER_OVERFLOW) {
+        pAdapterInfo = (IP_ADAPTER_INFO *) SDL_realloc(pAdapterInfo, ulOutBufLen);
+        if (pAdapterInfo == NULL) {
+			return 0;
+        }
+		dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen);
+    }
+
+    if (dwRetVal == NO_ERROR) {
+        for (pAdapter = pAdapterInfo; pAdapter; pAdapter = pAdapter->Next) {
+			for (pAddress = &pAdapterInfo->IpAddressList; pAddress; pAddress = pAddress->Next) {
+				if (count < maxcount) {
+					addresses[count].host = inet_addr(pAddress->IpAddress.String);
+					addresses[count].port = 0;
+				}
+				++count;
+			}
+        }
+    }
+	SDL_free(pAdapterInfo);
 #endif
 	return count;
 }
