@@ -59,9 +59,9 @@ typedef int socklen_t;
 #ifdef linux /* FIXME: what other platforms have this? */
 #include <netinet/tcp.h>
 #endif
+#include <sys/socket.h>
 #include <net/if.h>
 #include <netdb.h>
-#include <sys/socket.h>
 #endif /* WIN32 */
 
 /* FIXME: What platforms need this? */
