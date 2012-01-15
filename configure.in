@@ -84,10 +84,10 @@ case "$host" in
         INETLIB="-lwinsock -lws2"
 	;;
     x86_64-*-mingw32*)
-        INETLIB="-lws2_32"
+        INETLIB="-lws2_32 -liphlpapi"
         ;;
     *-*-cygwin* | *-*-mingw32*)
-        INETLIB="-lwsock32"
+        INETLIB="-lwsock32 -liphlpapi"
         ;;
     sparc*-*-solaris*)
         INETLIB="-lsocket -lnsl"

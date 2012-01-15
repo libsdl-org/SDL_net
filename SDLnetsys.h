@@ -42,6 +42,7 @@
  * and is defined only for winsock2. */
 typedef int socklen_t;
 #endif /* W64 */
+#include <iphlpapi.h>
 #else /* UNIX */
 #include <sys/types.h>
 #ifdef __FreeBSD__
