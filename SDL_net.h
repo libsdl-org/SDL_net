@@ -366,7 +366,6 @@ extern no_parse_DECLSPEC char * SDLCALL SDLNet_GetError(void);
 #define SDLNet_Write16(value, areap)	\
 	(*SDL_reinterpret_cast(Uint16 *, areap) = SDL_SwapBE16(value))
 #else
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Write16(value, areap)	\
 do 					\
 {					\
@@ -374,15 +373,6 @@ do 					\
 	area[0] = (value >>  8) & 0xFF;	\
 	area[1] =  value        & 0xFF;	\
 } while ( 0 )
-#else
-#define SDLNet_Write16(value, areap)	\
-do 					\
-{					\
-	Uint8 *area = SDL_reinterpret_cast(Uint8 *, areap);	\
-	area[1] = (value >>  8) & 0xFF;	\
-	area[0] =  value        & 0xFF;	\
-} while ( 0 )
-#endif
 #endif /* !SDL_DATA_ALIGNED */
 
 /* Write a 32 bit value to network packet buffer */
@@ -390,7 +380,6 @@ do 					\
 #define SDLNet_Write32(value, areap) 	\
 	*SDL_reinterpret_cast(Uint32 *, areap) = SDL_SwapBE32(value);
 #else
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Write32(value, areap) 	\
 do					\
 {					\
@@ -400,17 +389,6 @@ do					\
 	area[2] = (value >>  8) & 0xFF;	\
 	area[3] =  value       & 0xFF;	\
 } while ( 0 )
-#else
-#define SDLNet_Write32(value, areap) 	\
-do					\
-{					\
-	Uint8 *area = SDL_reinterpret_cast(Uint8 *, areap);	\
-	area[3] = (value >> 24) & 0xFF;	\
-	area[2] = (value >> 16) & 0xFF;	\
-	area[1] = (value >>  8) & 0xFF;	\
-	area[0] =  value       & 0xFF;	\
-} while ( 0 )
-#endif
 #endif /* !SDL_DATA_ALIGNED */
 
 /* Read a 16 bit value from network packet buffer */
@@ -418,13 +396,8 @@ do					\
 #define SDLNet_Read16(areap) 		\
 	(SDL_SwapBE16(*SDL_reinterpret_cast(Uint16 *, areap)))
 #else
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Read16(areap) 		\
 	(((SDL_reinterpret_cast(Uint8 *, areap))[0] <<  8) | (SDL_reinterpret_cast(Uint8 *, areap))[1] <<  0)
-#else
-#define SDLNet_Read16(areap) 		\
-	(((SDL_reinterpret_cast(Uint8 *, areap))[1] <<  8) | (SDL_reinterpret_cast(Uint8 *, areap))[0] <<  0)
-#endif
 #endif /* !SDL_DATA_ALIGNED */
 
 /* Read a 32 bit value from network packet buffer */
@@ -432,15 +405,9 @@ do					\
 #define SDLNet_Read32(areap) 		\
 	(SDL_SwapBE32(*SDL_reinterpret_cast(Uint32 *, areap)))
 #else
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Read32(areap) 		\
 	(((SDL_reinterpret_cast(Uint8 *, areap))[0] << 24) | ((SDL_reinterpret_cast(Uint8 *, areap))[1] << 16) | \
 	 ((SDL_reinterpret_cast(Uint8 *, areap))[2] <<  8) |  (SDL_reinterpret_cast(Uint8 *, areap))[3] <<  0)
-#else
-#define SDLNet_Read32(areap) 		\
-	(((SDL_reinterpret_cast(Uint8 *, areap))[3] << 24) | ((SDL_reinterpret_cast(Uint8 *, areap))[2] << 16) | \
-	 ((SDL_reinterpret_cast(Uint8 *, areap))[1] <<  8) |  (SDL_reinterpret_cast(Uint8 *, areap))[0] <<  0)
-#endif
 #endif /* !SDL_DATA_ALIGNED */
 
 /* Ends C function definitions when using C++ */
