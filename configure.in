@@ -42,7 +42,7 @@ dnl Detect the canonical build and host environments
 AC_CANONICAL_HOST
 
 dnl Setup for automake
-AM_INIT_AUTOMAKE(SDL_net, $VERSION)
+AM_INIT_AUTOMAKE(SDL2_net, $VERSION)
 
 dnl Check for tools
 AC_PROG_LIBTOOL
@@ -108,7 +108,7 @@ esac
 AC_SUBST(INETLIB)
 
 dnl Check for SDL
-SDL_VERSION=1.2.14
+SDL_VERSION=2.0.0
 AC_SUBST(SDL_VERSION)
 AM_PATH_SDL($SDL_VERSION,
             :,
@@ -142,5 +142,5 @@ AC_SUBST([WINDRES])
 
 # Finally create all the generated files
 AC_OUTPUT([
-Makefile SDL_net.spec SDL_net.qpg SDL_net.pc
+Makefile SDL2_net.spec SDL2_net.pc
 ])
