@@ -18,9 +18,6 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
-    Pleasanton, CA 94588 (USA)
-    slouken@devolution.com
-*/
 
 /* Note that this isn't necessarily the way to run a chat system.
    This is designed to excercise the network code more than be really
