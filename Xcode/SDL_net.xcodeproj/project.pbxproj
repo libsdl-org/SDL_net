@@ -18,7 +18,7 @@
 		BE48FF6A07AFA9A800BB41DA /* SDLnetselect.c in Sources */ = {isa = PBXBuildFile; fileRef = 0E06A2820119C8317F000001 /* SDLnetselect.c */; };
 		BE48FF6B07AFA9A800BB41DA /* SDLnetTCP.c in Sources */ = {isa = PBXBuildFile; fileRef = 0E06A2840119C8317F000001 /* SDLnetTCP.c */; };
 		BE48FF6C07AFA9A800BB41DA /* SDLnetUDP.c in Sources */ = {isa = PBXBuildFile; fileRef = 0E06A2850119C8317F000001 /* SDLnetUDP.c */; };
-		BE48FF8307AFAA6F00BB41DA /* SDL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE48FF8207AFAA6F00BB41DA /* SDL.framework */; };
+		BE48FF8307AFAA6F00BB41DA /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE48FF8207AFAA6F00BB41DA /* SDL2.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,7 +46,7 @@
 		BE48FF6407AFA9A800BB41DA /* SDL_net.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDL_net.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE48FF6F07AFA9A900BB41DA /* libSDL_net.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSDL_net.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE48FF7307AFA9A900BB41DA /* Create DMG */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Create DMG"; sourceTree = BUILT_PRODUCTS_DIR; };
-		BE48FF8207AFAA6F00BB41DA /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = /Library/Frameworks/SDL.framework; sourceTree = "<absolute>"; };
+		BE48FF8207AFAA6F00BB41DA /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = /Library/Frameworks/SDL2.framework; sourceTree = "<absolute>"; };
 		F59C710300D5CB5801000001 /* ReadMe.txt */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = ReadMe.txt; sourceTree = "<group>"; };
 		F59C710400D5CB5801000001 /* Welcome.txt */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = Welcome.txt; sourceTree = "<group>"; };
 		F59C710600D5CB5801000001 /* SDL_net.info */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = SDL_net.info; sourceTree = "<group>"; };
@@ -57,7 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BE48FF8307AFAA6F00BB41DA /* SDL.framework in Frameworks */,
+				BE48FF8307AFAA6F00BB41DA /* SDL2.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,7 +137,7 @@
 		BE48FF8107AFAA4A00BB41DA /* Linked Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				BE48FF8207AFAA6F00BB41DA /* SDL.framework */,
+				BE48FF8207AFAA6F00BB41DA /* SDL2.framework */,
 			);
 			name = "Linked Frameworks";
 			sourceTree = "<group>";
@@ -192,6 +192,7 @@
 				BE48FF5B07AFA9A800BB41DA /* Sources */,
 				BE48FF6007AFA9A800BB41DA /* Frameworks */,
 				BE48FF6107AFA9A800BB41DA /* Rez */,
+				AAF0666114D4748600475C7D /* Convert SDL includes to SDL Framework includes */,
 			);
 			buildRules = (
 			);
@@ -295,6 +296,20 @@
 /* End PBXRezBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		AAF0666114D4748600475C7D /* Convert SDL includes to SDL Framework includes */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Convert SDL includes to SDL Framework includes";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd $SYMROOT/$CONFIGURATION/$PUBLIC_HEADERS_FOLDER_PATH\nHEADER=SDL_net.h\nsed 's,#include \"\\(.*\\)\",#include <SDL2/\\1>,' <$HEADER >$HEADER.new\nmv $HEADER.new $HEADER";
+		};
 		BE48FF7207AFA9A900BB41DA /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -302,7 +317,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# clean up the framework, remove headers, extra files\nmkdir -p build/dmg-tmp\n/Developer/Tools/CpMac -r $TARGET_BUILD_DIR/SDL_net.framework build/dmg-tmp/\ncp pkg-support/resources/ReadMe.txt build/dmg-tmp\n\n# remove the .DS_Store files if any (we may want to provide one in the future for fancy .dmgs)\nrm -rf build/dmg-tmp/.DS_Store\n\n# create the dmg\nhdiutil create -ov -fs HFS+ -volname SDL_net -srcfolder build/dmg-tmp build/SDL_net.dmg\n\n# clean up\nrm -rf build/dmg-tmp\n\n# compress it???\n#(cd build; gnutar -zcvf SDL_net.dmg.tar.gz SDL_net.dmg)";
+			shellScript = "# clean up the framework, remove headers, extra files\nPRODUCT_NAME=SDL2_net\nmkdir -p build/dmg-tmp\n/Developer/Tools/CpMac -r $TARGET_BUILD_DIR/$PRODUCT_NAME.framework build/dmg-tmp/\ncp pkg-support/resources/ReadMe.txt build/dmg-tmp\n\n# remove the .DS_Store files if any (we may want to provide one in the future for fancy .dmgs)\nrm -rf build/dmg-tmp/.DS_Store\n\n# create the dmg\nhdiutil create -ov -fs HFS+ -volname $PRODUCT_NAME -srcfolder build/dmg-tmp build/$PRODUCT_NAME.dmg\n\n# clean up\nrm -rf build/dmg-tmp";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -446,8 +461,9 @@
 					/Library/Frameworks/SDL.framework/Headers,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
-				PRODUCT_NAME = SDL_net;
+				PRODUCT_NAME = SDL2_net;
 				SDKROOT = macosx;
+				USER_HEADER_SEARCH_PATHS = "$(HOME)/Library/Frameworks/SDL2.framework/Headers /Library/Frameworks/SDL2.framework/Headers";
 			};
 			name = Debug;
 		};
@@ -467,10 +483,11 @@
 					/Library/Frameworks/SDL.framework/Headers,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
-				PRODUCT_NAME = SDL_net;
+				PRODUCT_NAME = SDL2_net;
 				SDKROOT = macosx;
 				SEPARATE_STRIP = YES;
 				STRIP_STYLE = "non-global";
+				USER_HEADER_SEARCH_PATHS = "$(HOME)/Library/Frameworks/SDL2.framework/Headers /Library/Frameworks/SDL2.framework/Headers";
 			};
 			name = Release;
 		};
