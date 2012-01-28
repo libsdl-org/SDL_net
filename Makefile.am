@@ -19,8 +19,6 @@ EXTRA_DIST =			\
 	VisualC			\
 	Xcode			\
 	Xcode-iOS		\
-	MPWmake.sea.bin		\
-	Watcom-OS2.zip		\
 	quit.bmp		\
 	scroll_dn.bmp		\
 	scroll_up.bmp		\
