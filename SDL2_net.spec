@@ -1,5 +1,5 @@
-%define name @PACKAGE@
-%define version @VERSION@
+%define name SDL2_net
+%define version 1.2.9
 %define release 1
 
 Summary: SDL portable network library
@@ -12,7 +12,6 @@ License: LGPL
 Group: System Environment/Libraries
 BuildRoot: /var/tmp/%{name}-buildroot
 Prefix: %{_prefix}
-Requires: SDL
 
 %description
 This is a portable network library for use with SDL.
@@ -54,7 +53,7 @@ rm -rf $RPM_BUILD_ROOT
 %{prefix}/lib/lib*.a
 %{prefix}/lib/lib*.la
 %{prefix}/lib/lib*.so
-%{prefix}/include/SDL/
+%{prefix}/include/*/
 %{prefix}/lib/pkgconfig/*.pc
 
 %changelog
