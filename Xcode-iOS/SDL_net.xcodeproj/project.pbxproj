@@ -128,7 +128,7 @@
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0420;
+				LastUpgradeCheck = 0430;
 			};
 			buildConfigurationList = 00F072090992C7C800D99510 /* Build configuration list for PBXProject "SDL_net" */;
 			compatibilityVersion = "Xcode 3.2";
