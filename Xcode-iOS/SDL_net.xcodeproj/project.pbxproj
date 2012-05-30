@@ -25,7 +25,7 @@
 		1014BAEC010A4B677F000001 /* SDLnetselect.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetselect.c; path = ../SDLnetselect.c; sourceTree = SOURCE_ROOT; };
 		1014BAED010A4B677F000001 /* SDLnetTCP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetTCP.c; path = ../SDLnetTCP.c; sourceTree = SOURCE_ROOT; };
 		1014BAEE010A4B677F000001 /* SDLnetUDP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetUDP.c; path = ../SDLnetUDP.c; sourceTree = SOURCE_ROOT; };
-		BE48FF6F07AFA9A900BB41DA /* libSDL_net.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSDL_net.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE48FF6F07AFA9A900BB41DA /* libSDL2_net.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSDL2_net.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,7 +51,7 @@
 			isa = PBXGroup;
 			children = (
 				089C1665FE841158C02AAC07 /* Resources */,
-				BE48FF6F07AFA9A900BB41DA /* libSDL_net.a */,
+				BE48FF6F07AFA9A900BB41DA /* libSDL2_net.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -119,7 +119,7 @@
 			name = "Static Library";
 			productInstallPath = /usr/local/lib;
 			productName = "Static Library";
-			productReference = BE48FF6F07AFA9A900BB41DA /* libSDL_net.a */;
+			productReference = BE48FF6F07AFA9A900BB41DA /* libSDL2_net.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -182,7 +182,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				LIBRARY_STYLE = STATIC;
 				OTHER_LDFLAGS = "";
-				PRODUCT_NAME = SDL_net;
+				PRODUCT_NAME = SDL2_net;
 			};
 			name = Debug;
 		};
@@ -193,7 +193,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				LIBRARY_STYLE = STATIC;
 				OTHER_LDFLAGS = "";
-				PRODUCT_NAME = SDL_net;
+				PRODUCT_NAME = SDL2_net;
 			};
 			name = Release;
 		};
