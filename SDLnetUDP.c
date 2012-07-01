@@ -85,8 +85,7 @@ int SDLNet_ResizePacket(UDPpacket *packet, int newsize)
 extern void SDLNet_FreePacket(UDPpacket *packet)
 {
 	if ( packet ) {
-		if ( packet->data )
-			free(packet->data);
+		free(packet->data);
 		free(packet);
 	}
 }
@@ -163,7 +162,7 @@ UDPsocket SDLNet_UDP_Open(Uint16 port)
 	/* Bind locally, if appropriate */
 	sock_addr.sin_family = AF_INET;
 	sock_addr.sin_addr.s_addr = INADDR_ANY;
-	sock_addr.sin_port = SDL_SwapBE16(port);
+	sock_addr.sin_port = SDLNet_Read16(&port);
 
 	/* Bind the socket for listening */
 	if ( bind(sock->channel, (struct sockaddr *)&sock_addr,
@@ -175,7 +174,7 @@ UDPsocket SDLNet_UDP_Open(Uint16 port)
 	/* Get the bound address and port */
 	sock_len = sizeof(sock_addr);
 	if ( getsockname(sock->channel, (struct sockaddr *)&sock_addr, &sock_len) < 0 ) {
-perror("getsockname");
+		perror("getsockname");
 		SDLNet_SetError("Couldn't get socket address");
 		goto error_return;
 	}
@@ -225,7 +224,7 @@ void SDLNet_UDP_SetPacketLoss(UDPsocket sock, int percent)
 		  but there isn't a portable reentrant random
 		  number generator with good randomness.
 	*/
-	srandom(SDL_GetTicks());
+	srandom(time(NULL));
 
 	if (percent < 0) {
 		percent = 0;

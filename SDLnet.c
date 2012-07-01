@@ -1,6 +1,7 @@
 /*
   SDL_net:  An example cross-platform network library for use with SDL
   Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 2012 Simeon Maxein <smaxein@googlemail.com>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -23,15 +24,13 @@
 
 #include <string.h>
 
-#include "SDL_endian.h"
-
 #include "SDLnetsys.h"
 #include "SDL_net.h"
 
 
-const SDL_version *SDLNet_Linked_Version(void)
+const SDLNet_version *SDLNet_Linked_Version(void)
 {
-	static SDL_version linked_version;
+	static SDLNet_version linked_version;
 	SDL_NET_VERSION(&linked_version);
 	return(&linked_version);
 }
@@ -58,6 +57,28 @@ void SDLNet_SetLastError(int err)
 }
 
 #endif
+
+static char errorbuf[1024];
+
+void SDLCALL SDLNet_SetError(const char *fmt, ...)
+{
+	va_list argp;
+	va_start(argp, fmt);
+	vsnprintf(errorbuf, sizeof(errorbuf), fmt, argp);
+	va_end(argp);
+#ifndef WITHOUT_SDL
+	SDL_SetError("%s", errorbuf);
+#endif
+}
+
+char * SDLCALL SDLNet_GetError(void)
+{
+#ifdef WITHOUT_SDL
+	return errorbuf;
+#else
+	return SDL_GetError();
+#endif
+}
 
 /* Initialize/Cleanup the network API */
 int  SDLNet_Init(void)
@@ -132,7 +153,7 @@ int SDLNet_ResolveHost(IPaddress *address, const char *host, Uint16 port)
 			}
 		}
 	}
-	address->port = SDL_SwapBE16(port);
+	address->port = SDLNet_Read16(&port);
 
 	/* Return the status */
 	return(retval);
@@ -207,13 +228,13 @@ int SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount)
     DWORD dwRetVal = 0;
     ULONG ulOutBufLen = sizeof (IP_ADAPTER_INFO);
 
-    pAdapterInfo = (IP_ADAPTER_INFO *) SDL_malloc(sizeof (IP_ADAPTER_INFO));
+    pAdapterInfo = (IP_ADAPTER_INFO *) malloc(sizeof (IP_ADAPTER_INFO));
     if (pAdapterInfo == NULL) {
 		return 0;
     }
 
     if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == ERROR_BUFFER_OVERFLOW) {
-        pAdapterInfo = (IP_ADAPTER_INFO *) SDL_realloc(pAdapterInfo, ulOutBufLen);
+        pAdapterInfo = (IP_ADAPTER_INFO *) realloc(pAdapterInfo, ulOutBufLen);
         if (pAdapterInfo == NULL) {
 			return 0;
         }
@@ -231,39 +252,44 @@ int SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount)
 			}
         }
     }
-	SDL_free(pAdapterInfo);
+	free(pAdapterInfo);
 #endif
 	return count;
 }
 
-#if !SDL_DATA_ALIGNED /* function versions for binary compatibility */
+#if !defined(WITHOUT_SDL) && !SDL_DATA_ALIGNED /* function versions for binary compatibility */
 
-/* Write a 16 bit value to network packet buffer */
 #undef SDLNet_Write16
-void   SDLNet_Write16(Uint16 value, void *areap)
+#undef SDLNet_Write32
+#undef SDLNet_Read16
+#undef SDLNet_Read32
+
+/* Write a 16/32 bit value to network packet buffer */
+extern DECLSPEC void SDLCALL SDLNet_Write16(Uint16 value, void *area);
+extern DECLSPEC void SDLCALL SDLNet_Write32(Uint32 value, void *area);
+
+/* Read a 16/32 bit value from network packet buffer */
+extern DECLSPEC Uint16 SDLCALL SDLNet_Read16(void *area);
+extern DECLSPEC Uint32 SDLCALL SDLNet_Read32(void *area);
+
+void  SDLNet_Write16(Uint16 value, void *areap)
 {
 	(*(Uint16 *)(areap) = SDL_SwapBE16(value));
 }
 
-/* Write a 32 bit value to network packet buffer */
-#undef SDLNet_Write32
 void   SDLNet_Write32(Uint32 value, void *areap)
 {
 	*(Uint32 *)(areap) = SDL_SwapBE32(value);
 }
 
-/* Read a 16 bit value from network packet buffer */
-#undef SDLNet_Read16
 Uint16 SDLNet_Read16(void *areap)
 {
 	return (SDL_SwapBE16(*(Uint16 *)(areap)));
 }
 
-/* Read a 32 bit value from network packet buffer */
-#undef SDLNet_Read32
 Uint32 SDLNet_Read32(void *areap)
 {
 	return (SDL_SwapBE32(*(Uint32 *)(areap)));
 }
 
-#endif /* !SDL_DATA_ALIGNED */
+#endif /* !defined(WITHOUT_SDL) && !SDL_DATA_ALIGNED */
