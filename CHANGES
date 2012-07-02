@@ -1,3 +1,7 @@
+1.2.9:
+Simeon Maxein - Mon Jul  2 08:02:57 EDT 2012
+ * Made it possible to use SDL_net without SDL
+
 1.2.8:
 Sam Lantinga - Sun Jan 15 01:39:35 EST 2012
  * Added the definition for INADDR_LOOPBACK
