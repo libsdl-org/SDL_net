@@ -174,7 +174,6 @@ UDPsocket SDLNet_UDP_Open(Uint16 port)
 	/* Get the bound address and port */
 	sock_len = sizeof(sock_addr);
 	if ( getsockname(sock->channel, (struct sockaddr *)&sock_addr, &sock_len) < 0 ) {
-		perror("getsockname");
 		SDLNet_SetError("Couldn't get socket address");
 		goto error_return;
 	}
