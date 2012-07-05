@@ -22,12 +22,13 @@
 
 /* $Id$ */
 
+#include "SDL_net.h"
+#include "SDLnetsys.h"
+
+#ifdef WITHOUT_SDL
 #include <string.h>
 #include <stdarg.h>
-
-#include "SDLnetsys.h"
-#include "SDL_net.h"
-
+#endif
 
 const SDLNet_version *SDLNet_Linked_Version(void)
 {
