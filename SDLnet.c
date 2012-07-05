@@ -23,6 +23,7 @@
 /* $Id$ */
 
 #include <string.h>
+#include <stdarg.h>
 
 #include "SDLnetsys.h"
 #include "SDL_net.h"
