@@ -72,8 +72,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wsock32.lib iphlpapi.lib SDL.lib"
-				OutputFile=".\Debug/SDL_net.dll"
+				AdditionalDependencies="wsock32.lib iphlpapi.lib SDL2.lib"
+				OutputFile="$(OutDir)\SDL2_net.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				GenerateDebugInformation="true"
@@ -250,8 +250,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wsock32.lib iphlpapi.lib SDL.lib"
-				OutputFile=".\Release/SDL_net.dll"
+				AdditionalDependencies="wsock32.lib iphlpapi.lib SDL2.lib"
+				OutputFile="$(OutDir)\SDL2_net.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				ProgramDatabaseFile=".\Release/SDL_net.pdb"

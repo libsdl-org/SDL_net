@@ -22,8 +22,8 @@
 
 /* $Id$ */
 
-#include "SDL_net.h"
 #include "SDLnetsys.h"
+#include "SDL_net.h"
 
 #ifdef WITHOUT_SDL
 #include <string.h>
@@ -66,14 +66,14 @@ void SDLCALL SDLNet_SetError(const char *fmt, ...)
 {
 	va_list argp;
 	va_start(argp, fmt);
-	vsnprintf(errorbuf, sizeof(errorbuf), fmt, argp);
+	SDL_vsnprintf(errorbuf, sizeof(errorbuf), fmt, argp);
 	va_end(argp);
 #ifndef WITHOUT_SDL
 	SDL_SetError("%s", errorbuf);
 #endif
 }
 
-char * SDLCALL SDLNet_GetError(void)
+const char * SDLCALL SDLNet_GetError(void)
 {
 #ifdef WITHOUT_SDL
 	return errorbuf;

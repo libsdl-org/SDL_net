@@ -73,7 +73,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib"
+				AdditionalDependencies="SDL2.lib SDL2main.lib"
 				ProgramDatabaseFile=".\Release/showinterfaces.pdb"
 				SubSystem="2"
 				TargetMachine="1"
@@ -244,7 +244,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib"
+				AdditionalDependencies="SDL2.lib SDL2main.lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/showinterfaces.pdb"
 				SubSystem="2"
