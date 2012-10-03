@@ -309,11 +309,11 @@ extern DECLSPEC SDLNet_SocketSet SDLCALL SDLNet_AllocSocketSet(int maxsockets);
 
 /* Add a socket to a set of sockets to be checked for available data */
 extern DECLSPEC int SDLCALL SDLNet_AddSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock);
-static inline int SDLNet_TCP_AddSocket(SDLNet_SocketSet set, TCPsocket sock)
+static __inline__ int SDLNet_TCP_AddSocket(SDLNet_SocketSet set, TCPsocket sock)
 {
 	return SDLNet_AddSocket(set, (SDLNet_GenericSocket)sock);
 }
-static inline int SDLNet_UDP_AddSocket(SDLNet_SocketSet set, UDPsocket sock)
+static __inline__ int SDLNet_UDP_AddSocket(SDLNet_SocketSet set, UDPsocket sock)
 {
 	return SDLNet_AddSocket(set, (SDLNet_GenericSocket)sock);
 }
@@ -321,11 +321,11 @@ static inline int SDLNet_UDP_AddSocket(SDLNet_SocketSet set, UDPsocket sock)
 
 /* Remove a socket from a set of sockets to be checked for available data */
 extern DECLSPEC int SDLCALL SDLNet_DelSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock);
-static inline int SDLNet_TCP_DelSocket(SDLNet_SocketSet set, TCPsocket sock)
+static __inline__ int SDLNet_TCP_DelSocket(SDLNet_SocketSet set, TCPsocket sock)
 {
 	return SDLNet_DelSocket(set, (SDLNet_GenericSocket)sock);
 }
-static inline int SDLNet_UDP_DelSocket(SDLNet_SocketSet set, UDPsocket sock)
+static __inline__ int SDLNet_UDP_DelSocket(SDLNet_SocketSet set, UDPsocket sock)
 {
 	return SDLNet_DelSocket(set, (SDLNet_GenericSocket)sock);
 }
@@ -344,7 +344,7 @@ extern DECLSPEC int SDLCALL SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 tim
    for reading.
 */
 #define SDLNet_SocketReady(sock) _SDLNet_SocketReady((SDLNet_GenericSocket)(sock))
-static inline int _SDLNet_SocketReady(SDLNet_GenericSocket sock)
+static __inline__ int _SDLNet_SocketReady(SDLNet_GenericSocket sock)
 {
 	return (sock != NULL) && (sock->ready);
 }
@@ -357,7 +357,7 @@ extern DECLSPEC void SDLCALL SDLNet_FreeSocketSet(SDLNet_SocketSet set);
 /***********************************************************************/
 
 extern DECLSPEC void SDLCALL SDLNet_SetError(const char *fmt, ...);
-extern DECLSPEC char * SDLCALL SDLNet_GetError(void);
+extern DECLSPEC const char * SDLCALL SDLNet_GetError(void);
 
 /***********************************************************************/
 /* Inline functions to read/write network data                         */
@@ -381,36 +381,36 @@ extern DECLSPEC char * SDLCALL SDLNet_GetError(void);
 
 #if !defined(WITHOUT_SDL) && !SDL_DATA_ALIGNED
 
-static inline void _SDLNet_Write16(Uint16 value, void *areap)
+static __inline__ void _SDLNet_Write16(Uint16 value, void *areap)
 {
 	*(Uint16 *)areap = SDL_SwapBE16(value);
 }
 
-static inline void _SDLNet_Write32(Uint32 value, void *areap)
+static __inline__ void _SDLNet_Write32(Uint32 value, void *areap)
 {
 	*(Uint32 *)areap = SDL_SwapBE32(value);
 }
 
-static inline Uint16 _SDLNet_Read16(void *areap)
+static __inline__ Uint16 _SDLNet_Read16(void *areap)
 {
 	return SDL_SwapBE16(*(Uint16 *)areap);
 }
 
-static inline Uint32 _SDLNet_Read32(void *areap)
+static __inline__ Uint32 _SDLNet_Read32(void *areap)
 {
 	return SDL_SwapBE32(*(Uint32 *)areap);
 }
 
 #else /* !defined(WITHOUT_SDL) && !SDL_DATA_ALIGNED */
 
-static inline void _SDLNet_Write16(Uint16 value, void *areap)
+static __inline__ void _SDLNet_Write16(Uint16 value, void *areap)
 {
 	Uint8 *area = (Uint8*)areap;
 	area[0] = (value >>  8) & 0xFF;
 	area[1] =  value        & 0xFF;
 }
 
-static inline void _SDLNet_Write32(Uint32 value, void *areap)
+static __inline__ void _SDLNet_Write32(Uint32 value, void *areap)
 {
 	Uint8 *area = (Uint8*)areap;
 	area[0] = (value >> 24) & 0xFF;
@@ -419,13 +419,13 @@ static inline void _SDLNet_Write32(Uint32 value, void *areap)
 	area[3] =  value        & 0xFF;
 }
 
-static inline Uint16 _SDLNet_Read16(void *areap)
+static __inline__ Uint16 _SDLNet_Read16(void *areap)
 {
 	Uint8 *area = (Uint8*)areap;
 	return ((Uint16)area[0]) << 8 | ((Uint16)area[1]);
 }
 
-static inline Uint32 _SDLNet_Read32(void *areap)
+static __inline__ Uint32 _SDLNet_Read32(void *areap)
 {
 	Uint8 *area = (Uint8*)areap;
 	return ((Uint32)area[0]) << 24 | ((Uint32)area[1]) << 16 | ((Uint32)area[2]) << 8 | ((Uint32)area[3]);
