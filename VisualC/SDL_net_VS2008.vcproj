@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="SDL_net"
+	Name="SDL2_net"
 	ProjectGUID="{8AB3504F-5E58-4910-AFE8-7A1E595AC3F4}"
 	RootNamespace="SDL_net"
 	TargetFrameworkVersion="131072"
@@ -73,7 +73,6 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="wsock32.lib iphlpapi.lib SDL2.lib"
-				OutputFile="$(OutDir)\SDL2_net.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				GenerateDebugInformation="true"
@@ -251,7 +250,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="wsock32.lib iphlpapi.lib SDL2.lib"
-				OutputFile="$(OutDir)\SDL2_net.dll"
+				OutputFile="$(OutDir)\$(ProjectName).dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				ProgramDatabaseFile=".\Release/SDL_net.pdb"
