@@ -183,6 +183,7 @@
 				LIBRARY_STYLE = STATIC;
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = SDL2_net;
+				SKIP_INSTALL = YES;
 			};
 			name = Debug;
 		};
@@ -194,6 +195,7 @@
 				LIBRARY_STYLE = STATIC;
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = SDL2_net;
+				SKIP_INSTALL = YES;
 			};
 			name = Release;
 		};
