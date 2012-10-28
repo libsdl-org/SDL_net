@@ -43,8 +43,8 @@
 		1014BAED010A4B677F000001 /* SDLnetTCP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetTCP.c; path = ../SDLnetTCP.c; sourceTree = SOURCE_ROOT; };
 		1014BAEE010A4B677F000001 /* SDLnetUDP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetUDP.c; path = ../SDLnetUDP.c; sourceTree = SOURCE_ROOT; };
 		BE48FF6307AFA9A800BB41DA /* Info-Framework__Upgraded_.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-Framework__Upgraded_.plist"; sourceTree = "<group>"; };
-		BE48FF6407AFA9A800BB41DA /* SDL_net.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = SDL_net.framework; path = SDL2_net.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		BE48FF6F07AFA9A900BB41DA /* libSDL_net.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = libSDL_net.a; path = libSDL2_net.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE48FF6407AFA9A800BB41DA /* SDL2_net.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDL2_net.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE48FF6F07AFA9A900BB41DA /* libSDL2_net.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSDL2_net.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE48FF7307AFA9A900BB41DA /* Create DMG */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Create DMG"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE48FF8207AFAA6F00BB41DA /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = /Library/Frameworks/SDL2.framework; sourceTree = "<absolute>"; };
 		F59C710300D5CB5801000001 /* ReadMe.txt */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = ReadMe.txt; sourceTree = "<group>"; };
@@ -83,8 +83,8 @@
 			isa = PBXGroup;
 			children = (
 				089C1665FE841158C02AAC07 /* Resources */,
-				BE48FF6407AFA9A800BB41DA /* SDL_net.framework */,
-				BE48FF6F07AFA9A900BB41DA /* libSDL_net.a */,
+				BE48FF6407AFA9A800BB41DA /* SDL2_net.framework */,
+				BE48FF6F07AFA9A900BB41DA /* libSDL2_net.a */,
 				BE48FF7307AFA9A900BB41DA /* Create DMG */,
 			);
 			name = Products;
@@ -202,7 +202,7 @@
 			name = Framework;
 			productInstallPath = "@executable_path/../Frameworks";
 			productName = SDL_net;
-			productReference = BE48FF6407AFA9A800BB41DA /* SDL_net.framework */;
+			productReference = BE48FF6407AFA9A800BB41DA /* SDL2_net.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		BE48FF6507AFA9A800BB41DA /* Static Library */ = {
@@ -221,7 +221,7 @@
 			name = "Static Library";
 			productInstallPath = /usr/local/lib;
 			productName = "Static Library";
-			productReference = BE48FF6F07AFA9A900BB41DA /* libSDL_net.a */;
+			productReference = BE48FF6F07AFA9A900BB41DA /* libSDL2_net.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		BE48FF7007AFA9A900BB41DA /* Create DMG */ = {
@@ -362,8 +362,7 @@
 				DYLIB_CURRENT_VERSION = 9;
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = "Info-Framework__Upgraded_.plist";
-				INSTALL_PATH = "@rpath";
-				LD_RUNPATH_SEARCH_PATHS = "@loader_path/Frameworks";
+				INSTALL_PATH = "@executable_path/../Frameworks";
 				WRAPPER_EXTENSION = framework;
 			};
 			name = Debug;
@@ -375,8 +374,7 @@
 				DYLIB_CURRENT_VERSION = 9;
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = "Info-Framework__Upgraded_.plist";
-				INSTALL_PATH = "@rpath";
-				LD_RUNPATH_SEARCH_PATHS = "@loader_path/Frameworks";
+				INSTALL_PATH = "@executable_path/../Frameworks";
 				WRAPPER_EXTENSION = framework;
 			};
 			name = Release;
@@ -391,6 +389,7 @@
 				OTHER_REZFLAGS = "";
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
+				SKIP_INSTALL = YES;
 			};
 			name = Debug;
 		};
@@ -404,6 +403,7 @@
 				OTHER_REZFLAGS = "";
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
+				SKIP_INSTALL = YES;
 			};
 			name = Release;
 		};
