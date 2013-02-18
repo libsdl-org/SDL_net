@@ -14,6 +14,7 @@ libSDL2_net_la_SOURCES =		\
 	SDLnetsys.h
 
 EXTRA_DIST =			\
+	debian			\
 	CHANGES			\
 	version.rc		\
 	VisualC			\
