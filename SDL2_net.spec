@@ -1,5 +1,5 @@
 %define name SDL2_net
-%define version 1.2.9
+%define version 2.0.0
 %define release 1
 
 Summary: SDL portable network library
