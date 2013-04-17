@@ -57,9 +57,7 @@ typedef int socklen_t;
 #ifndef __BEOS__
 #include <arpa/inet.h>
 #endif
-#ifdef linux /* FIXME: what other platforms have this? */
 #include <netinet/tcp.h>
-#endif
 #include <sys/socket.h>
 #include <net/if.h>
 #include <netdb.h>

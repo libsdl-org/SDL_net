@@ -144,6 +144,8 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 	{ int yes = 1;
 	setsockopt(sock->channel, IPPROTO_TCP, TCP_NODELAY, (char*)&yes, sizeof(yes));
 	}
+#else
+#warning Building without TCP_NODELAY
 #endif /* TCP_NODELAY */
 
 	/* Fill in the channel host address */
