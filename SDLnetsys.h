@@ -73,11 +73,11 @@ typedef Uint32 socklen_t;
 #ifdef __OS2__
 #define closesocket     soclose
 #else  /* !__OS2__ */
-#define closesocket	close
+#define closesocket close
 #endif /* __OS2__ */
-#define SOCKET	int
-#define INVALID_SOCKET	-1
-#define SOCKET_ERROR	-1
+#define SOCKET  int
+#define INVALID_SOCKET  -1
+#define SOCKET_ERROR    -1
 #endif /* __USE_W32_SOCKETS */
 
 #ifdef __USE_W32_SOCKETS

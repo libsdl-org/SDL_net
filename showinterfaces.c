@@ -20,22 +20,22 @@
 */
 #include "SDL_net.h"
 
-#define MAX_ADDRESSES	10
+#define MAX_ADDRESSES   10
 
 int main(int argc, char *argv[])
 {
-	IPaddress addresses[MAX_ADDRESSES];
-	int i, count;
+    IPaddress addresses[MAX_ADDRESSES];
+    int i, count;
 
-	count = SDLNet_GetLocalAddresses(addresses, MAX_ADDRESSES);
-	printf("Found %d local addresses\n", count);
-	for ( i = 0; i < count; ++i ) {
-		printf("%d: %d.%d.%d.%d - %s\n", i+1,
-			(addresses[i].host >> 0) & 0xFF,
-			(addresses[i].host >> 8) & 0xFF,
-			(addresses[i].host >> 16) & 0xFF,
-			(addresses[i].host >> 24) & 0xFF,
-			SDLNet_ResolveIP(&addresses[i]));
-	}
-	return 0;
+    count = SDLNet_GetLocalAddresses(addresses, MAX_ADDRESSES);
+    printf("Found %d local addresses\n", count);
+    for ( i = 0; i < count; ++i ) {
+        printf("%d: %d.%d.%d.%d - %s\n", i+1,
+            (addresses[i].host >> 0) & 0xFF,
+            (addresses[i].host >> 8) & 0xFF,
+            (addresses[i].host >> 16) & 0xFF,
+            (addresses[i].host >> 24) & 0xFF,
+            SDLNet_ResolveIP(&addresses[i]));
+    }
+    return 0;
 }
