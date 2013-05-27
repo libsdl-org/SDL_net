@@ -15,7 +15,6 @@ libSDL2_net_la_SOURCES =		\
 
 EXTRA_DIST =			\
 	debian			\
-	CHANGES			\
 	version.rc		\
 	VisualC			\
 	Xcode			\
@@ -26,7 +25,8 @@ EXTRA_DIST =			\
 	SDL2_net.spec		\
 	SDL2_net.spec.in		\
 	gcc-fat.sh		\
-	autogen.sh
+	autogen.sh			\
+	*.txt
 
 if USE_VERSION_RC
 libSDL2_net_la_LDFLAGS = 	\
