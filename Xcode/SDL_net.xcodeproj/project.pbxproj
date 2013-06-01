@@ -27,7 +27,7 @@
 			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = BE48FF5607AFA9A800BB41DA;
-			remoteInfo = "Framework (Upgraded)";
+			remoteInfo = "Framework";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -42,7 +42,7 @@
 		1014BAEC010A4B677F000001 /* SDLnetselect.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetselect.c; path = ../SDLnetselect.c; sourceTree = SOURCE_ROOT; };
 		1014BAED010A4B677F000001 /* SDLnetTCP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetTCP.c; path = ../SDLnetTCP.c; sourceTree = SOURCE_ROOT; };
 		1014BAEE010A4B677F000001 /* SDLnetUDP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetUDP.c; path = ../SDLnetUDP.c; sourceTree = SOURCE_ROOT; };
-		BE48FF6307AFA9A800BB41DA /* Info-Framework__Upgraded_.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-Framework__Upgraded_.plist"; sourceTree = "<group>"; };
+		BE48FF6307AFA9A800BB41DA /* Info-Framework.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-Framework.plist"; sourceTree = "<group>"; };
 		BE48FF6407AFA9A800BB41DA /* SDL2_net.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDL2_net.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE48FF6F07AFA9A900BB41DA /* libSDL2_net.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSDL2_net.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE48FF7307AFA9A900BB41DA /* Create DMG */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Create DMG"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -98,7 +98,7 @@
 				08FB77ACFE841707C02AAC07 /* Library Source */,
 				BE48FF8007AFAA4100BB41DA /* Frameworks */,
 				034768DDFF38A45A11DB9C8B /* Products */,
-				BE48FF6307AFA9A800BB41DA /* Info-Framework__Upgraded_.plist */,
+				BE48FF6307AFA9A800BB41DA /* Info-Framework.plist */,
 			);
 			name = SDL_netFramework;
 			sourceTree = "<group>";
@@ -361,7 +361,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 9;
 				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = "Info-Framework__Upgraded_.plist";
+				INFOPLIST_FILE = "Info-Framework.plist";
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				WRAPPER_EXTENSION = framework;
 			};
@@ -373,7 +373,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 9;
 				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = "Info-Framework__Upgraded_.plist";
+				INFOPLIST_FILE = "Info-Framework.plist";
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				WRAPPER_EXTENSION = framework;
 			};
