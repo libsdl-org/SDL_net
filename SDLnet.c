@@ -272,7 +272,7 @@ extern DECLSPEC void SDLCALL SDLNet_Write32(Uint32 value, void *area);
 
 /* Read a 16/32 bit value from network packet buffer */
 extern DECLSPEC Uint16 SDLCALL SDLNet_Read16(void *area);
-extern DECLSPEC Uint32 SDLCALL SDLNet_Read32(void *area);
+extern DECLSPEC Uint32 SDLCALL SDLNet_Read32(const void *area);
 
 void  SDLNet_Write16(Uint16 value, void *areap)
 {
@@ -289,7 +289,7 @@ Uint16 SDLNet_Read16(void *areap)
     return (SDL_SwapBE16(*(Uint16 *)(areap)));
 }
 
-Uint32 SDLNet_Read32(void *areap)
+Uint32 SDLNet_Read32(const void *areap)
 {
     return (SDL_SwapBE32(*(Uint32 *)(areap)));
 }
