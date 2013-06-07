@@ -20,8 +20,8 @@
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\Release"
-			IntermediateDirectory=".\Release"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -100,13 +100,13 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copy SDL_net"
-				CommandLine="copy &quot;$(SolutionDir)\$(ConfigurationName)\SDL_net.dll&quot; &quot;$(TargetDir)\SDL_net.dll&quot;"
+				Description=""
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
@@ -159,7 +159,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib"
+				AdditionalDependencies="SDL2.lib SDL2main.lib"
 				ProgramDatabaseFile=".\Release/showinterfaces.pdb"
 				SubSystem="2"
 				TargetMachine="17"
@@ -186,14 +186,14 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copy SDL_net"
-				CommandLine="copy &quot;$(SolutionDir)\$(ConfigurationName)\SDL_net.dll&quot; &quot;$(TargetDir)\SDL_net.dll&quot;"
+				Description=""
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\Debug"
-			IntermediateDirectory=".\Debug"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -272,13 +272,13 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copy SDL_net"
-				CommandLine="copy &quot;$(SolutionDir)\$(ConfigurationName)\SDL_net.dll&quot; &quot;$(TargetDir)\SDL_net.dll&quot;"
+				Description=""
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
@@ -330,7 +330,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib"
+				AdditionalDependencies="SDL2.lib SDL2main.lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/showinterfaces.pdb"
 				SubSystem="2"
@@ -358,8 +358,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copy SDL_net"
-				CommandLine="copy &quot;$(SolutionDir)\$(ConfigurationName)\SDL_net.dll&quot; &quot;$(TargetDir)\SDL_net.dll&quot;"
+				Description=""
+				CommandLine=""
 			/>
 		</Configuration>
 	</Configurations>

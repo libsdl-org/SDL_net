@@ -20,8 +20,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\Debug"
-			IntermediateDirectory=".\Debug"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -45,7 +45,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Debug/SDL_net.tlb"
+				TypeLibraryName=".\Debug/SDL2_net.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -54,7 +54,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="true"
 				RuntimeLibrary="2"
-				PrecompiledHeaderFile=".\Debug/SDL_net.pch"
+				PrecompiledHeaderFile=".\Debug/SDL2_net.pch"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
@@ -76,7 +76,7 @@
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/SDL_net.pdb"
+				ProgramDatabaseFile=".\Debug/SDL2_net.pdb"
 				SubSystem="2"
 				TargetMachine="1"
 			/>
@@ -92,7 +92,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/SDL_net.bsc"
+				OutputFile=".\Debug/SDL2_net.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -106,7 +106,7 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
@@ -131,7 +131,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="3"
-				TypeLibraryName=".\Debug/SDL_net.tlb"
+				TypeLibraryName=".\Debug/SDL2_net.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -140,7 +140,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="true"
 				RuntimeLibrary="2"
-				PrecompiledHeaderFile=".\Debug/SDL_net.pch"
+				PrecompiledHeaderFile=".\Debug/SDL2_net.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -161,12 +161,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib iphlpapi.lib SDL.lib"
-				OutputFile=".\Debug/SDL_net.dll"
+				AdditionalDependencies="ws2_32.lib iphlpapi.lib SDL2.lib"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/SDL_net.pdb"
+				ProgramDatabaseFile=".\Debug/SDL2_net.pdb"
 				SubSystem="2"
 				TargetMachine="17"
 			/>
@@ -182,7 +181,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/SDL_net.bsc"
+				OutputFile=".\Debug/SDL2_net.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -196,8 +195,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\Release"
-			IntermediateDirectory=".\Release"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -221,7 +220,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Release/SDL_net.tlb"
+				TypeLibraryName=".\Release/SDL2_net.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -232,7 +231,7 @@
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release/SDL_net.pch"
+				PrecompiledHeaderFile=".\Release/SDL2_net.pch"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 			/>
@@ -250,10 +249,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="wsock32.lib iphlpapi.lib SDL2.lib"
-				OutputFile="$(OutDir)\$(ProjectName).dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				ProgramDatabaseFile=".\Release/SDL_net.pdb"
+				ProgramDatabaseFile=".\Release/SDL2_net.pdb"
 				SubSystem="2"
 				TargetMachine="1"
 			/>
@@ -269,7 +267,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Release/SDL_net.bsc"
+				OutputFile=".\Release/SDL2_net.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -283,7 +281,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
@@ -308,7 +306,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="3"
-				TypeLibraryName=".\Release/SDL_net.tlb"
+				TypeLibraryName=".\Release/SDL2_net.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -319,7 +317,7 @@
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release/SDL_net.pch"
+				PrecompiledHeaderFile=".\Release/SDL2_net.pch"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 			/>
@@ -336,11 +334,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib iphlpapi.lib SDL.lib"
-				OutputFile=".\Release/SDL_net.dll"
+				AdditionalDependencies="ws2_32.lib iphlpapi.lib SDL2.lib"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				ProgramDatabaseFile=".\Release/SDL_net.pdb"
+				ProgramDatabaseFile=".\Release/SDL2_net.pdb"
 				SubSystem="2"
 				TargetMachine="17"
 			/>
@@ -356,7 +353,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Release/SDL_net.bsc"
+				OutputFile=".\Release/SDL2_net.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
