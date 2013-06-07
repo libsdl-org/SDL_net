@@ -28,9 +28,9 @@ int main(int argc, char *argv[])
     int i, count;
 
     count = SDLNet_GetLocalAddresses(addresses, MAX_ADDRESSES);
-    printf("Found %d local addresses\n", count);
+    SDL_Log("Found %d local addresses", count);
     for ( i = 0; i < count; ++i ) {
-        printf("%d: %d.%d.%d.%d - %s\n", i+1,
+        SDL_Log("%d: %d.%d.%d.%d - %s", i+1,
             (addresses[i].host >> 0) & 0xFF,
             (addresses[i].host >> 8) & 0xFF,
             (addresses[i].host >> 16) & 0xFF,
