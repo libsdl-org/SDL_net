@@ -392,14 +392,14 @@ static __inline__ void _SDLNet_Write32(Uint32 value, void *areap)
     *(Uint32 *)areap = SDL_SwapBE32(value);
 }
 
-static __inline__ Uint16 _SDLNet_Read16(void *areap)
+static __inline__ Uint16 _SDLNet_Read16(const void *areap)
 {
-    return SDL_SwapBE16(*(Uint16 *)areap);
+    return SDL_SwapBE16(*(const Uint16 *)areap);
 }
 
-static __inline__ Uint32 _SDLNet_Read32(void *areap)
+static __inline__ Uint32 _SDLNet_Read32(const void *areap)
 {
-    return SDL_SwapBE32(*(Uint32 *)areap);
+    return SDL_SwapBE32(*(const Uint32 *)areap);
 }
 
 #else /* !defined(WITHOUT_SDL) && !SDL_DATA_ALIGNED */
@@ -426,9 +426,9 @@ static __inline__ Uint16 _SDLNet_Read16(void *areap)
     return ((Uint16)area[0]) << 8 | ((Uint16)area[1]);
 }
 
-static __inline__ Uint32 _SDLNet_Read32(void *areap)
+static __inline__ Uint32 _SDLNet_Read32(const void *areap)
 {
-    Uint8 *area = (Uint8*)areap;
+    const Uint8 *area = (const Uint8*)areap;
     return ((Uint32)area[0]) << 24 | ((Uint32)area[1]) << 16 | ((Uint32)area[2]) << 8 | ((Uint32)area[3]);
 }
 
