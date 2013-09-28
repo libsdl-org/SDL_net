@@ -245,7 +245,7 @@ int SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount)
 
     if (dwRetVal == NO_ERROR) {
         for (pAdapter = pAdapterInfo; pAdapter; pAdapter = pAdapter->Next) {
-            for (pAddress = &pAdapterInfo->IpAddressList; pAddress; pAddress = pAddress->Next) {
+            for (pAddress = &pAdapter->IpAddressList; pAddress; pAddress = pAddress->Next) {
                 if (count < maxcount) {
                     addresses[count].host = inet_addr(pAddress->IpAddress.String);
                     addresses[count].port = 0;
