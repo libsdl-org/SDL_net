@@ -149,7 +149,7 @@ int SDLNet_ResolveHost(IPaddress *address, const char *host, Uint16 port)
 
             hp = gethostbyname(host);
             if ( hp ) {
-                memcpy(&address->host,hp->h_addr,hp->h_length);
+                SDL_memcpy(&address->host,hp->h_addr,hp->h_length);
             } else {
                 retval = -1;
             }
@@ -230,13 +230,13 @@ int SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount)
     DWORD dwRetVal = 0;
     ULONG ulOutBufLen = sizeof (IP_ADAPTER_INFO);
 
-    pAdapterInfo = (IP_ADAPTER_INFO *) malloc(sizeof (IP_ADAPTER_INFO));
+    pAdapterInfo = (IP_ADAPTER_INFO *) SDL_malloc(sizeof (IP_ADAPTER_INFO));
     if (pAdapterInfo == NULL) {
         return 0;
     }
 
     if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == ERROR_BUFFER_OVERFLOW) {
-        pAdapterInfo = (IP_ADAPTER_INFO *) realloc(pAdapterInfo, ulOutBufLen);
+        pAdapterInfo = (IP_ADAPTER_INFO *) SDL_realloc(pAdapterInfo, ulOutBufLen);
         if (pAdapterInfo == NULL) {
             return 0;
         }
@@ -254,7 +254,7 @@ int SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount)
             }
         }
     }
-    free(pAdapterInfo);
+    SDL_free(pAdapterInfo);
 #endif
     return count;
 }
