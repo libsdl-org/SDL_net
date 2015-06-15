@@ -71,7 +71,6 @@
 				AdditionalDependencies="wsock32.lib iphlpapi.lib SDL2.lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -148,7 +147,6 @@
 				AdditionalDependencies="ws2_32.lib iphlpapi.lib SDL2.lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -222,7 +220,6 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="wsock32.lib iphlpapi.lib SDL2.lib"
 				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -296,7 +293,6 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="ws2_32.lib iphlpapi.lib SDL2.lib"
 				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
