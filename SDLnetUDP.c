@@ -55,10 +55,10 @@ extern UDPpacket *SDLNet_AllocPacket(int size)
 
 
     error = 1;
-    packet = (UDPpacket *)malloc(sizeof(*packet));
+    packet = (UDPpacket *)SDL_malloc(sizeof(*packet));
     if ( packet != NULL ) {
         packet->maxlen = size;
-        packet->data = (Uint8 *)malloc(size);
+        packet->data = (Uint8 *)SDL_malloc(size);
         if ( packet->data != NULL ) {
             error = 0;
         }
@@ -74,9 +74,9 @@ int SDLNet_ResizePacket(UDPpacket *packet, int newsize)
 {
     Uint8 *newdata;
 
-    newdata = (Uint8 *)malloc(newsize);
+    newdata = (Uint8 *)SDL_malloc(newsize);
     if ( newdata != NULL ) {
-        free(packet->data);
+        SDL_free(packet->data);
         packet->data = newdata;
         packet->maxlen = newsize;
     }
@@ -85,8 +85,8 @@ int SDLNet_ResizePacket(UDPpacket *packet, int newsize)
 extern void SDLNet_FreePacket(UDPpacket *packet)
 {
     if ( packet ) {
-        free(packet->data);
-        free(packet);
+        SDL_free(packet->data);
+        SDL_free(packet);
     }
 }
 
@@ -99,7 +99,7 @@ UDPpacket **SDLNet_AllocPacketV(int howmany, int size)
 {
     UDPpacket **packetV;
 
-    packetV = (UDPpacket **)malloc((howmany+1)*sizeof(*packetV));
+    packetV = (UDPpacket **)SDL_malloc((howmany+1)*sizeof(*packetV));
     if ( packetV != NULL ) {
         int i;
         for ( i=0; i<howmany; ++i ) {
@@ -125,7 +125,7 @@ void SDLNet_FreePacketV(UDPpacket **packetV)
         for ( i=0; packetV[i]; ++i ) {
             SDLNet_FreePacket(packetV[i]);
         }
-        free(packetV);
+        SDL_free(packetV);
     }
 }
 
@@ -143,13 +143,13 @@ UDPsocket SDLNet_UDP_Open(Uint16 port)
     socklen_t sock_len;
 
     /* Allocate a UDP socket structure */
-    sock = (UDPsocket)malloc(sizeof(*sock));
+    sock = (UDPsocket)SDL_malloc(sizeof(*sock));
     if ( sock == NULL ) {
         SDLNet_SetError("Out of memory");
         goto error_return;
     }
-    memset(sock, 0, sizeof(*sock));
-    memset(&sock_addr, 0, sizeof(sock_addr));
+    SDL_memset(sock, 0, sizeof(*sock));
+    SDL_memset(&sock_addr, 0, sizeof(sock_addr));
 
     /* Open the socket */
     sock->channel = socket(AF_INET, SOCK_DGRAM, 0);
@@ -514,14 +514,11 @@ int SDLNet_UDP_Recv(UDPsocket sock, UDPpacket *packet)
 /* Close a UDP network socket */
 extern void SDLNet_UDP_Close(UDPsocket sock)
 {
-    if ( sock != NULL )
-    {
-        if ( sock->channel != INVALID_SOCKET )
-        {
+    if ( sock != NULL ) {
+        if ( sock->channel != INVALID_SOCKET ) {
             closesocket(sock->channel);
         }
-
-        free(sock);
+        SDL_free(sock);
     }
 }
 

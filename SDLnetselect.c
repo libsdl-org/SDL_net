@@ -46,18 +46,18 @@ SDLNet_SocketSet SDLNet_AllocSocketSet(int maxsockets)
     struct _SDLNet_SocketSet *set;
     int i;
 
-    set = (struct _SDLNet_SocketSet *)malloc(sizeof(*set));
+    set = (struct _SDLNet_SocketSet *)SDL_malloc(sizeof(*set));
     if ( set != NULL ) {
         set->numsockets = 0;
         set->maxsockets = maxsockets;
-        set->sockets = (struct SDLNet_Socket **)malloc
+        set->sockets = (struct SDLNet_Socket **)SDL_malloc
                     (maxsockets*sizeof(*set->sockets));
         if ( set->sockets != NULL ) {
             for ( i=0; i<maxsockets; ++i ) {
                 set->sockets[i] = NULL;
             }
         } else {
-            free(set);
+            SDL_free(set);
             set = NULL;
         }
     }
@@ -156,8 +156,8 @@ int SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout)
 extern void SDLNet_FreeSocketSet(SDLNet_SocketSet set)
 {
     if ( set ) {
-        free(set->sockets);
-        free(set);
+        SDL_free(set->sockets);
+        SDL_free(set);
     }
 }
 
