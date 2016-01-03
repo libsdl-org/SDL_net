@@ -58,7 +58,7 @@ extern "C" {
 */
 #define SDL_NET_MAJOR_VERSION   2
 #define SDL_NET_MINOR_VERSION   0
-#define SDL_NET_PATCHLEVEL      0
+#define SDL_NET_PATCHLEVEL      1
 
 /* This macro can be used to fill a version structure with the compile-time
  * version of the SDL_net library.
