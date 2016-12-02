@@ -22,8 +22,8 @@
 
 /* $Id$ */
 
-#ifndef _SDL_NET_H
-#define _SDL_NET_H
+#ifndef SDL_NET_H_
+#define SDL_NET_H_
 
 #ifdef WITHOUT_SDL
 #include <stdint.h>
@@ -452,4 +452,4 @@ SDL_FORCE_INLINE Uint32 _SDLNet_Read32(const void *areap)
 #endif
 #include "close_code.h"
 
-#endif /* _SDL_NET_H */
+#endif /* SDL_NET_H_ */
