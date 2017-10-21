@@ -70,6 +70,18 @@ extern "C" {
     (X)->patch = SDL_NET_PATCHLEVEL;                \
 }
 
+/**
+ *  This is the version number macro for the current SDL_net version.
+ */
+#define SDL_NET_COMPILEDVERSION \
+    SDL_VERSIONNUM(SDL_NET_MAJOR_VERSION, SDL_NET_MINOR_VERSION, SDL_NET_PATCHLEVEL)
+
+/**
+ *  This macro will evaluate to true if compiled with SDL_net at least X.Y.Z.
+ */
+#define SDL_NET_VERSION_ATLEAST(X, Y, Z) \
+    (SDL_NET_COMPILEDVERSION >= SDL_VERSIONNUM(X, Y, Z))
+
 /* This function gets the version of the dynamically linked SDL_net library.
    it should NOT be used to fill a version structure, instead you should
    use the SDL_NET_VERSION() macro.
