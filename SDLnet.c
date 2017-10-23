@@ -59,8 +59,11 @@ int SDLNet_GetLastError(void)
 
 void SDLNet_SetLastError(int err)
 {
- /* FIXME: OS2 doesn't provide anything for this? */
+    #if defined(__OS2__) && !defined(__EMX__)
+    /* FIXME: OS2 doesn't have a function to reset socket errno */
+    #else
     errno = err;
+    #endif
 }
 
 #endif
