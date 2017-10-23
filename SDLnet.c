@@ -50,11 +50,16 @@ static int SDLNet_started = 0;
 
 int SDLNet_GetLastError(void)
 {
+    #if defined(__OS2__) && !defined(__EMX__)
+    return sock_errno();
+    #else
     return errno;
+    #endif
 }
 
 void SDLNet_SetLastError(int err)
 {
+ /* FIXME: OS2 doesn't provide anything for this? */
     errno = err;
 }
 
@@ -95,6 +100,11 @@ int  SDLNet_Init(void)
             SDLNet_SetError("Couldn't initialize Winsock 1.1\n");
             return(-1);
         }
+#elif defined(__OS2__) && !defined(__EMX__)
+        if (sock_init() < 0) {
+            SDLNet_SetError("Couldn't initialize IBM OS/2 sockets");
+            return(-1);
+        }
 #else
         /* SIGPIPE is generated when a remote socket is closed */
         void (*handler)(int);
@@ -123,6 +133,8 @@ void SDLNet_Quit(void)
                 WSACleanup();
             }
         }
+#elif defined(__OS2__) && !defined(__EMX__)
+        /* -- nothing */
 #else
         /* Restore the SIGPIPE handler */
         void (*handler)(int);
