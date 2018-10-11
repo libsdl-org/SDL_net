@@ -26,7 +26,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef _WIN32_WCE
+#if defined(__OS2__) && !defined(__EMX__)
+#include <nerrno.h>
+#elif !defined(_WIN32_WCE)
 #include <errno.h>
 #endif
 
@@ -44,6 +46,9 @@ typedef int socklen_t;
 #endif /* W64 */
 #include <iphlpapi.h>
 #else /* UNIX */
+#ifdef __OS2__
+#include <sys/param.h>
+#endif
 #include <sys/types.h>
 #ifdef __FreeBSD__
 #include <sys/socket.h>
@@ -64,8 +69,10 @@ typedef int socklen_t;
 #include <netdb.h>
 #endif /* WIN32 */
 
+#ifdef __OS2__
+typedef int socklen_t;
+#elif 0
 /* FIXME: What platforms need this? */
-#if 0
 typedef Uint32 socklen_t;
 #endif
 
