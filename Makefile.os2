@@ -1,0 +1,71 @@
+# Open Watcom makefile to build SDL2net.dll for OS/2
+# wmake -f Makefile.os2
+#
+# Remember to edit DEPS_INC and DEPS_LIB below to meet
+# your own environment!.
+
+LIBNAME = SDL2net
+VERSION = 2.0.1
+
+TITLENAME = $(LIBNAME) $(VERSION)
+
+LIBFILE = $(LIBNAME).lib
+DLLFILE = $(LIBNAME).dll
+LNKFILE = $(LIBNAME).lnk
+# change DEPS_INC in order to point to the dependency headers.
+DEPS_INC=-IC:\SDL2DEV\h\SDL2
+# change DEPS_LIB in order to point to the dependency libraries.
+DEPS_LIB=C:\SDL2DEV\lib
+
+SRCS = SDLnetTCP.c SDLnetUDP.c SDLnetselect.c SDLnet.c
+
+OBJS = $(SRCS:.c=.obj)
+
+LIBS = SDL2.lib
+
+CFLAGS = -bt=os2 -d0 -q -bm -5s -fp5 -fpi87 -sg -oteanbmier -ei -j
+# warnings:
+CFLAGS+= -wx
+# to build a dll:
+CFLAGS+= -bd
+# for DECLSPEC:
+CFLAGS+= -DBUILD_SDL
+# include paths:
+CFLAGS+= -I$(%WATCOM)/h/os2 -I$(%WATCOM)/h
+CFLAGS+= -I. $(DEPS_INC)
+
+$(LIBFILE): $(DLLFILE)
+  @echo * Create library: $@...
+  wlib -b -n -q -c -pa -s -t -zld -ii -io $@ $(DLLFILE)
+
+$(DLLFILE): $(OBJS) $(LNKFILE)
+  @echo * Link: $@
+  wlink @$(LNKFILE)
+
+$(LNKFILE):
+  @%create $@
+  @%append $@ SYSTEM os2v2_dll INITINSTANCE TERMINSTANCE
+  @%append $@ NAME $(LIBNAME)
+  @for %i in ($(OBJS)) do @%append $@ FILE %i
+  @%append $@ OPTION QUIET
+  @%append $@ OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@Simple DirectMedia Layer network library'
+  @%append $@ LIBPATH $(DEPS_LIB)
+  @for %i in ($(LIBS)) do @%append $@ LIB %i
+  @%append $@ OPTION MAP=$*
+  @%append $@ OPTION ELIMINATE
+  @%append $@ OPTION MANYAUTODATA
+  @%append $@ OPTION OSNAME='OS/2 and eComStation'
+  @%append $@ OPTION SHOWDEAD
+
+.c.obj:
+  wcc386 $(CFLAGS) -fo=$^@ $<
+
+clean: .SYMBOLIC
+  @echo * Clean: $(TITLENAME)
+  @if exist *.obj rm *.obj
+  @if exist *.err rm *.err
+  @if exist $(LNKFILE) rm $(LNKFILE)
+distclean: .SYMBOLIC clean
+  @if exist $(DLLFILE) rm $(DLLFILE)
+  @if exist $(LIBFILE) rm $(LIBFILE)
+  @if exist *.map rm *.map
