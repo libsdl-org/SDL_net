@@ -1,3 +1,11 @@
+1.2.9:
+- Fixed endian-ness issues with SDLNet_(Read|Write)(16|32) (bug #1388)
+- Fixed bad aligned access considerations on ARM. (debian bug #212570)
+- Fixed SDLNet_UDP_Bind not behaving as described (debian bug #211570)
+- Fixed returning all IP addresses from SDLNet_GetLocalAddresses() on
+  Windows (bug #2103)
+- Build fixes for OS/2 (bug #3913)
+
 1.2.8:
 Sam Lantinga - Sun Jan 15 01:39:35 EST 2012
  * Added the definition for INADDR_LOOPBACK
