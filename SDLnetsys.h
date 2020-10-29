@@ -19,9 +19,10 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-/* $Id$ */
-
 /* Include normal system headers */
+#ifdef __APPLE__
+#define _DARWIN_C_SOURCE
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
