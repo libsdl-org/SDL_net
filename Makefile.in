@@ -427,6 +427,7 @@ EXTRA_DIST = \
 	Android.mk		\
 	debian			\
 	version.rc		\
+	Makefile.os2		\
 	VisualC			\
 	Xcode			\
 	Xcode-iOS		\
