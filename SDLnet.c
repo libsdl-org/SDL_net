@@ -20,8 +20,6 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-/* $Id$ */
-
 #include "SDLnetsys.h"
 #include "SDL_net.h"
 
@@ -60,7 +58,7 @@ int SDLNet_GetLastError(void)
 void SDLNet_SetLastError(int err)
 {
     #if defined(__OS2__) && !defined(__EMX__)
-    /* FIXME: OS2 doesn't have a function to reset socket errno */
+    (void) err; /* FIXME: OS2 doesn't have a function to reset socket errno */
     #else
     errno = err;
     #endif

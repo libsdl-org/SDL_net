@@ -19,8 +19,6 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-/* $Id$ */
-
 #include "SDLnetsys.h"
 #include "SDL_net.h"
 
@@ -48,11 +46,10 @@ struct _UDPsocket {
 /* Allocate/free a single UDP packet 'size' bytes long.
    The new packet is returned, or NULL if the function ran out of memory.
  */
-extern UDPpacket *SDLNet_AllocPacket(int size)
+UDPpacket *SDLNet_AllocPacket(int size)
 {
     UDPpacket *packet;
     int error;
-
 
     error = 1;
     packet = (UDPpacket *)SDL_malloc(sizeof(*packet));
@@ -70,6 +67,7 @@ extern UDPpacket *SDLNet_AllocPacket(int size)
     }
     return(packet);
 }
+
 int SDLNet_ResizePacket(UDPpacket *packet, int newsize)
 {
     Uint8 *newdata;
@@ -82,7 +80,8 @@ int SDLNet_ResizePacket(UDPpacket *packet, int newsize)
     }
     return(packet->maxlen);
 }
-extern void SDLNet_FreePacket(UDPpacket *packet)
+
+void SDLNet_FreePacket(UDPpacket *packet)
 {
     if ( packet ) {
         SDL_free(packet->data);
@@ -118,6 +117,7 @@ UDPpacket **SDLNet_AllocPacketV(int howmany, int size)
     }
     return(packetV);
 }
+
 void SDLNet_FreePacketV(UDPpacket **packetV)
 {
     if ( packetV ) {
@@ -208,12 +208,10 @@ UDPsocket SDLNet_UDP_Open(Uint16 port)
 #endif
 
     /* The socket is ready */
-
     return(sock);
 
 error_return:
     SDLNet_UDP_Close(sock);
-
     return(NULL);
 }
 
@@ -436,7 +434,7 @@ static int SocketReady(SOCKET sock)
    This function returns the number of packets read from the network, or -1
    on error.  This function does not block, so can return 0 packets pending.
 */
-extern int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
+int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
 {
     int numrecv, i, j;
     struct UDP_channel *binding;
@@ -482,7 +480,6 @@ extern int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
 foundit:
             ++numrecv;
         }
-
         else
         {
             packet->len = 0;
@@ -512,7 +509,7 @@ int SDLNet_UDP_Recv(UDPsocket sock, UDPpacket *packet)
 }
 
 /* Close a UDP network socket */
-extern void SDLNet_UDP_Close(UDPsocket sock)
+void SDLNet_UDP_Close(UDPsocket sock)
 {
     if ( sock != NULL ) {
         if ( sock->channel != INVALID_SOCKET ) {
@@ -521,4 +518,3 @@ extern void SDLNet_UDP_Close(UDPsocket sock)
         SDL_free(sock);
     }
 }
-
