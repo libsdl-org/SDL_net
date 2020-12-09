@@ -19,8 +19,6 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-/* $Id$ */
-
 /* Include normal system headers */
 #include <stdio.h>
 #include <stdlib.h>

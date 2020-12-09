@@ -19,8 +19,6 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-/* $Id$ */
-
 #include "SDLnetsys.h"
 #include "SDL_net.h"
 
@@ -48,11 +46,10 @@ struct _UDPsocket {
 /* Allocate/free a single UDP packet 'size' bytes long.
    The new packet is returned, or NULL if the function ran out of memory.
  */
-extern UDPpacket *SDLNet_AllocPacket(int size)
+UDPpacket *SDLNet_AllocPacket(int size)
 {
 	UDPpacket *packet;
 	int error;
-
 
 	error = 1;
 	packet = (UDPpacket *)malloc(sizeof(*packet));
@@ -70,6 +67,7 @@ extern UDPpacket *SDLNet_AllocPacket(int size)
 	}
 	return(packet);
 }
+
 int SDLNet_ResizePacket(UDPpacket *packet, int newsize)
 {
 	Uint8 *newdata;
@@ -82,7 +80,8 @@ int SDLNet_ResizePacket(UDPpacket *packet, int newsize)
 	}
 	return(packet->maxlen);
 }
-extern void SDLNet_FreePacket(UDPpacket *packet)
+
+void SDLNet_FreePacket(UDPpacket *packet)
 {
 	if ( packet ) {
 		if ( packet->data )
@@ -151,7 +150,7 @@ UDPsocket SDLNet_UDP_Open(Uint16 port)
 	}
 	memset(sock, 0, sizeof(*sock));
 	memset(&sock_addr, 0, sizeof(sock_addr));
-	
+
 	/* Open the socket */
 	sock->channel = socket(AF_INET, SOCK_DGRAM, 0);
 	if ( sock->channel == INVALID_SOCKET ) 
@@ -175,7 +174,7 @@ UDPsocket SDLNet_UDP_Open(Uint16 port)
 	/* Get the bound address and port */
 	sock_len = sizeof(sock_addr);
 	if ( getsockname(sock->channel, (struct sockaddr *)&sock_addr, &sock_len) < 0 ) {
-perror("getsockname");
+		perror("getsockname");
 		SDLNet_SetError("Couldn't get socket address");
 		goto error_return;
 	}
@@ -210,12 +209,10 @@ perror("getsockname");
 #endif
 
 	/* The socket is ready */
-	
 	return(sock);
 
 error_return:
 	SDLNet_UDP_Close(sock);
-	
 	return(NULL);
 }
 
@@ -369,15 +366,15 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 				++numsent;
 			}
 		}
-		else 
+		else
 		{
 			/* Send to each of the bound addresses on the channel */
 #ifdef DEBUG_NET
 			printf("SDLNet_UDP_SendV sending packet to channel = %d\n", packets[i]->channel );
 #endif
-			
+
 			binding = &sock->binding[packets[i]->channel];
-			
+
 			for ( j=binding->numbound-1; j>=0; --j ) 
 			{
 				sock_addr.sin_addr.s_addr = binding->address[j].host;
@@ -394,7 +391,7 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets)
 			}
 		}
 	}
-	
+
 	return(numsent);
 }
 
@@ -438,7 +435,7 @@ static int SocketReady(SOCKET sock)
    This function returns the number of packets read from the network, or -1
    on error.  This function does not block, so can return 0 packets pending.
 */
-extern int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
+int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
 {
 	int numrecv, i, j;
 	struct UDP_channel *binding;
@@ -455,7 +452,7 @@ extern int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
 		UDPpacket *packet;
 
 		packet = packets[numrecv];
-		
+
 		sock_len = sizeof(sock_addr);
 		packet->status = recvfrom(sock->channel,
 				packet->data, packet->maxlen, 0,
@@ -483,16 +480,15 @@ extern int SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets)
 			}
 foundit:
 			++numrecv;
-		} 
-		
-		else 
+		}
+		else
 		{
 			packet->len = 0;
 		}
 	}
-	
+
 	sock->ready = 0;
-	
+
 	return(numrecv);
 }
 
@@ -514,7 +510,7 @@ int SDLNet_UDP_Recv(UDPsocket sock, UDPpacket *packet)
 }
 
 /* Close a UDP network socket */
-extern void SDLNet_UDP_Close(UDPsocket sock)
+void SDLNet_UDP_Close(UDPsocket sock)
 {
 	if ( sock != NULL ) 
 	{
@@ -526,4 +522,3 @@ extern void SDLNet_UDP_Close(UDPsocket sock)
 		free(sock);
 	}
 }
-
