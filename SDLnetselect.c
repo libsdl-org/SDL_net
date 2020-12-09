@@ -19,8 +19,6 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-/* $Id$ */
-
 #include "SDLnetsys.h"
 #include "SDL_net.h"
 
@@ -151,13 +149,12 @@ int SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout)
 	}
 	return(retval);
 }
- 
+
 /* Free a set of sockets allocated by SDL_NetAllocSocketSet() */
-extern void SDLNet_FreeSocketSet(SDLNet_SocketSet set)
+void SDLNet_FreeSocketSet(SDLNet_SocketSet set)
 {
 	if ( set ) {
 		free(set->sockets);
 		free(set);
 	}
 }
-
