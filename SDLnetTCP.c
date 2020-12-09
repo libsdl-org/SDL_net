@@ -19,8 +19,6 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-/* $Id$ */
-
 #include "SDLnetsys.h"
 #include "SDL_net.h"
 
@@ -65,8 +63,7 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
     /* Connect to remote, or bind locally, as appropriate */
     if ( (ip->host != INADDR_NONE) && (ip->host != INADDR_ANY) ) {
 
-    // #########  Connecting to remote
-
+    /* #########  Connecting to remote */
         SDL_memset(&sock_addr, 0, sizeof(sock_addr));
         sock_addr.sin_family = AF_INET;
         sock_addr.sin_addr.s_addr = ip->host;
@@ -81,8 +78,7 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
         sock->sflag = 0;
     } else {
 
-    // ##########  Binding locally
-
+    /* ##########  Binding locally */
         SDL_memset(&sock_addr, 0, sizeof(sock_addr));
         sock_addr.sin_family = AF_INET;
         sock_addr.sin_addr.s_addr = INADDR_ANY;
