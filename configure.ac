@@ -1,5 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(README.txt)
+AC_INIT
+AC_CONFIG_MACRO_DIR([acinclude])
+AC_CONFIG_SRCDIR([SDLnet.c])
 
 dnl Set various version strings - taken gratefully from the GTk sources
 
@@ -45,7 +47,6 @@ dnl Setup for automake
 AM_INIT_AUTOMAKE(SDL2_net, $VERSION)
 
 dnl Check for tools
-AC_PROG_LIBTOOL
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
@@ -138,6 +139,7 @@ CXXFLAGS="$CXXFLAGS $CFLAGS"
 AC_SUBST([WINDRES])
 
 # Finally create all the generated files
-AC_OUTPUT([
+AC_CONFIG_FILES([
 Makefile SDL2_net.spec SDL2_net.pc
 ])
+AC_OUTPUT
