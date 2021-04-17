@@ -34,6 +34,7 @@
 #if defined(__WIN32__) || defined(WIN32)
 #define __USE_W32_SOCKETS
 #if defined(_WIN64) || defined(__MINGW64_VERSION_MAJOR)
+#define __USE_WINSOCK2
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else
