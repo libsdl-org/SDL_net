@@ -118,6 +118,7 @@ int  SDLNet_Init(void)
     ++SDLNet_started;
     return(0);
 }
+
 void SDLNet_Quit(void)
 {
     if ( SDLNet_started == 0 ) {
