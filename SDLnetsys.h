@@ -33,7 +33,7 @@
 /* Include system network headers */
 #if defined(__WIN32__) || defined(WIN32)
 #define __USE_W32_SOCKETS
-#ifdef _WIN64
+#if defined(_WIN64) || defined(__MINGW64_VERSION_MAJOR)
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else

@@ -83,8 +83,11 @@ dnl Figure out which networking libraries to use
 case "$host" in
     *mingw32ce*)
         INETLIB="-lwinsock -lws2"
-	;;
+        ;;
     x86_64-*-mingw*)
+        INETLIB="-lws2_32 -liphlpapi"
+        ;;
+    *-w64-mingw*)
         INETLIB="-lws2_32 -liphlpapi"
         ;;
     *-*-cygwin* | *-*-mingw*)
@@ -121,7 +124,7 @@ LIBS="$LIBS $SDL_LIBS"
 dnl Check for GUI library for the chat client
 have_GUI=no
 AC_ARG_ENABLE(gui,
-[  --enable-gui            Try to build the GUI test programs [default=yes]],
+[AS_HELP_STRING([--enable-gui],[Try to build the GUI test programs [default=yes]])],
               , enable_gui=yes)
 if test x$enable_gui = xyes; then
     AC_LANG_PUSH(C++)
