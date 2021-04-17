@@ -30,7 +30,7 @@
 
 #if defined(__OS2__) && !defined(__EMX__)
 #include <nerrno.h>
-#elif !defined(_WIN32_WCE)
+#else
 #include <errno.h>
 #endif
 
