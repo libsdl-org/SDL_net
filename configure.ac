@@ -81,11 +81,8 @@ AM_CONDITIONAL(USE_VERSION_RC, test x$use_version_rc = xtrue)
 
 dnl Figure out which networking libraries to use
 case "$host" in
-    x86_64-*-mingw*)
-        INETLIB="-lws2_32 -liphlpapi"
-        ;;
     *-*-cygwin* | *-*-mingw*)
-        INETLIB="-lwsock32 -liphlpapi"
+        INETLIB="-lws2_32 -liphlpapi"
         ;;
     sparc*-*-solaris*)
         INETLIB="-lsocket -lnsl"
@@ -118,7 +115,7 @@ LIBS="$LIBS $SDL_LIBS"
 dnl Check for GUI library for the chat client
 have_GUI=no
 AC_ARG_ENABLE(gui,
-[  --enable-gui            Try to build the GUI test programs [default=yes]],
+[AS_HELP_STRING([--enable-gui],[Try to build the GUI test programs [default=yes]])],
               , enable_gui=yes)
 if test x$enable_gui = xyes; then
     AC_LANG_PUSH(C++)
