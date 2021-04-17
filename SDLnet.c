@@ -95,6 +95,7 @@ int  SDLNet_Init(void)
 	++SDLNet_started;
 	return(0);
 }
+
 void SDLNet_Quit(void)
 {
 	if ( SDLNet_started == 0 ) {
@@ -105,9 +106,6 @@ void SDLNet_Quit(void)
 		/* Clean up windows networking */
 		if ( WSACleanup() == SOCKET_ERROR ) {
 			if ( WSAGetLastError() == WSAEINPROGRESS ) {
-#if !(defined(_WIN32_WCE)||defined(__USE_WINSOCK2))
-				WSACancelBlockingCall();
-#endif
 				WSACleanup();
 			}
 		}

@@ -33,16 +33,8 @@
 /* Include system network headers */
 #if defined(__WIN32__) || defined(WIN32)
 #define __USE_W32_SOCKETS
-#if defined(_WIN64) || defined(__MINGW64_VERSION_MAJOR)
-#define __USE_WINSOCK2
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#else
-#include <winsock.h>
-/* NOTE: windows socklen_t is signed
- * and is defined only for winsock2. */
-typedef int socklen_t;
-#endif /* W64 */
 #include <iphlpapi.h>
 #else /* UNIX */
 #ifdef __OS2__
@@ -60,7 +52,7 @@ typedef int socklen_t;
 #ifndef __BEOS__
 #include <arpa/inet.h>
 #endif
-#ifdef linux /* FIXME: what other platforms have this? */
+#ifdef __linux__ /* FIXME: what other platforms have this? */
 #include <netinet/tcp.h>
 #endif
 #include <sys/socket.h>
