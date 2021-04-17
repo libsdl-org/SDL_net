@@ -82,7 +82,7 @@ AM_CONDITIONAL(USE_VERSION_RC, test x$use_version_rc = xtrue)
 dnl Figure out which networking libraries to use
 case "$host" in
     *mingw32ce*)
-        INETLIB="-lwinsock -lws2"
+        INETLIB="-lwinsock -lws2 -liphlpapi"
         ;;
     x86_64-*-mingw*)
         INETLIB="-lws2_32 -liphlpapi"
