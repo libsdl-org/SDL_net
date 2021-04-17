@@ -20,7 +20,7 @@
 */
 
 /* Include normal system headers */
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(_DARWIN_C_SOURCE)
 #define _DARWIN_C_SOURCE
 #endif
 #include <stdio.h>
