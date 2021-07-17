@@ -7,5 +7,7 @@ Name: SDL_net
 Description: net library for Simple DirectMedia Layer
 Version: @VERSION@
 Requires: sdl >= @SDL_VERSION@
-Libs: -L${libdir} -lSDL_net
+@ENABLE_SHARED_TRUE@Libs: -L${libdir} -lSDL_net
+@ENABLE_SHARED_TRUE@@ENABLE_STATIC_TRUE@Libs.private: @INETLIB@
+@ENABLE_SHARED_FALSE@Libs: -L${libdir} -lSDL_net @INETLIB@
 Cflags: -I${includedir}/SDL
