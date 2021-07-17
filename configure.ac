@@ -136,6 +136,25 @@ AM_CONDITIONAL(HAVE_GUI_LIB, test x$have_GUI = xyes)
 dnl C++ flags are the same as the C flags
 CXXFLAGS="$CXXFLAGS $CFLAGS"
 
+if test x$enable_shared = xyes; then
+    ENABLE_SHARED_TRUE=
+    ENABLE_SHARED_FALSE="#"
+else
+    ENABLE_SHARED_TRUE="#"
+    ENABLE_SHARED_FALSE=
+fi
+if test x$enable_static = xyes; then
+    ENABLE_STATIC_TRUE=
+    ENABLE_STATIC_FALSE="#"
+else
+    ENABLE_STATIC_TRUE="#"
+    ENABLE_STATIC_FALSE=
+fi
+AC_SUBST(ENABLE_SHARED_TRUE)
+AC_SUBST(ENABLE_SHARED_FALSE)
+AC_SUBST(ENABLE_STATIC_TRUE)
+AC_SUBST(ENABLE_STATIC_FALSE)
+
 AC_SUBST([WINDRES])
 
 # Finally create all the generated files
