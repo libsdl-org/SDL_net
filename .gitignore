@@ -1,0 +1,65 @@
+syntax:glob
+.svn
+autom4te*
+config.cache
+config.log
+config.status
+Makefile
+libtool
+.deps
+.libs
+*.lo
+*.o
+*.la
+*.lai
+.DS_Store
+xcuserdata
+*.xcworkspace
+SDL2_net.pc
+showinterfaces
+build
+Build
+
+# for CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+cmake_uninstall.cmake
+SDL2ConfigVersion.cmake
+.ninja_*
+*.ninja
+
+# for CLion
+.idea
+cmake-build-*
+
+# for Xcode
+*.mode1*
+*.perspective*
+*.pbxuser
+(^|/)build($|/)
+.DS_Store
+xcuserdata
+*.xcworkspace
+
+# for Visual C++
+.vs
+Debug
+Release
+*.user
+*.ncb
+*.suo
+*.sdf
+
+# for Visual Studio Code
+.vscode
+
+# for Debian
+builddir/
+debian/*.debhelper.log
+debian/*.substvars
+debian/*.tar.gz
+debian/.debhelper/
+debian/files
+debian/libsdl*/
+debian/tmp/
