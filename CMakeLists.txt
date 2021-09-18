@@ -45,6 +45,11 @@ else()
     set_target_properties(SDL2_net PROPERTIES POSITION_INDEPENDENT_CODE ON)
   endif()
 
+  # Windows requires additional libs
+  if(WIN32)
+    target_link_libraries(SDL2_net wsock32 ws2_32 iphlpapi)
+  endif()
+
   target_include_directories(
     SDL2_net PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SDL2>)
 
@@ -111,4 +116,8 @@ option(BUILD_SHOWINTERFACE
 if(BUILD_SHOWINTERFACE)
   add_executable(showinterfaces showinterfaces.c)
   target_link_libraries(showinterfaces SDL2_net)
+  # Windows requires SDL2main
+  if(WIN32)
+    target_link_libraries(showinterfaces SDL2::SDL2main)
+  endif()
 endif()
