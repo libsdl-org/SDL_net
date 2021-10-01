@@ -38,7 +38,7 @@ else()
   # library generation #####
   add_library(SDL2_net SDLnet.c SDLnetselect.c SDLnetTCP.c SDLnetUDP.c
                        SDL_net.h SDLnetsys.h)
-  if(BUILD_SHARED_LIBS)
+  if(BUILD_SHARED_LIBS OR WIN32)
     target_link_libraries(SDL2_net SDL2::SDL2)
   else()
     target_link_libraries(SDL2_net SDL2::SDL2-static)

@@ -1,0 +1,34 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  Build:
+    name: ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.os }}
+
+    defaults:
+      run:
+        shell: ${{ matrix.platform.shell }}
+
+    strategy:
+      matrix:
+        platform:
+        - { name: Windows (x64),     os: windows-latest, shell: pwsh, flags: -A x64, vcpkg-triplet: x64-windows}
+        - { name: Windows (x86),     os: windows-latest, shell: pwsh, flags: -A Win32, vcpkg-triplet: x86-windows }
+        - { name: Windows (ARM64),   os: windows-latest, shell: pwsh, flags: -A ARM64, vcpkg-triplet: arm64-windows }
+        - { name: Linux,             os: ubuntu-20.04,   shell: sh, vcpkg-triplet: x64-linux }
+        - { name: MacOS,             os: macos-latest,   shell: sh, vcpkg-triplet: x64-osx }
+    
+    steps:
+    - name: Install SDL2
+      run: vcpkg install sdl2:${{ matrix.platform.vcpkg-triplet }}
+    - uses: actions/checkout@v2
+    - name: Configure CMake (Windows)
+      if: runner.os == 'Windows'
+      run: cmake -DCMAKE_TOOLCHAIN_FILE="$Env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -B build ${{ matrix.platform.flags }} -S .
+    - name: Configure CMake (Others)
+      if: runner.os != 'Windows'
+      run: cmake -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -B build ${{ matrix.platform.flags }} -S .
+    - name: Build
+      run: cmake --build build/
