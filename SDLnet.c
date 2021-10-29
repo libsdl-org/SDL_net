@@ -270,7 +270,7 @@ int SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount)
     return count;
 }
 
-#if !defined(WITHOUT_SDL) && !SDL_DATA_ALIGNED /* function versions for binary compatibility */
+/* function versions for binary compatibility */
 
 #undef SDLNet_Write16
 #undef SDLNet_Write32
@@ -282,27 +282,25 @@ extern DECLSPEC void SDLCALL SDLNet_Write16(Uint16 value, void *area);
 extern DECLSPEC void SDLCALL SDLNet_Write32(Uint32 value, void *area);
 
 /* Read a 16/32 bit value from network packet buffer */
-extern DECLSPEC Uint16 SDLCALL SDLNet_Read16(void *area);
+extern DECLSPEC Uint16 SDLCALL SDLNet_Read16(const void *area);
 extern DECLSPEC Uint32 SDLCALL SDLNet_Read32(const void *area);
 
 void  SDLNet_Write16(Uint16 value, void *areap)
 {
-    (*(Uint16 *)(areap) = SDL_SwapBE16(value));
+    _SDLNet_Write16(value, areap);
 }
 
 void   SDLNet_Write32(Uint32 value, void *areap)
 {
-    *(Uint32 *)(areap) = SDL_SwapBE32(value);
+    _SDLNet_Write32(value, areap);
 }
 
-Uint16 SDLNet_Read16(void *areap)
+Uint16 SDLNet_Read16(const void *areap)
 {
-    return (SDL_SwapBE16(*(Uint16 *)(areap)));
+    return _SDLNet_Read16(areap);
 }
 
 Uint32 SDLNet_Read32(const void *areap)
 {
-    return (SDL_SwapBE32(*(Uint32 *)(areap)));
+    return _SDLNet_Read32(areap);
 }
-
-#endif /* !defined(WITHOUT_SDL) && !SDL_DATA_ALIGNED */
