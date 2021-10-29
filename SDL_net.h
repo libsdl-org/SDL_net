@@ -374,12 +374,12 @@ extern DECLSPEC const char * SDLCALL SDLNet_GetError(void);
 /* Inline functions to read/write network data                         */
 /***********************************************************************/
 
-/* Warning, some systems have data access alignment restrictions */
-#if defined(sparc) || defined(mips) || defined(__arm__)
-#define SDL_DATA_ALIGNED    1
+/* Warning, most systems have data access alignment restrictions */
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86) || defined(_M_AMD64)
+#define SDL_DATA_ALIGNED    0
 #endif
 #ifndef SDL_DATA_ALIGNED
-#define SDL_DATA_ALIGNED    0
+#define SDL_DATA_ALIGNED    1
 #endif
 
 /* Write a 16/32-bit value to network packet buffer */
