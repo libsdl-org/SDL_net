@@ -430,9 +430,9 @@ SDL_FORCE_INLINE void _SDLNet_Write32(Uint32 value, void *areap)
     area[3] =  value        & 0xFF;
 }
 
-SDL_FORCE_INLINE Uint16 _SDLNet_Read16(void *areap)
+SDL_FORCE_INLINE Uint16 _SDLNet_Read16(const void *areap)
 {
-    Uint8 *area = (Uint8*)areap;
+    const Uint8 *area = (const Uint8*)areap;
     return ((Uint16)area[0]) << 8 | ((Uint16)area[1]);
 }
 
