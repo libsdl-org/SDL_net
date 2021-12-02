@@ -43,7 +43,7 @@ else
 libSDL2_net_la_LDFLAGS = 	\
 	-no-undefined		\
 	-release $(LT_RELEASE)	\
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) $(LT_EXTRA)
 libSDL2_net_la_LIBADD = @INETLIB@
 endif
 
