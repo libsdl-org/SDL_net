@@ -112,6 +112,34 @@ case "$host" in
 esac
 AC_SUBST(INETLIB)
 
+dnl See if GCC's -fvisibility=hidden is supported (gcc4 and later, usually).
+CheckVisibilityHidden()
+{
+    AC_MSG_CHECKING(for GCC -fvisibility=hidden option)
+    have_gcc_fvisibility=no
+    case "$host" in
+    *-*-cygwin* | *-*-mingw* | *-*-os2*)
+        AC_MSG_RESULT([ignored for $host_os])
+        return
+        ;;
+    esac
+
+    visibility_CFLAGS="-fvisibility=hidden"
+    save_CFLAGS="$CFLAGS"
+    CFLAGS="$save_CFLAGS $visibility_CFLAGS -Werror"
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #if !defined(__GNUC__) || __GNUC__ < 4
+    #error SDL only uses visibility attributes in GCC 4 or newer
+    #endif
+    ]],[])], [have_gcc_fvisibility=yes],[])
+    AC_MSG_RESULT($have_gcc_fvisibility)
+    CFLAGS="$save_CFLAGS"
+
+    if test x$have_gcc_fvisibility = xyes; then
+        CFLAGS="$CFLAGS $visibility_CFLAGS"
+    fi
+}
+
 dnl Check for SDL
 SDL_VERSION=2.0.0
 AC_SUBST(SDL_VERSION)
@@ -139,6 +167,9 @@ http://www.libsdl.org/projects/GUIlib/
     fi
 fi
 AM_CONDITIONAL(HAVE_GUI_LIB, test x$have_GUI = xyes)
+
+dnl check for GCC visibility attributes
+CheckVisibilityHidden
 
 dnl C++ flags are the same as the C flags
 CXXFLAGS="$CXXFLAGS $CFLAGS"
