@@ -26,6 +26,8 @@ LIBS = SDL2.lib
 CFLAGS = -bt=os2 -d0 -q -bm -5s -fp5 -fpi87 -sg -oteanbmier -ei -j
 # warnings:
 CFLAGS+= -wx
+# newer OpenWatcom versions enable W303 by default
+CFLAGS_BASE+= -wcd=303
 # to build a dll:
 CFLAGS+= -bd
 # for DECLSPEC:
