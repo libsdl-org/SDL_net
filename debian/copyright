@@ -5,7 +5,7 @@ Upstream-Contact: Sam Lantinga <slouken@libsdl.org>
 Source: http://www.libsdl.org/projects/SDL_net/
 
 Files: *
-Copyright: 1997-2021 Sam Lantinga
+Copyright: 1997-2022 Sam Lantinga
 License: zlib/libpng
 
 Files: debian/*
