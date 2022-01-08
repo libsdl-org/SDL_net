@@ -1,4 +1,4 @@
-# Makefile.am for the SDL sample image loading library and viewer
+# Makefile.am for the SDL portable network library
 ACLOCAL_AMFLAGS = -I acinclude
 AUTOMAKE_OPTIONS= foreign
 
