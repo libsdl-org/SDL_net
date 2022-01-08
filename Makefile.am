@@ -15,7 +15,7 @@ libSDL2_net_la_SOURCES =		\
 	SDLnetselect.c		\
 	SDLnetsys.h
 
-EXTRA_DIST =			\
+EXTRA_DIST = CHANGES.txt COPYING.txt README.txt \
 	Android.mk		\
 	debian			\
 	version.rc		\
@@ -27,10 +27,8 @@ EXTRA_DIST =			\
 	scroll_dn.bmp		\
 	scroll_up.bmp		\
 	SDL2_net.spec		\
-	SDL2_net.spec.in		\
-	gcc-fat.sh		\
-	autogen.sh			\
-	$(srcdir)/*.txt
+	SDL2_net.spec.in	\
+	autogen.sh gcc-fat.sh
 
 if USE_VERSION_RC
 libSDL2_net_la_LDFLAGS = 	\
