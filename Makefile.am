@@ -1,4 +1,4 @@
-# Makefile.am for the SDL sample image loading library and viewer
+# Makefile.am for the SDL portable network library
 ACLOCAL_AMFLAGS = -I acinclude
 AUTOMAKE_OPTIONS= foreign
 
@@ -29,8 +29,7 @@ EXTRA_DIST =			\
 	scroll_up.bmp		\
 	SDL_net.spec		\
 	SDL_net.spec.in		\
-	gcc-fat.sh		\
-	autogen.sh
+	autogen.sh gcc-fat.sh
 
 if USE_VERSION_RC
 libSDL_net_la_LDFLAGS = 	\
