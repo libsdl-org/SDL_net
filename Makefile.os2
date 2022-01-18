@@ -12,6 +12,7 @@ TITLENAME = $(LIBNAME) $(VERSION)
 LIBFILE = $(LIBNAME).lib
 DLLFILE = $(LIBNAME).dll
 LNKFILE = $(LIBNAME).lnk
+
 # change DEPS_INC in order to point to the dependency headers.
 DEPS_INC=-IC:\SDL2DEV\h\SDL2
 # change DEPS_LIB in order to point to the dependency libraries.
@@ -23,7 +24,7 @@ OBJS = $(SRCS:.c=.obj)
 
 LIBS = SDL2.lib
 
-CFLAGS = -bt=os2 -d0 -q -bm -5s -fp5 -fpi87 -sg -oteanbmier -ei -j
+CFLAGS = -bt=os2 -d0 -q -bm -5s -fp5 -fpi87 -sg -oeatxh -ei -j
 # warnings:
 CFLAGS+= -wx
 # newer OpenWatcom versions enable W303 by default
@@ -67,6 +68,7 @@ clean: .SYMBOLIC
   @if exist *.obj rm *.obj
   @if exist *.err rm *.err
   @if exist $(LNKFILE) rm $(LNKFILE)
+
 distclean: .SYMBOLIC clean
   @if exist $(DLLFILE) rm $(DLLFILE)
   @if exist $(LIBFILE) rm $(LIBFILE)
