@@ -112,6 +112,36 @@ case "$host" in
 esac
 AC_SUBST(INETLIB)
 
+dnl See if GCC's -Wall is supported.
+CheckWarnAll()
+{
+    AC_MSG_CHECKING(for GCC -Wall option)
+    have_gcc_Wall=no
+
+    save_CFLAGS="$CFLAGS"
+    CFLAGS="$save_CFLAGS -Wall"
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([int x = 0;])], [have_gcc_Wall=yes])
+    AC_MSG_RESULT($have_gcc_Wall)
+    CFLAGS="$save_CFLAGS"
+
+    if test x$have_gcc_Wall = xyes; then
+        CFLAGS="$CFLAGS -Wall"
+
+dnl Haiku headers use multicharacter constants all over the place. Ignore these warnings when using -Wall.
+        AC_MSG_CHECKING(for necessary GCC -Wno-multichar option)
+        need_gcc_Wno_multichar=no
+        case "$host" in
+            *-*-haiku*)
+                need_gcc_Wno_multichar=yes
+                ;;
+        esac
+        AC_MSG_RESULT($need_gcc_Wno_multichar)
+        if test x$need_gcc_Wno_multichar = xyes; then
+            CFLAGS="$CFLAGS -Wno-multichar"
+        fi
+    fi
+}
+
 dnl See if GCC's -fvisibility=hidden is supported (gcc4 and later, usually).
 CheckVisibilityHidden()
 {
@@ -167,6 +197,9 @@ http://www.libsdl.org/projects/GUIlib/
     fi
 fi
 AM_CONDITIONAL(HAVE_GUI_LIB, test x$have_GUI = xyes)
+
+dnl check for GCC warning options
+CheckWarnAll
 
 dnl check for GCC visibility attributes
 CheckVisibilityHidden
