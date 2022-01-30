@@ -33,8 +33,15 @@
 /* Include system network headers */
 #if defined(__WIN32__) || defined(WIN32)
 #define __USE_W32_SOCKETS
+#ifdef __USE_WINSOCK2
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#else
+#include <winsock.h>
+/* NOTE: windows socklen_t is signed
+ * and is defined only for winsock2. */
+typedef int socklen_t;
+#endif
 #include <iphlpapi.h>
 #else /* UNIX */
 #ifdef __OS2__

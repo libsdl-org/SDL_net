@@ -106,6 +106,9 @@ void SDLNet_Quit(void)
 		/* Clean up windows networking */
 		if ( WSACleanup() == SOCKET_ERROR ) {
 			if ( WSAGetLastError() == WSAEINPROGRESS ) {
+#ifndef __USE_WINSOCK2
+				WSACancelBlockingCall();
+#endif
 				WSACleanup();
 			}
 		}

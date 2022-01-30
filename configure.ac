@@ -82,10 +82,19 @@ AM_CONDITIONAL(USE_VERSION_RC, test x$use_version_rc = xtrue)
 dnl Figure out which networking libraries to use
 case "$host" in
     *mingw32ce*)
+        CFLAGS="$CFLAGS -D__USE_WINSOCK2"
         INETLIB="-lws2 -liphlpapi"
         ;;
     *-*-cygwin* | *-*-mingw*)
-        INETLIB="-lws2_32 -liphlpapi"
+        AC_ARG_ENABLE(winsock2,
+        [AS_HELP_STRING([--enable-winsock2],[Build with Winsock 2 instead of 1.1 [default=yes]])],
+                      , enable_winsock2=yes)
+        if test x$enable_winsock2 = xyes; then
+            CFLAGS="$CFLAGS -D__USE_WINSOCK2"
+            INETLIB="-lws2_32 -liphlpapi"
+        else
+            INETLIB="-lwsock32 -liphlpapi"
+        fi
         ;;
     sparc*-*-solaris*)
         INETLIB="-lsocket -lnsl"
