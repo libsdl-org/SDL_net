@@ -39,6 +39,7 @@ AC_SUBST(LT_RELEASE)
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
+AC_SUBST(LT_EXTRA)
 
 dnl Detect the canonical build and host environments
 AC_CANONICAL_HOST
@@ -51,12 +52,7 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
-if test -z "$host_alias"; then
-    hostaliaswindres=
-else
-    hostaliaswindres="$host_alias-windres"
-fi
-AC_CHECK_PROGS(WINDRES, [windres $hostaliaswindres $host_os-windres])
+LT_PROG_RC
 
 case "$host" in
     *-*-beos*)
@@ -72,9 +68,8 @@ case "$host" in
                 ac_default_prefix=$BUILD_PREFIX
             fi
         fi
-        if test x$WINDRES != x; then
-            use_version_rc=true
-        fi
+        use_version_rc=true
+        LT_EXTRA="-Wl,version.o"
         ;;
 esac
 AM_CONDITIONAL(USE_VERSION_RC, test x$use_version_rc = xtrue)
@@ -219,7 +214,6 @@ AC_SUBST(ENABLE_SHARED_FALSE)
 AC_SUBST(ENABLE_STATIC_TRUE)
 AC_SUBST(ENABLE_STATIC_FALSE)
 
-AC_SUBST([WINDRES])
 
 # Finally create all the generated files
 AC_CONFIG_FILES([

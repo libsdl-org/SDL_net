@@ -31,23 +31,17 @@ EXTRA_DIST =			\
 	SDL_net.spec.in		\
 	autogen.sh gcc-fat.sh
 
+libSDL_net_la_LDFLAGS = 	\
+	-no-undefined		\
+	-release $(LT_RELEASE)	\
+	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) $(LT_EXTRA)
+libSDL_net_la_LIBADD = @INETLIB@
 if USE_VERSION_RC
-libSDL_net_la_LDFLAGS = 	\
-	-no-undefined		\
-	-release $(LT_RELEASE)	\
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) -Wl,version.o
-libSDL_net_la_LIBADD = @INETLIB@
 libSDL_net_la_DEPENDENCIES = version.o
-else
-libSDL_net_la_LDFLAGS = 	\
-	-no-undefined		\
-	-release $(LT_RELEASE)	\
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
-libSDL_net_la_LIBADD = @INETLIB@
 endif
 
-%.o : %.rc
-	$(WINDRES) $< $@
+.rc.o:
+	$(RC) $< $@
 
 if HAVE_GUI_LIB
 EXAMPLES = showinterfaces chat chatd
