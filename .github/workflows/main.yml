@@ -43,6 +43,9 @@ jobs:
           ${NULL+}
     - uses: actions/checkout@v2
 
+    - name: Check that versioning is consistent
+      run: ./test-versioning.sh
+
     - name: Configure Autotools
       run: |
         set -eu
