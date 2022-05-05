@@ -55,8 +55,8 @@ extern "C" {
 /* Printable format: "%d.%d.%d", MAJOR, MINOR, PATCHLEVEL
 */
 #define SDL_NET_MAJOR_VERSION   2
-#define SDL_NET_MINOR_VERSION   0
-#define SDL_NET_PATCHLEVEL      1
+#define SDL_NET_MINOR_VERSION   1
+#define SDL_NET_PATCHLEVEL      0
 
 /* This macro can be used to fill a version structure with the compile-time
  * version of the SDL_net library.
@@ -68,17 +68,27 @@ extern "C" {
     (X)->patch = SDL_NET_PATCHLEVEL;                \
 }
 
+#if SDL_NET_MAJOR_VERSION < 3 && SDL_MAJOR_VERSION < 3
 /**
  *  This is the version number macro for the current SDL_net version.
+ *
+ *  In versions higher than 2.9.0, the minor version overflows into
+ *  the thousands digit: for example, 2.23.0 is encoded as 4300.
+ *  This macro will not be available in SDL 3.x or SDL_net 3.x.
+ *
+ *  Deprecated, use SDL_NET_VERSION_ATLEAST or SDL_NET_VERSION instead.
  */
 #define SDL_NET_COMPILEDVERSION \
     SDL_VERSIONNUM(SDL_NET_MAJOR_VERSION, SDL_NET_MINOR_VERSION, SDL_NET_PATCHLEVEL)
+#endif /* SDL_NET_MAJOR_VERSION < 3 && SDL_MAJOR_VERSION < 3 */
 
 /**
  *  This macro will evaluate to true if compiled with SDL_net at least X.Y.Z.
  */
 #define SDL_NET_VERSION_ATLEAST(X, Y, Z) \
-    (SDL_NET_COMPILEDVERSION >= SDL_VERSIONNUM(X, Y, Z))
+    ((SDL_NET_MAJOR_VERSION >= X) && \
+     (SDL_NET_MAJOR_VERSION > X || SDL_NET_MINOR_VERSION >= Y) && \
+     (SDL_NET_MAJOR_VERSION > X || SDL_NET_MINOR_VERSION > Y || SDL_NET_PATCHLEVEL >= Z))
 
 /* This function gets the version of the dynamically linked SDL_net library.
    it should NOT be used to fill a version structure, instead you should
