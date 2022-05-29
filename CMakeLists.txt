@@ -127,11 +127,13 @@ if(SDL2NET_BUILD_SHARED_LIBS)
     endif()
 endif()
 
-# Use `Compatible Interface Properties` to ensure all linked SDL2 libraries are built with the same "sharedness".
-set_target_properties(SDL2_net PROPERTIES 
-    INTERFACE_SDL2_SHARED ${SDL2NET_BUILD_SHARED_LIBS}
-    COMPATIBLE_INTERFACE_BOOL SDL2_SHARED
-)
+# Use `Compatible Interface Properties` to ensure a shared SDL2_net is built with a shared SDL2
+if(SDL2NET_BUILD_SHARED_LIBS)
+    set_target_properties(SDL2_net PROPERTIES 
+        INTERFACE_SDL2_SHARED ${SDL2NET_BUILD_SHARED_LIBS}
+        COMPATIBLE_INTERFACE_BOOL SDL2_SHARED
+    )
+endif()
 
 if(SDL2NET_BUILD_SHARED_LIBS)
     sdl_target_link_options_no_undefined(SDL2_net)
