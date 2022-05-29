@@ -164,5 +164,11 @@ else
     not_ok "CMakeLists.txt DYLIB_COMPATIBILITY_VERSION is inconsistent"
 fi
 
+if [ "$ref_sdl_req" = "$sdl_req" ]; then
+    ok ".github/fetch_sdl_vc.ps1 $sdl_req"
+else
+    not_ok ".github/fetch_sdl_vc.ps1 sdl2_version=$sdl_req disagrees with configure.ac SDL_VERSION=$ref_sdl_req"
+fi
+
 echo "1..$tests"
 exit "$failed"

@@ -69,14 +69,14 @@ target_compile_definitions(SDL2_net PRIVATE
     SDL_BUILD_MICRO_VERSION=${MICRO_VERSION}
 )
 target_link_libraries(SDL2_net PRIVATE ${sdl2_target_name})
-if(WIN32) 
-    set_target_properties(SDL2_net PROPERTIES COMPILE_FLAGS "/wd4244 /wd4996")
+if(WIN32)
+    if (MSVC)
+        set_target_properties(SDL2_net PROPERTIES COMPILE_FLAGS "/wd4244 /wd4996")
+    endif()
     target_compile_definitions(SDL2_net PRIVATE _WINSOCK_DEPRECATED_NO_WARNINGS)
     target_link_libraries(SDL2_net PRIVATE ws2_32 iphlpapi)
     if(SDL2NET_BUILD_SHARED_LIBS)
-        target_sources(SDL2_net PRIVATE
-            version.rc
-        )
+        target_sources(SDL2_net PRIVATE version.rc)
     endif()
 endif()
 set_target_properties(SDL2_net PROPERTIES
