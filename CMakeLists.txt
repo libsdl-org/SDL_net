@@ -71,7 +71,7 @@ target_compile_definitions(SDL2_net PRIVATE
 target_link_libraries(SDL2_net PRIVATE ${sdl2_target_name})
 if(WIN32)
     if (MSVC)
-        set_target_properties(SDL2_net PROPERTIES COMPILE_FLAGS "/wd4244 /wd4996")
+        target_compile_options(SDL2_net PRIVATE /W3 /wd4244)
     endif()
     target_compile_definitions(SDL2_net PRIVATE _WINSOCK_DEPRECATED_NO_WARNINGS)
     target_link_libraries(SDL2_net PRIVATE ws2_32 iphlpapi)
