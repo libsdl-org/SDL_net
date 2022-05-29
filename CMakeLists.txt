@@ -233,15 +233,10 @@ endif()
 if(SDL2NET_SHOWINTERFACES)
     add_executable(showinterfaces showinterfaces.c)
 
-    if(MINGW) # FIXME: mingw should be handled by SDL2::SDL2(-static/main) targets
+    if(MINGW) # FIXME: mingw should be handled by SDL2::SDL2(-static) targets
         target_link_libraries(showinterfaces PRIVATE mingw32)
-        target_link_options(showinterfaces PRIVATE -mwindows)
     endif()
     
-    find_package(SDL2main)
-    if(TARGET SDL2::SDL2main)
-        target_link_libraries(showinterfaces PRIVATE SDL2::SDL2main)
-    endif()
-    
+    target_compile_definitions(showinterfaces PRIVATE SDL_MAIN_HANDLED)
     target_link_libraries(showinterfaces PRIVATE SDL2_net::${sdl2_net_export_name} ${sdl2_target_name})
 endif()

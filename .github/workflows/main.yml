@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-        - { name: Windows (MSVC+CMake),         os: windows-latest, shell: sh,   cmake: '-GNinja -DSDL2NET_SHOWINTERFACES=OFF', msvc: 1 }
+        - { name: Windows (MSVC+CMake),         os: windows-latest, shell: sh,   cmake: '-GNinja', msvc: 1 }
         - { name: Windows (mingw32+autotools),  os: windows-latest, shell: 'msys2 {0}', msystem: mingw32, msys-env: mingw-w64-i686 }
         - { name: Windows (mingw64+CMake),      os: windows-latest, shell: 'msys2 {0}', msystem: mingw64, msys-env: mingw-w64-x86_64, cmake: '-G "Ninja Multi-Config"' }
         - { name: Linux (autotools),            os: ubuntu-20.04,   shell: sh }
