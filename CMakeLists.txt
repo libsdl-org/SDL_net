@@ -126,7 +126,7 @@ if(SDL2NET_BUILD_SHARED_LIBS)
         )
     endif()
 else()
-    if(MSVC OR (WATCOM AND (WIN32 OR OS2))
+    if(MSVC OR (WATCOM AND (WIN32 OR OS2)))
         set_target_properties(SDL2_net PROPERTIES
             OUTPUT_NAME "SDL2_net-static"
         )
