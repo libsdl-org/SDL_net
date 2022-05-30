@@ -125,6 +125,12 @@ if(SDL2NET_BUILD_SHARED_LIBS)
             OUTPUT_NAME "SDL2_net-${LT_RELEASE}"
         )
     endif()
+else()
+    if(MSVC OR (WATCOM AND (WIN32 OR OS2))
+        set_target_properties(SDL2_net PROPERTIES
+            OUTPUT_NAME "SDL2_net-static"
+        )
+    endif()
 endif()
 
 # Use `Compatible Interface Properties` to ensure a shared SDL2_net is built with a shared SDL2
@@ -156,8 +162,8 @@ if(SDL2NET_INSTALL)
 
     if(APPLE)
         set(PKG_PREFIX "SDL2_net.framework/Resources")
-    elseif(WIN32)
-        set(PKG_PREFIX "cmake/SDL2_net")
+    elseif(WIN32 AND NOT MINGW)
+        set(PKG_PREFIX "cmake")
     else()
         set(PKG_PREFIX "${CMAKE_INSTALL_LIBDIR}/cmake/SDL2_net")
     endif()
