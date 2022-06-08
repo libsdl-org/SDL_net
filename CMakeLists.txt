@@ -145,11 +145,6 @@ if(SDL2NET_BUILD_SHARED_LIBS)
     sdl_target_link_options_no_undefined(SDL2_net)
 endif()
 
-if(SDL2NET_BUILD_SHARED_LIBS)
-    # Make sure static library dependencies are built with -fPIC when building a shared SDL2_net
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-endif()
-
 if(SDL2NET_INSTALL)
     install(
         TARGETS SDL2_net
