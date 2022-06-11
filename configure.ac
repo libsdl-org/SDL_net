@@ -208,6 +208,12 @@ http://www.libsdl.org/projects/GUIlib/
 fi
 AM_CONDITIONAL(HAVE_GUI_LIB, test x$have_GUI = xyes)
 
+dnl Calculate the location of the prefix, relative to the cmake folder
+eval pkg_prefix=$prefix
+eval pkg_cmakedir=$libdir/cmake/SDL2_net
+cmake_prefix_relpath="$(echo -n "$pkg_cmakedir" | sed -E "s#^$pkg_prefix##" | sed -E "s#[A-Za-z0-9_ .-]+#..#g")"
+AC_SUBST([cmake_prefix_relpath])
+
 dnl check for GCC warning options
 CheckWarnAll
 
@@ -239,6 +245,10 @@ AC_SUBST(ENABLE_STATIC_FALSE)
 
 # Finally create all the generated files
 AC_CONFIG_FILES([
-Makefile SDL2_net.spec SDL2_net.pc
+Makefile 
+sdl2_net-config.cmake
+sdl2_net-config-version.cmake
+SDL2_net.spec 
+SDL2_net.pc
 ])
 AC_OUTPUT
