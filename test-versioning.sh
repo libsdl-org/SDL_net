@@ -27,9 +27,9 @@ not_ok () {
     failed=1
 }
 
-major=$(sed -ne 's/^MAJOR_VERSION=//p' configure.ac)
-minor=$(sed -ne 's/^MINOR_VERSION=//p' configure.ac)
-micro=$(sed -ne 's/^MICRO_VERSION=//p' configure.ac)
+major=$(sed -Ene 's/^m4_define\(\[MAJOR_VERSION_MACRO\], \[([0-9]*)\]\)$/\1/p' configure.ac)
+minor=$(sed -Ene 's/^m4_define\(\[MINOR_VERSION_MACRO\], \[([0-9]*)\]\)$/\1/p' configure.ac)
+micro=$(sed -Ene 's/^m4_define\(\[MICRO_VERSION_MACRO\], \[([0-9]*)\]\)$/\1/p' configure.ac)
 version="${major}.${minor}.${micro}"
 
 if [ "$ref_version" = "$version" ]; then
