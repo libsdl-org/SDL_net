@@ -68,7 +68,7 @@ target_compile_definitions(SDL2_net PRIVATE
     SDL_BUILD_MINOR_VERSION=${MINOR_VERSION}
     SDL_BUILD_MICRO_VERSION=${MICRO_VERSION}
 )
-target_link_libraries(SDL2_net PRIVATE ${sdl2_target_name})
+target_link_libraries(SDL2_net PRIVATE $<BUILD_INTERFACE:${sdl2_target_name}>)
 if(WIN32)
     if (MSVC)
         target_compile_options(SDL2_net PRIVATE /W3 /wd4244)
