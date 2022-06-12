@@ -20,9 +20,9 @@ if(NOT TARGET SDL2_net::SDL2_net)
     add_library(SDL2_net::SDL2_net INTERFACE IMPORTED)
     set_target_properties(SDL2_net::SDL2_net
         PROPERTIES
-            INTERFACE_COMPILE_OPTIONS "-F;${_sdl2net_framework_parent_path}"
+            INTERFACE_COMPILE_OPTIONS "SHELL:-F ${_sdl2net_framework_parent_path}"
             INTERFACE_INCLUDE_DIRECTORIES "${_sdl2net_framework_path}/Headers"
-            INTERFACE_LINK_OPTIONS "-F;${_sdl2net_framework_parent_path};-framework;SDL2_net"
+            INTERFACE_LINK_OPTIONS "SHELL:-F ${_sdl2net_framework_parent_path};SHELL:-framework SDL2_net"
             COMPATIBLE_INTERFACE_BOOL "SDL2_SHARED"
             INTERFACE_SDL2_SHARED "ON"
     )
