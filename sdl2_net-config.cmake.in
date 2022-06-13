@@ -21,7 +21,7 @@ set(_sdl2net_libdir   "${libdir}")
 set(_sdl2net_incdir   "${includedir}/SDL2")
 
 # Convert _sdl2net_extra_static_libraries to list and keep only libraries
-string(REGEX MATCHALL "(-[lm]([a-zA-Z0-9._]+))|(-Wl,[^ ]*framework[^ ]*)" _sdl2net_extra_static_libraries "${_sdl2net_extra_static_libraries}")
+string(REGEX MATCHALL "(-[lm]([-a-zA-Z0-9._]+))|(-Wl,[^ ]*framework[^ ]*)" _sdl2net_extra_static_libraries "${_sdl2net_extra_static_libraries}")
 string(REGEX REPLACE "^-l" "" _sdl2net_extra_static_libraries "${_sdl2net_extra_static_libraries}")
 string(REGEX REPLACE ";-l" ";" _sdl2net_extra_static_libraries "${_sdl2net_extra_static_libraries}")
 
