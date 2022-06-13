@@ -155,9 +155,7 @@ if(SDL2NET_INSTALL)
         PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/SDL2" COMPONENT devel
     )
 
-    if(APPLE)
-        set(PKG_PREFIX "SDL2_net.framework/Resources")
-    elseif(WIN32 AND NOT MINGW)
+    if(WIN32 AND NOT MINGW)
         set(PKG_PREFIX "cmake")
     else()
         set(PKG_PREFIX "${CMAKE_INSTALL_LIBDIR}/cmake/SDL2_net")
