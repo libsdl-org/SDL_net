@@ -2,9 +2,9 @@
 # This file is meant to be placed in a cmake subfolder of SDL2_net-devel-2.x.y-mingw
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(sdl2_net_config_path "${CMAKE_CURRENT_LIST_DIR}/../i686-w64-mingw32/lib/cmake/SDL2_net/sdl2-net-config.cmake")
+    set(sdl2_net_config_path "${CMAKE_CURRENT_LIST_DIR}/../i686-w64-mingw32/lib/cmake/SDL2_net/sdl2_net-config.cmake")
 elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(sdl2_net_config_path "${CMAKE_CURRENT_LIST_DIR}/../x86_64-w64-mingw32/lib/cmake/SDL2_net/sdl2-net-config.cmake")
+    set(sdl2_net_config_path "${CMAKE_CURRENT_LIST_DIR}/../x86_64-w64-mingw32/lib/cmake/SDL2_net/sdl2_net-config.cmake")
 else("${CMAKE_SIZEOF_VOID_P}" STREQUAL "")
     set(SDL2_net_FOUND FALSE)
     return()
