@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7F1CA4C62854D7A400FE6C2E /* CMake in Resources */ = {isa = PBXBuildFile; fileRef = 7F1CA4C12854D77600FE6C2E /* CMake */; };
 		BE48FF5807AFA9A800BB41DA /* SDL_net.h in Headers */ = {isa = PBXBuildFile; fileRef = 1014BAEA010A4B677F000001 /* SDL_net.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BE48FF5907AFA9A800BB41DA /* SDLnetsys.h in Headers */ = {isa = PBXBuildFile; fileRef = 0E06A2830119C8317F000001 /* SDLnetsys.h */; };
 		BE48FF5C07AFA9A800BB41DA /* SDLnet.c in Sources */ = {isa = PBXBuildFile; fileRef = 1014BAEB010A4B677F000001 /* SDLnet.c */; };
@@ -42,6 +43,7 @@
 		1014BAEC010A4B677F000001 /* SDLnetselect.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetselect.c; path = ../SDLnetselect.c; sourceTree = SOURCE_ROOT; };
 		1014BAED010A4B677F000001 /* SDLnetTCP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetTCP.c; path = ../SDLnetTCP.c; sourceTree = SOURCE_ROOT; };
 		1014BAEE010A4B677F000001 /* SDLnetUDP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetUDP.c; path = ../SDLnetUDP.c; sourceTree = SOURCE_ROOT; };
+		7F1CA4C12854D77600FE6C2E /* CMake */ = {isa = PBXFileReference; lastKnownFileType = folder; path = CMake; sourceTree = "<group>"; };
 		BE48FF6307AFA9A800BB41DA /* Info-Framework.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-Framework.plist"; sourceTree = "<group>"; };
 		BE48FF6407AFA9A800BB41DA /* SDL2_net.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDL2_net.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE48FF6F07AFA9A900BB41DA /* libSDL2_net.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSDL2_net.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -154,6 +156,7 @@
 		F59C710100D5CB5801000001 /* resources */ = {
 			isa = PBXGroup;
 			children = (
+				7F1CA4C12854D77600FE6C2E /* CMake */,
 				F59C710300D5CB5801000001 /* ReadMe.txt */,
 				F59C710400D5CB5801000001 /* Welcome.txt */,
 			);
@@ -274,6 +277,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7F1CA4C62854D7A400FE6C2E /* CMake in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

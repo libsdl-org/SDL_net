@@ -4,10 +4,14 @@
 
 set -eu
 
+# Needed so sed doesn't report illegal byte sequences on macOS
+export LC_CTYPE=C
+
 ref_major=$(sed -ne 's/^#define SDL_NET_MAJOR_VERSION  *//p' SDL_net.h)
 ref_minor=$(sed -ne 's/^#define SDL_NET_MINOR_VERSION  *//p' SDL_net.h)
 ref_micro=$(sed -ne 's/^#define SDL_NET_PATCHLEVEL  *//p' SDL_net.h)
 ref_version="${ref_major}.${ref_minor}.${ref_micro}"
+ref_sdl_req=$(sed -ne 's/^SDL_VERSION=//p' configure.ac)
 
 tests=0
 failed=0
@@ -23,9 +27,9 @@ not_ok () {
     failed=1
 }
 
-major=$(sed -ne 's/^MAJOR_VERSION=//p' configure.ac)
-minor=$(sed -ne 's/^MINOR_VERSION=//p' configure.ac)
-micro=$(sed -ne 's/^MICRO_VERSION=//p' configure.ac)
+major=$(sed -Ene 's/^m4_define\(\[MAJOR_VERSION_MACRO\], \[([0-9]*)\]\)$/\1/p' configure.ac)
+minor=$(sed -Ene 's/^m4_define\(\[MINOR_VERSION_MACRO\], \[([0-9]*)\]\)$/\1/p' configure.ac)
+micro=$(sed -Ene 's/^m4_define\(\[MICRO_VERSION_MACRO\], \[([0-9]*)\]\)$/\1/p' configure.ac)
 version="${major}.${minor}.${micro}"
 
 if [ "$ref_version" = "$version" ]; then
@@ -132,6 +136,38 @@ if [ "$ref" = "$dylib_cur" ]; then
     ok "project.pbxproj DYLIB_CURRENT_VERSION is consistent"
 else
     not_ok "project.pbxproj DYLIB_CURRENT_VERSION is inconsistent"
+fi
+
+major=$(sed -ne 's/^set(MAJOR_VERSION \([0-9]*\))$/\1/p' CMakeLists.txt)
+minor=$(sed -ne 's/^set(MINOR_VERSION \([0-9]*\))$/\1/p' CMakeLists.txt)
+micro=$(sed -ne 's/^set(MICRO_VERSION \([0-9]*\))$/\1/p' CMakeLists.txt)
+sdl_req=$(sed -ne 's/^set(SDL_REQUIRED_VERSION \([0-9.]*\))$/\1/p' CMakeLists.txt)
+dylib_cmake=$(sed -ne 's/^set(DYLIB_COMPATIBILITY_VERSION "\([0-9]*\)")$/\1/p' CMakeLists.txt)
+ref='1'
+version="${major}.${minor}.${micro}"
+
+if [ "$ref_version" = "$version" ]; then
+    ok "CMakeLists.txt $version"
+else
+    not_ok "CMakeLists.txt $version disagrees with SDL_image.h $ref_version"
+fi
+
+if [ "$ref_sdl_req" = "$sdl_req" ]; then
+    ok "CMakeLists.txt SDL_REQUIRED_VERSION is consistent"
+else
+    not_ok "CMakeLists.txt SDL_REQUIRED_VERSION=$sdl_req disagrees with configure.ac SDL_VERSION=$ref_sdl_req"
+fi
+
+if [ "$ref" = "$dylib_cmake" ]; then
+    ok "CMakeLists.txt DYLIB_COMPATIBILITY_VERSION is consistent"
+else
+    not_ok "CMakeLists.txt DYLIB_COMPATIBILITY_VERSION is inconsistent"
+fi
+
+if [ "$ref_sdl_req" = "$sdl_req" ]; then
+    ok ".github/fetch_sdl_vc.ps1 $sdl_req"
+else
+    not_ok ".github/fetch_sdl_vc.ps1 sdl2_version=$sdl_req disagrees with configure.ac SDL_VERSION=$ref_sdl_req"
 fi
 
 echo "1..$tests"

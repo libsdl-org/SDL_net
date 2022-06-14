@@ -1,15 +1,21 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT
+
+dnl Set various version strings - taken gratefully from the GTk sources
+# See release_checklist.md
+m4_define([MAJOR_VERSION_MACRO], [2])
+m4_define([MINOR_VERSION_MACRO], [1])
+m4_define([MICRO_VERSION_MACRO], [0])
+
+AC_INIT([SDL2_net],
+        MAJOR_VERSION_MACRO.MINOR_VERSION_MACRO.MICRO_VERSION_MACRO,
+        [https://github.com/libsdl-org/SDL_net/issues],
+        [SDL2_net])
 AC_CONFIG_MACRO_DIR([acinclude])
 AC_CONFIG_SRCDIR([SDLnet.c])
 
-dnl Set various version strings - taken gratefully from the GTk sources
-
-# See release_checklist.md
-MAJOR_VERSION=2
-MINOR_VERSION=1
-MICRO_VERSION=0
-VERSION=$MAJOR_VERSION.$MINOR_VERSION.$MICRO_VERSION
+AC_SUBST([MAJOR_VERSION], MAJOR_VERSION_MACRO)
+AC_SUBST([MINOR_VERSION], MINOR_VERSION_MACRO)
+AC_SUBST([MICRO_VERSION], MICRO_VERSION_MACRO)
 
 BINARY_AGE=`expr $MINOR_VERSION \* 100 + $MICRO_VERSION`
 AS_CASE(["$MINOR_VERSION"],
@@ -62,7 +68,7 @@ dnl Detect the canonical build and host environments
 AC_CANONICAL_HOST
 
 dnl Setup for automake
-AM_INIT_AUTOMAKE(SDL2_net, $VERSION)
+AM_INIT_AUTOMAKE([1.16 foreign subdir-objects tar-ustar])
 
 dnl Check for tools
 AC_PROG_CC
@@ -208,6 +214,12 @@ http://www.libsdl.org/projects/GUIlib/
 fi
 AM_CONDITIONAL(HAVE_GUI_LIB, test x$have_GUI = xyes)
 
+dnl Calculate the location of the prefix, relative to the cmake folder
+eval pkg_prefix=$prefix
+eval pkg_cmakedir=$libdir/cmake/SDL2_net
+cmake_prefix_relpath="$(echo -n "$pkg_cmakedir" | sed -E "s#^$pkg_prefix##" | sed -E "s#[A-Za-z0-9_ .-]+#..#g")"
+AC_SUBST([cmake_prefix_relpath])
+
 dnl check for GCC warning options
 CheckWarnAll
 
@@ -239,6 +251,10 @@ AC_SUBST(ENABLE_STATIC_FALSE)
 
 # Finally create all the generated files
 AC_CONFIG_FILES([
-Makefile SDL2_net.spec SDL2_net.pc
+Makefile
+sdl2_net-config.cmake
+sdl2_net-config-version.cmake
+SDL2_net.spec
+SDL2_net.pc
 ])
 AC_OUTPUT
