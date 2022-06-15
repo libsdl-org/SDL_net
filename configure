@@ -17757,7 +17757,6 @@ fi
 
 
 
-
 # Finally create all the generated files
 ac_config_files="$ac_config_files Makefile sdl2_net-config.cmake sdl2_net-config-version.cmake SDL2_net.spec SDL2_net.pc"
 

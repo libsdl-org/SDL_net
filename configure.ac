@@ -7,7 +7,7 @@ m4_define([MINOR_VERSION_MACRO], [1])
 m4_define([MICRO_VERSION_MACRO], [0])
 
 AC_INIT([SDL2_net],
-        MAJOR_VERSION_MACRO.MINOR_VERSION_MACRO.MICRO_VERSION_MACRO,
+        [MAJOR_VERSION_MACRO.MINOR_VERSION_MACRO.MICRO_VERSION_MACRO],
         [https://github.com/libsdl-org/SDL_net/issues],
         [SDL2_net])
 AC_CONFIG_MACRO_DIR([acinclude])
@@ -49,9 +49,8 @@ LT_MAJOR=0
 LT_REVISION=$INTERFACE_AGE
 LT_AGE=`expr $BINARY_AGE - $INTERFACE_AGE`
 LT_CURRENT=`expr $LT_MAJOR + $LT_AGE`
-LT_EXTRA="" dnl for OS2 dll name
+LT_EXTRA=""
 m4_pattern_allow([^LT_MAJOR$])
-
 
 dnl For use in static assertions
 AC_DEFINE_UNQUOTED([SDL_BUILD_MAJOR_VERSION], $MAJOR_VERSION, [ ])
@@ -68,7 +67,7 @@ dnl Detect the canonical build and host environments
 AC_CANONICAL_HOST
 
 dnl Setup for automake
-AM_INIT_AUTOMAKE([1.16 foreign subdir-objects tar-ustar])
+AM_INIT_AUTOMAKE([foreign subdir-objects tar-ustar])
 
 dnl Check for tools
 AC_PROG_CC
@@ -247,7 +246,6 @@ AC_SUBST(ENABLE_SHARED_TRUE)
 AC_SUBST(ENABLE_SHARED_FALSE)
 AC_SUBST(ENABLE_STATIC_TRUE)
 AC_SUBST(ENABLE_STATIC_FALSE)
-
 
 # Finally create all the generated files
 AC_CONFIG_FILES([
