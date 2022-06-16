@@ -23,6 +23,7 @@ jobs:
         - { name: 'Linux (CMake, static)',      os: ubuntu-20.04,   shell: sh,   cmake: '-DBUILD_SHARED_LIBS=OFF -GNinja', shared: 0, static: 1 }
         - { name: macOS (autotools),            os: macos-latest,   shell: sh, shared: 1, static: 1 }
         - { name: macOS (CMake),                os: macos-latest,   shell: sh,   cmake: '-GNinja', shared: 1, static: 0 }
+        - { name: 'macOS (CMake, framework)',   os: macos-latest,   shell: sh,   cmake: '-DSDL2NET_BUILD_APPLE_FRAMEWORK=ON  -GNinja', shared: 1, static: 0 }
 
     steps:
     - name: Set up MSYS2
@@ -94,6 +95,7 @@ jobs:
           -DBUILD_SHARED_LIBS=ON \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=prefix_cmake \
+          -DSDL2NET_APPLE_FRAMEWORK_DESTDIR=prefix_cmake \
           -DSDL2NET_SHOWINTERFACES=ON \
           ${{ matrix.platform.cmake }}
 
