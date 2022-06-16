@@ -161,7 +161,7 @@ if(SDL2NET_BUILD_APPLE_FRAMEWORK)
         FRAMEWORK true
         FRAMEWORK_VERSION A
         MACOSX_FRAMEWORK_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Xcode/Info-Framework.plist"
-        RESOURCE "${RESOURCE_FILES};COPYING.txt"
+        RESOURCE "${RESOURCE_FILES}"
     )
 
     # FIXME: Is there a more elegant way to do this? Globbing recursively all 
