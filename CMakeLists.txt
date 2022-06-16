@@ -151,9 +151,7 @@ if(SDL2NET_BUILD_SHARED_LIBS)
 endif()
 
 if(SDL2NET_BUILD_APPLE_FRAMEWORK)
-    file(GLOB RESOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Xcode/pkg-support/resources/*")
-    list(FILTER RESOURCE_FILES EXCLUDE REGEX "\.DS\_Store")
-
+    set(RESOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Xcode/pkg-support/resources/CMake" "COPYING.txt")
     file(GLOB FRAMEWORK_CMAKE_CONFIG_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Xcode/pkg-support/resources/CMake/*")
 
     # Resource files and headers need to be set as a source to be included in the framework
@@ -163,7 +161,7 @@ if(SDL2NET_BUILD_APPLE_FRAMEWORK)
         FRAMEWORK true
         FRAMEWORK_VERSION A
         MACOSX_FRAMEWORK_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Xcode/Info-Framework.plist"
-        RESOURCE "${RESOURCE_FILES}"
+        RESOURCE "${RESOURCE_FILES};COPYING.txt"
     )
 
     # FIXME: Is there a more elegant way to do this? Globbing recursively all 
