@@ -281,7 +281,8 @@ extern DECLSPEC int SDLCALL SDLNet_TCP_Send(TCPsocket sock, const void *data, in
  * moment the socket is able to see new data. If packets are coming in slowly
  * from the network, this might be less data than you expect at a given time.
  *
- * This function may block!
+ * This function may block! Use SDLNet_CheckSockets() to make sure there is
+ * data available before calling this function, if you want to avoid blocking.
  *
  * \param sock the socket to send data to.
  * \param data a pointer to where to store received data.
@@ -289,6 +290,7 @@ extern DECLSPEC int SDLCALL SDLNet_TCP_Send(TCPsocket sock, const void *data, in
  * \returns number of bytes received, which might be less than `maxlen`.
  *
  * \sa SDLNet_TCP_Send
+ * \sa SDLNet_CheckSockets
  */
 extern DECLSPEC int SDLCALL SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxlen);
 
@@ -390,7 +392,7 @@ extern DECLSPEC void SDLCALL SDLNet_FreePacket(UDPpacket *packet);
 /**
  * Allocate a UDP packet vector (array of packets).
  *
- * This allocates `howmany` packets at once,each `size` bytes long.
+ * This allocates `howmany` packets at once, each `size` bytes long.
  *
  * You must free the results of this function with SDLNet_FreePacketV, and
  * must not free individual packets from this function with SDLNet_FreePacket.
@@ -869,9 +871,9 @@ extern DECLSPEC void SDLCALL SDLNet_SetError(const char *fmt, ...);
  * Get the latest error message from SDL_net.
  *
  * The error message, depending on how SDL_net was built, may or may not be
- * thread-specific. Sometimes things will set an error message when no failure
- * was reported; the error string is only meaningful right after a public API
- * reports a failure, and should be ignored otherwise.
+ * thread-local data. Sometimes things will set an error message when no
+ * failure was reported; the error string is only meaningful right after a
+ * public API reports a failure, and should be ignored otherwise.
  */
 extern DECLSPEC const char * SDLCALL SDLNet_GetError(void);
 
