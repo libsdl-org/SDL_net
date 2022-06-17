@@ -815,7 +815,7 @@ SDL_FORCE_INLINE int SDLNet_UDP_DelSocket(SDLNet_SocketSet set, UDPsocket sock)
  * in milliseconds has elapsed, whichever occurs first.
  *
  * \param set the socket set to check for ready sockets.
- * \param timeout the time to wait _in milliseconds_ for new data to arrive. A
+ * \param timeout the time to wait in milliseconds for new data to arrive. A
  *                timeout of zero checks for new data and returns without
  *                blocking.
  * \returns the number of sockets ready for reading, or -1 if there was an
