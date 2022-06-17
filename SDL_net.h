@@ -208,6 +208,8 @@ typedef struct _TCPsocket *TCPsocket;
  *
  * \param ip The address to open a connection to (or to host a server on).
  * \returns the newly created socket, or NULL if there was an error.
+ *
+ * \sa SDLNet_TCP_Close
  */
 extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_Open(IPaddress *ip);
 
@@ -258,6 +260,8 @@ extern DECLSPEC IPaddress * SDLCALL SDLNet_TCP_GetPeerAddress(TCPsocket sock);
  * \returns number of bytes sent, which might be less if there was a problem
  *          or connection failure. If the socket is invalid, this function
  *          can return -1, but in valid uses it'll return >= 0.
+ *
+ * \sa SDLNet_TCP_Recv
  */
 extern DECLSPEC int SDLCALL SDLNet_TCP_Send(TCPsocket sock, const void *data,
         int len);
@@ -286,6 +290,8 @@ extern DECLSPEC int SDLCALL SDLNet_TCP_Send(TCPsocket sock, const void *data,
  * \param data a pointer to where to store received data.
  * \param maxlen the maximum number of bytes that can be stored at `data`.
  * \returns number of bytes received, which might be less than `maxlen`.
+ *
+ * \sa SDLNet_TCP_Send
  */
 extern DECLSPEC int SDLCALL SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxlen);
 
@@ -303,9 +309,7 @@ extern DECLSPEC int SDLCALL SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxl
 extern DECLSPEC void SDLCALL SDLNet_TCP_Close(TCPsocket sock);
 
 
-/***********************************************************************/
-/* UDP network API                                                     */
-/***********************************************************************/
+/* UDP network API */
 
 /* The maximum channels on a a UDP socket */
 #define SDLNET_MAX_UDPCHANNELS  32
@@ -322,32 +326,145 @@ typedef struct {
     IPaddress address;  /* The source/dest address of an incoming/outgoing packet */
 } UDPpacket;
 
-/* Allocate/resize/free a single UDP packet 'size' bytes long.
-   The new packet is returned, or NULL if the function ran out of memory.
+/**
+ * Allocate a single UDP packet.
+ *
+ * This allocates a packet with `size` bytes of space for payload.
+ *
+ * When done with this packet, you can free it with SDLNet_FreePacket.
+ * Packets can be used multiple times; you don't have to allocate a new
+ * one for each piece of data you intend to send.
+ *
+ * You can allocate multiple packets at once with SDLNet_AllocPacketV.
+ *
+ * \param size the maximum number of bytes of payload this packet will contain.
+ * \returns the new packet, or NULL if the function ran out of memory.
+ *
+ * \sa SDLNet_ResizePacket
+ * \sa SDLNet_FreePacket
+ * \sa SDLNet_AllocPacketV
  */
 extern DECLSPEC UDPpacket * SDLCALL SDLNet_AllocPacket(int size);
+
+
+/**
+ * Reallocate a UDP packet's payload space.
+ *
+ * This takes an existing packet and makes sure it can contain at
+ * least `newsize` bytes of space for payload.
+ *
+ * When done with this packet, you can free it with SDLNet_FreePacket.
+ * Packets can be used multiple times; you don't have to allocate a new
+ * one for each piece of data you intend to send.
+ *
+ * Please note that on memory allocation failure, this function will leave
+ * the existing buffer alone, and _will return the original buffer size_.
+ * It will not return an error value, it'll just leave the packet as it was!
+ *
+ * \warning Existing contents of the packet's data are lost when resizing,
+ *          whether you are growing or shrinking the payload space, since
+ *          SDL_net does not realloc the existing data.
+ *
+ * \param newsize the new maximum number of bytes of payload this packet
+ *        will contain.
+ * \returns the new maximum payload size, which will be unchanged from
+ *          the previous if the system ran out of memory.
+ *
+ * \sa SDLNet_AllocPacket
+ * \sa SDLNet_FreePacket
+ */
 extern DECLSPEC int SDLCALL SDLNet_ResizePacket(UDPpacket *packet, int newsize);
+
+
+/**
+ * Dispose of a UDP packet.
+ *
+ * This frees both the packet's payload and the packet itself. Once this
+ * call completes, the packet's pointer is invalid and should not be used
+ * anymore.
+ *
+ * \param packet the packet to free.
+ *
+ * \sa SDLNet_AllocPacket
+ * \sa SDLNet_ResizePacket
+ */
 extern DECLSPEC void SDLCALL SDLNet_FreePacket(UDPpacket *packet);
 
-/* Allocate/Free a UDP packet vector (array of packets) of 'howmany' packets,
-   each 'size' bytes long.
-   A pointer to the first packet in the array is returned, or NULL if the
-   function ran out of memory.
+/**
+ * Allocate a UDP packet vector (array of packets).
+ *
+ * This allocates `howmany` packets at once,each `size` bytes long.
+ *
+ * You must free the results of this function with SDLNet_FreePacketV,
+ * and must not free individual packets from this function with
+ * SDLNet_FreePacket.
+ *
+ * \param howmany the number of packets to allocate.
+ * \param size the maximum bytes of payload each packet should contain.
+ * \returns a pointer to the first packet in the array, or NULL if the
+ *          function ran out of memory.
+ *
+ * \sa SDLNet_FreePacketV
  */
 extern DECLSPEC UDPpacket ** SDLCALL SDLNet_AllocPacketV(int howmany, int size);
+
+
+/**
+ * Free a UDP packet vector (array of packets).
+ *
+ * This frees the results of a previous call to SDLNet_AllocPacketV(),
+ * freeing both the set of packets and the array that holds them.
+ *
+ * It is safe to free a NULL array through here; it's a harmless no-op.
+ *
+ * You must not use this to free packets allocated through any function
+ * other than SDLNet_AllocPacketV().
+ *
+ * \param packetV the results of a call to SDLNet_AllocPacketV().
+ *
+ * \sa SDLNet_AllocPacketV
+ */
 extern DECLSPEC void SDLCALL SDLNet_FreePacketV(UDPpacket **packetV);
 
-
-/* Open a UDP network socket
-   If 'port' is non-zero, the UDP socket is bound to a local port.
-   The 'port' should be given in native byte order, but is used
-   internally in network (big endian) byte order, in addresses, etc.
-   This allows other systems to send to this socket via a known port.
-*/
+/**
+ * Open a UDP network socket.
+ *
+ * If `port` is non-zero, the UDP socket is bound to a local port.
+ *
+ * The `port` should be given in native byte order, but is used
+ * internally in network (big endian) byte order, in addresses, etc.
+ * This allows other systems to send to this socket via a known port.
+ *
+ * Note that UDP sockets at the platform layer "binds" to a nework port
+ * number, but SDL_net's UDP sockets also "bind" to a "channel" on top of
+ * that, with SDLNet_UDP_Bind(). But the term is used for both.
+ *
+ * When you are done communicating over the returned socket, you can
+ * shut it down and free its resources with SDLNet_UDP_Close().
+ *
+ * \param port the UDP port to bind this socket to.
+ * \returns a new UDP socket, ready to communicate.
+ *
+ * \sa SDLNet_UDP_Close
+ * \sa SDLNet_UDP_Bind
+ */
 extern DECLSPEC UDPsocket SDLCALL SDLNet_UDP_Open(Uint16 port);
 
-/* Set the percentage of simulated packet loss for packets sent on the socket.
-*/
+/**
+ * Set the percentage of simulated packet loss for packets sent on the socket.
+ *
+ * SDL_net can optionally, at random, drop packets that are being sent and
+ * received, to simulate bad networking conditions. As these sort of
+ * conditions can happen in the real world but likely won't between machines
+ * on the same LAN, you can use this function in testing to make sure your
+ * app is robust against network problems even on a fast, reliable network.
+ *
+ * You probably don't want to use this function outside of local testing.
+ *
+ * \param sock the socket to simulate packet loss on.
+ * \param percent a value from 0 to 100 of likelihood to drop a packet (higher
+ *                the number means more likelihood of dropping.
+ */
 extern DECLSPEC void SDLCALL SDLNet_UDP_SetPacketLoss(UDPsocket sock, int percent);
 
 /* Bind the address 'address' to the requested channel on the UDP socket.
