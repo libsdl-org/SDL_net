@@ -262,8 +262,7 @@ extern DECLSPEC IPaddress * SDLCALL SDLNet_TCP_GetPeerAddress(TCPsocket sock);
  *
  * \sa SDLNet_TCP_Recv
  */
-extern DECLSPEC int SDLCALL SDLNet_TCP_Send(TCPsocket sock, const void *data,
-        int len);
+extern DECLSPEC int SDLCALL SDLNet_TCP_Send(TCPsocket sock, const void *data, int len);
 
 /**
  * Receive data from a non-server socket.
