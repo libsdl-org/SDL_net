@@ -90,34 +90,58 @@ extern "C" {
      (SDL_NET_MAJOR_VERSION > X || SDL_NET_MINOR_VERSION >= Y) && \
      (SDL_NET_MAJOR_VERSION > X || SDL_NET_MINOR_VERSION > Y || SDL_NET_PATCHLEVEL >= Z))
 
-/* This function gets the version of the dynamically linked SDL_net library.
-   it should NOT be used to fill a version structure, instead you should
-   use the SDL_NET_VERSION() macro.
+/**
+ * Query the version of SDL_net that the program is linked against.
+ *
+ * This function gets the version of the dynamically linked SDL_net library.
+ * This is separate from the SDL_NET_VERSION() macro, which tells you what
+ * version of the SDL_net headers you compiled against.
+ *
+ * This returns static internal data; do not free or modify it!
+ *
+ * \returns a pointer to the version information.
  */
 extern DECLSPEC const SDLNet_version * SDLCALL SDLNet_Linked_Version(void);
 
-/* Initialize/Cleanup the network API
-   SDL must be initialized before calls to functions in this library,
-   because this library uses utility functions from the SDL library.
-*/
-extern DECLSPEC int  SDLCALL SDLNet_Init(void);
+/**
+ * Initialize SDL_net.
+ *
+ * You must successfully call this function before it is safe to
+ * call any other function in this library, with one exception:
+ * A human-readable error message can be retrieved from
+ * SDLNet_GetError() when if this function fails.
+ *
+ * SDL must be initialized before calls to functions in this library,
+ * because this library uses utility functions from the SDL library.
+ *
+ * It is safe to call this more than once; the library keeps a
+ * counter of init calls, and decrements it on each call to SDLNet_Quit,
+ * so you must pair your init and quit calls.
+ *
+ * \returns 0 on success, -1 on error.
+ */
+extern DECLSPEC int SDLCALL SDLNet_Init(void);
+
+/**
+ * Deinitialize SDL_net.
+ *
+ * You must call this when done with the library, to free internal
+ * resources. It is safe to call this when the library isn't initialized,
+ * as it will just return immediately.
+ *
+ * Once you have as many quit calls as you have had successful calls to
+ * SDLNet_Init, the library will actually deinitialize.
+ */
 extern DECLSPEC void SDLCALL SDLNet_Quit(void);
 
-/***********************************************************************/
-/* IPv4 hostname resolution API                                        */
-/***********************************************************************/
+
+/* IPv4 hostname resolution API... */
 
 typedef struct {
     Uint32 host;            /* 32-bit IPv4 host address */
     Uint16 port;            /* 16-bit protocol port */
 } IPaddress;
 
-/* Resolve a host name and port to an IP address in network form.
-   If the function succeeds, it will return 0.
-   If the host couldn't be resolved, the host portion of the returned
-   address will be INADDR_NONE, and the function will return -1.
-   If 'host' is NULL, the resolved host will be set to INADDR_ANY.
- */
 #ifndef INADDR_ANY
 #define INADDR_ANY      0x00000000
 #endif
@@ -130,63 +154,152 @@ typedef struct {
 #ifndef INADDR_BROADCAST
 #define INADDR_BROADCAST    0xFFFFFFFF
 #endif
+
+/**
+ * Resolve a host name and port to an IP address in network form.
+ *
+ * If `host` is NULL, the resolved host will be set to `INADDR_ANY`.
+ *
+ * If the host couldn't be resolved, the host portion of the returned
+ * address will be INADDR_NONE, and the function will return -1.
+ *
+ * \param address to be filled in with the resolved address and port.
+ * \param host the hostname to lookup (like "libsdl.org")
+ * \param port the port intended to be connected to, to fill into address.
+ * \returns zero on success, -1 on error.
+ */
 extern DECLSPEC int SDLCALL SDLNet_ResolveHost(IPaddress *address, const char *host, Uint16 port);
 
-/* Resolve an ip address to a host name in canonical form.
-   If the ip couldn't be resolved, this function returns NULL,
-   otherwise a pointer to a static buffer containing the hostname
-   is returned.  Note that this function is not thread-safe.
-*/
+/**
+ * Resolve an IP address to a host name in canonical form.
+ *
+ * If the IP couldn't be resolved, this function returns NULL,
+ * otherwise a pointer to a static buffer containing the hostname
+ * is returned.
+ *
+ * \warning Note that this function is not thread-safe!
+ *
+ * \param ip the IP address to resolve into a hostname.
+ */
 extern DECLSPEC const char * SDLCALL SDLNet_ResolveIP(const IPaddress *ip);
 
-/* Get the addresses of network interfaces on this system.
-   This returns the number of addresses saved in 'addresses'
+/**
+ * Get the addresses of network interfaces on this system.
+ *
+ * \param addresses where to store the returned information.
+ * \param maxcount the number of results that can be stored at `addresses`
+ * \returns the number of addresses saved in `addresses`
  */
 extern DECLSPEC int SDLCALL SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount);
 
-/***********************************************************************/
-/* TCP network API                                                     */
-/***********************************************************************/
+
+/* TCP network API */
 
 typedef struct _TCPsocket *TCPsocket;
 
-/* Open a TCP network socket
-   If ip.host is INADDR_NONE or INADDR_ANY, this creates a local server
-   socket on the given port, otherwise a TCP connection to the remote
-   host and port is attempted. The address passed in should already be
-   swapped to network byte order (addresses returned from
-   SDLNet_ResolveHost() are already in the correct form).
-   The newly created socket is returned, or NULL if there was an error.
-*/
+/**
+ * Open a TCP network socket.
+ *
+ * If `ip->host` is INADDR_NONE or INADDR_ANY, this creates a local server
+ * socket on the given port, otherwise a TCP connection to the remote
+ * host and port is attempted. The address passed in should already be
+ * swapped to network byte order (addresses returned from
+ * SDLNet_ResolveHost() are already in the correct form).
+ *
+ * \param ip The address to open a connection to (or to host a server on).
+ * \returns the newly created socket, or NULL if there was an error.
+ */
 extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_Open(IPaddress *ip);
 
-/* Accept an incoming connection on the given server socket.
-   The newly created socket is returned, or NULL if there was an error.
-*/
+/**
+ * Accept an incoming connection on the given server socket.
+ *
+ * `server` must be a socket returned by SDLNet_TCP_Open with an address
+ * of INADDR_NONE or INADDR_ANY (a "server socket"). Other sockets do not
+ * accept connections.
+ *
+ * \param server the server socket to accept a connection on.
+ * \returns the newly created socket, or NULL if there was an error.
+ */
 extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_Accept(TCPsocket server);
 
-/* Get the IP address of the remote system associated with the socket.
-   If the socket is a server socket, this function returns NULL.
-*/
+/**
+ * Get the IP address of the remote system associated with the socket.
+ *
+ * If the socket is a server socket, this function returns NULL.
+ *
+ * This returns a pointer to internal memory; you should not modify or
+ * free it, and should assume it's only valid until the socket is given
+ * to SDLNet_TCP_Close.
+ *
+ * \param sock the socket to query.
+ * \returns the address information for the socket.
+ */
 extern DECLSPEC IPaddress * SDLCALL SDLNet_TCP_GetPeerAddress(TCPsocket sock);
 
-/* Send 'len' bytes of 'data' over the non-server socket 'sock'
-   This function returns the actual amount of data sent.  If the return value
-   is less than the amount of data sent, then either the remote connection was
-   closed, or an unknown socket error occurred.
-*/
+/**
+ * Send data over a non-server socket.
+ *
+ * `sock` must be a valid socket that was created by SDLNet_TCP_Open with
+ * a specific address, or SDLNet_TCP_Accept.
+ *
+ * This function sends `len` bytes, pointed to by `data` over the non-server
+ * socket `sock`.
+ *
+ * This function returns the actual amount of data sent.  If the return value
+ * is less than the amount of data sent, then either the remote connection was
+ * closed, or an unknown socket error occurred.
+ *
+ * \warning This function may block!
+ *
+ * \param sock the socket to send data to.
+ * \param data a pointer to the bytes to send.
+ * \param len the number of bytes, pointed to by `data`, to transmit.
+ * \returns number of bytes sent, which might be less if there was a problem
+ *          or connection failure. If the socket is invalid, this function
+ *          can return -1, but in valid uses it'll return >= 0.
+ */
 extern DECLSPEC int SDLCALL SDLNet_TCP_Send(TCPsocket sock, const void *data,
         int len);
 
-/* Receive up to 'maxlen' bytes of data over the non-server socket 'sock',
-   and store them in the buffer pointed to by 'data'.
-   This function returns the actual amount of data received.  If the return
-   value is less than or equal to zero, then either the remote connection was
-   closed, or an unknown socket error occurred.
-*/
+/**
+ * Receive data from a non-server socket.
+ *
+ * `sock` must be a valid socket that was created by SDLNet_TCP_Open with
+ * a specific address, or SDLNet_TCP_Accept.
+ *
+ * Receive up to `maxlen` bytes of data over the non-server socket `sock`,
+ * and store them in the buffer pointed to by `data`.
+ *
+ * This function returns the actual amount of data received.  If the return
+ * value is less than or equal to zero, then either the remote connection was
+ * closed, or an unknown socket error occurred.
+ *
+ * Note that this will return the number of bytes available at the first
+ * moment the socket is able to see new data. If packets are coming in slowly
+ * from the network, this might be less data than you expect at a given
+ * time.
+ *
+ * \warning This function may block!
+ *
+ * \param sock the socket to send data to.
+ * \param data a pointer to where to store received data.
+ * \param maxlen the maximum number of bytes that can be stored at `data`.
+ * \returns number of bytes received, which might be less than `maxlen`.
+ */
 extern DECLSPEC int SDLCALL SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxlen);
 
-/* Close a TCP network socket */
+/**
+ * Close a TCP network socket
+ *
+ * All TCP sockets (server and non-server) are deinitialized through this
+ * function. Call this once you are done with a socket, and assume the
+ * handle is invalid once you have.
+ *
+ * Closing a socket will disconnect any communication and free its resources.
+ *
+ * \param sock socket to close.
+ */
 extern DECLSPEC void SDLCALL SDLNet_TCP_Close(TCPsocket sock);
 
 
