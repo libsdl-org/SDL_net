@@ -435,7 +435,7 @@ extern DECLSPEC void SDLCALL SDLNet_FreePacketV(UDPpacket **packetV);
  * internally in network (big endian) byte order, in addresses, etc.
  * This allows other systems to send to this socket via a known port.
  *
- * Note that UDP sockets at the platform layer "binds" to a nework port
+ * Note that UDP sockets at the platform layer "bind" to a nework port
  * number, but SDL_net's UDP sockets also "bind" to a "channel" on top of
  * that, with SDLNet_UDP_Bind(). But the term is used for both.
  *
@@ -467,77 +467,186 @@ extern DECLSPEC UDPsocket SDLCALL SDLNet_UDP_Open(Uint16 port);
  */
 extern DECLSPEC void SDLCALL SDLNet_UDP_SetPacketLoss(UDPsocket sock, int percent);
 
-/* Bind the address 'address' to the requested channel on the UDP socket.
-   If the channel is -1, then the first unbound channel that has not yet
-   been bound to the maximum number of addresses will be bound with
-   the given address as it's primary address.
-   If the channel is already bound, this new address will be added to the
-   list of valid source addresses for packets arriving on the channel.
-   If the channel is not already bound, then the address becomes the primary
-   address, to which all outbound packets on the channel are sent.
-   This function returns the channel which was bound, or -1 on error.
-*/
+/**
+ * Bind an address to the requested channel on the UDP socket.
+ *
+ * Note that UDP sockets at the platform layer "bind" to a nework port
+ * number, but SDL_net's UDP sockets also "bind" to a "channel" on top of
+ * that, with SDLNet_UDP_Bind(). But the term is used for both.
+ *
+ * If `channel` is -1, then the first unbound channel that has not yet
+ * been bound to the maximum number of addresses will be bound with
+ * the given address as it's primary address.
+ *
+ * If the channel is already bound, this new address will be added to the
+ * list of valid source addresses for packets arriving on the channel.
+ * If the channel is not already bound, then the address becomes the primary
+ * address, to which all outbound packets on the channel are sent.
+ *
+ * \param sock the UDP socket to bind an address to a channel on.
+ * \param channel the channel of the socket to bind to, or -1 to use the first available channel.
+ * \param address the address to bind to the socket's channel.
+ * \returns the channel which was bound, or -1 on error.
+ *
+ * \sa SDLNet_UDP_Unbind
+ */
 extern DECLSPEC int SDLCALL SDLNet_UDP_Bind(UDPsocket sock, int channel, const IPaddress *address);
 
-/* Unbind all addresses from the given channel */
+/**
+ * Unbind all addresses from the given channel.
+ *
+ * Note that UDP sockets at the platform layer "bind" to a nework port
+ * number, but SDL_net's UDP sockets also "bind" to a "channel" on top of
+ * that, with SDLNet_UDP_Bind(). But the term is used for both.
+ *
+ * \param sock the UDP socket to unbind addresses from a channel on.
+ * \param channel the channel of the socket to unbind.
+ *
+ * \sa SDLNet_UDP_Bind
+ */
 extern DECLSPEC void SDLCALL SDLNet_UDP_Unbind(UDPsocket sock, int channel);
 
-/* Get the primary IP address of the remote system associated with the
-   socket and channel.  If the channel is -1, then the primary IP port
-   of the UDP socket is returned -- this is only meaningful for sockets
-   opened with a specific port.
-   If the channel is not bound and not -1, this function returns NULL.
+/**
+ * Get the IP address of the remote system for a socket and channel.
+ *
+ * If `channel` is -1, then the primary IP port of the UDP socket is
+ * returned -- this is only meaningful for sockets opened with a specific port.
+ *
+ * If the channel is not bound and not -1, this function returns NULL.
+ *
+ * \param sock the UDP socket to unbind addresses from a channel on.
+ * \param channel the channel of the socket to unbind.
+ * \returns the address bound to the socket's channel, or
  */
 extern DECLSPEC IPaddress * SDLCALL SDLNet_UDP_GetPeerAddress(UDPsocket sock, int channel);
 
-/* Send a vector of packets to the the channels specified within the packet.
-   If the channel specified in the packet is -1, the packet will be sent to
-   the address in the 'src' member of the packet.
-   Each packet will be updated with the status of the packet after it has
-   been sent, -1 if the packet send failed.
-   This function returns the number of packets sent.
-*/
+/**
+ * Send a vector of packets to the the channels specified within the packet.
+ *
+ * If the channel specified in the packet is -1, the packet will be sent to
+ * the address in the `src` member of the packet.
+ *
+ * Each packet will be updated with the status of the packet after it has
+ * been sent, -1 if the packet send failed.
+ *
+ * This function takes an array of packets but does not need to be allocated
+ * through SDLNet_AllocPacketV; if you supply your own array of packets you
+ * allocated individually, that is okay.
+ *
+ * \warning UDP is an _unreliable protocol_, which means we can report
+ * that your packet has been successfully sent from your machine, but then it
+ * never makes it to its destination when a router along the way quietly drops
+ * it. If this happens--and this is a common result on the internet!--you will
+ * not know the packet never made it. Also, packets may arrive in a different
+ * order than you sent them. Plan accordingly!
+ *
+ * \warning The maximum size of the packet is limited by the MTU (Maximum
+ * Transfer Unit) of the transport medium.  It can be as low as 250 bytes for
+ * some PPP links, and as high as 1500 bytes for ethernet. Different sizes
+ * can be sent, but the system might split it into multiple transmission
+ * fragments behind the scenes, that need to be reassembled on the other side
+ * (and the packet is lost if any fragment is lost in transit).
+ * So the less you can reasonably send in a single packet, the better, as it
+ * will be more reliable and lower latency.
+ *
+ * \returns the number of packets successfully sent from this machine.
+ *
+ * \sa SDLNet_UDP_RecV
+ */
 extern DECLSPEC int SDLCALL SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets);
 
-/* Send a single packet to the specified channel.
-   If the channel specified in the packet is -1, the packet will be sent to
-   the address in the 'src' member of the packet.
-   The packet will be updated with the status of the packet after it has
-   been sent.
-   This function returns 1 if the packet was sent, or 0 on error.
-
-   NOTE:
-   The maximum size of the packet is limited by the MTU (Maximum Transfer Unit)
-   of the transport medium.  It can be as low as 250 bytes for some PPP links,
-   and as high as 1500 bytes for ethernet.
-*/
+/**
+ * Send a single UDP packet to the specified channel.
+ *
+ * If the channel specified is -1, the packet will be sent to the address in
+ * the `src` member of the packet.
+ *
+ * The packet will be updated with the status of the packet after it has
+ * been sent.
+ *
+ * \warning UDP is an _unreliable protocol_, which means we can report
+ * that your packet has been successfully sent from your machine, but then it
+ * never makes it to its destination when a router along the way quietly drops
+ * it. If this happens--and this is a common result on the internet!--you will
+ * not know the packet never made it. Also, packets may arrive in a different
+ * order than you sent them. Plan accordingly!
+ *
+ * \warning The maximum size of the packet is limited by the MTU (Maximum
+ * Transfer Unit) of the transport medium.  It can be as low as 250 bytes for
+ * some PPP links, and as high as 1500 bytes for ethernet. Different sizes
+ * can be sent, but the system might split it into multiple transmission
+ * fragments behind the scenes, that need to be reassembled on the other side
+ * (and the packet is lost if any fragment is lost in transit).
+ * So the less you can reasonably send in a single packet, the better, as it
+ * will be more reliable and lower latency.
+ *
+ * This function returns 1 if the packet was sent, or 0 on error.
+ */
 extern DECLSPEC int SDLCALL SDLNet_UDP_Send(UDPsocket sock, int channel, UDPpacket *packet);
 
-/* Receive a vector of pending packets from the UDP socket.
-   The returned packets contain the source address and the channel they arrived
-   on.  If they did not arrive on a bound channel, the the channel will be set
-   to -1.
-   The channels are checked in highest to lowest order, so if an address is
-   bound to multiple channels, the highest channel with the source address
-   bound will be returned.
-   This function returns the number of packets read from the network, or -1
-   on error.  This function does not block, so can return 0 packets pending.
-*/
+/**
+ * Receive a vector of pending packets from a UDP socket.
+ *
+ * The returned packets contain the source address and the channel they arrived
+ * on. If they did not arrive on a bound channel, the the channel will be set
+ * to -1.
+ *
+ * The channels are checked in highest to lowest order, so if an address is
+ * bound to multiple channels, the highest channel with the source address
+ * bound will be returned.
+ *
+ * This function takes an array of packets but does not need to be allocated
+ * through SDLNet_AllocPacketV; if you supply your own array of packets you
+ * allocated individually, that is okay, as long as the last element in the
+ * array is NULL, so SDL_net knows the array bounds. The arrays returned by
+ * SDLNet_AllocPacketV are properly NULL-terminated for these purposes.
+ *
+ * This function does not block, so it can return 0 packets pending, which is
+ * not an error condition.
+ *
+ * \param sock the UDP socket to receive packets on.
+ * \param packets an array of packets, NULL terminated.
+ * \returns the number of packets read from the network, or -1 on error.
+ *          0 means no packets were currently available.
+ *
+ * \sa SDLNet_UDP_SendV
+ * \sa SDLNet_UDP_Recv
+ */
 extern DECLSPEC int SDLCALL SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets);
 
-/* Receive a single packet from the UDP socket.
-   The returned packet contains the source address and the channel it arrived
-   on.  If it did not arrive on a bound channel, the the channel will be set
-   to -1.
-   The channels are checked in highest to lowest order, so if an address is
-   bound to multiple channels, the highest channel with the source address
-   bound will be returned.
-   This function returns the number of packets read from the network, or -1
-   on error.  This function does not block, so can return 0 packets pending.
-*/
+/**
+ * Receive a single packet from a UDP socket.
+ *
+ * The returned packets contain the source address and the channel they arrived
+ * on. If they did not arrive on a bound channel, the the channel will be set
+ * to -1.
+ *
+ * The channels are checked in highest to lowest order, so if an address is
+ * bound to multiple channels, the highest channel with the source address
+ * bound will be returned.
+ *
+ * This function does not block, so it can return 0 packets pending, which is
+ * not an error condition.
+ *
+ * \param sock the UDP socket to receive packets on.
+ * \param packet a single packet to receive data into from the network.
+ * \returns 1 if a new packet is available, or -1 on error.
+ *          0 means no packets were currently available.
+ *
+ * \sa SDLNet_UDP_Send
+ * \sa SDLNet_UDP_RecvV
+ */
 extern DECLSPEC int SDLCALL SDLNet_UDP_Recv(UDPsocket sock, UDPpacket *packet);
 
-/* Close a UDP network socket */
+/**
+ * Close a UDP socket.
+ *
+ * This disconnects the socket and frees any resources it retains.
+ *
+ * This socket may not be used again once given to this function.
+ *
+ * \param sock UDP socket to close.
+ */
 extern DECLSPEC void SDLCALL SDLNet_UDP_Close(UDPsocket sock);
 
 
@@ -552,67 +661,226 @@ typedef struct _SDLNet_GenericSocket {
     int ready;
 } *SDLNet_GenericSocket;
 
-/* Allocate a socket set for use with SDLNet_CheckSockets()
-   This returns a socket set for up to 'maxsockets' sockets, or NULL if
-   the function ran out of memory.
+/**
+ * Allocate a socket set for use with SDLNet_CheckSockets().
+ *
+ * To query if new data is available on a socket, you use a "socket set"
+ * with SDLNet_CheckSockets(). A socket set is just a list of sockets
+ * behind the scenes; you allocate a set and then add/remove individual
+ * sockets to/from the set.
+ *
+ * When done with a socket set, you can free it with SDLNet_FreeSocketSet.
+ *
+ * \param maxsockets the maximum amount of sockets to include in this set.
+ * \returns a socket set for up to `maxsockets` sockets, or NULL if
+ *          the function ran out of memory.
+ *
+ * \sa SDLNet_FreeSocketSet
  */
 extern DECLSPEC SDLNet_SocketSet SDLCALL SDLNet_AllocSocketSet(int maxsockets);
 
-/* Add a socket to a set of sockets to be checked for available data */
+/**
+ * Add a socket to a socket set, to be checked for available data.
+ *
+ * Generally you don't want to call this generic function, but rather the
+ * specific, inline function that wraps it: SDLNet_TCP_AddSocket() or
+ * SDLNet_UDP_AddSocket().
+ *
+ * This function will fail if you add a socket to the set when the set already
+ * has its maximum number of sockets added, but otherwise it will always
+ * succeed.
+ *
+ * If `sock` is NULL, nothing is added to the set; this lets you query the number
+ * of sockets currently contained in the set.
+ *
+ * \param set the socket set to add a new socket to.
+ * \param sock the socket to add to the set.
+ * \returns the total number of sockets contained in the set (including this new one),
+ *          or -1 if the set is already full.
+ *
+ * \sa SDLNet_TCP_AddSocket
+ * \sa SDLNet_UDP_AddSocket
+ * \sa SDLNet_DelSocket
+ * \sa SDLNet_TCP_DelSocket
+ * \sa SDLNet_UDP_DelSocket
+ * \sa SDLNet_CheckSockets
+ */
 extern DECLSPEC int SDLCALL SDLNet_AddSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock);
+
+/**
+ * Add a TCP socket to a socket set, to be checked for available data.
+ *
+ * This is a small TCP-specific wrapper over SDLNet_AddSocket; please refer
+ * to that function's documentation.
+ *
+ * \param set the socket set to add a new socket to.
+ * \param sock the socket to add to the set.
+ * \returns the total number of sockets contained in the set (including this new one),
+ *          or -1 if the set is already full.
+ *
+ * \sa SDLNet_AddSocket
+ */
 SDL_FORCE_INLINE int SDLNet_TCP_AddSocket(SDLNet_SocketSet set, TCPsocket sock)
 {
     return SDLNet_AddSocket(set, (SDLNet_GenericSocket)sock);
 }
+
+/**
+ * Add a UDP socket to a socket set, to be checked for available data.
+ *
+ * This is a small UDP-specific wrapper over SDLNet_AddSocket; please refer
+ * to that function's documentation.
+ *
+ * \param set the socket set to add a new socket to.
+ * \param sock the socket to add to the set.
+ * \returns the total number of sockets contained in the set (including this new one),
+ *          or -1 if the set is already full.
+ *
+ * \sa SDLNet_AddSocket
+ */
 SDL_FORCE_INLINE int SDLNet_UDP_AddSocket(SDLNet_SocketSet set, UDPsocket sock)
 {
     return SDLNet_AddSocket(set, (SDLNet_GenericSocket)sock);
 }
 
 
-/* Remove a socket from a set of sockets to be checked for available data */
+/**
+ * Remove a socket from a set of sockets to be checked for available data.
+ *
+ * Generally you don't want to call this generic function, but rather the
+ * specific, inline function that wraps it: SDLNet_TCP_DelSocket() or
+ * SDLNet_UDP_DelSocket().
+ *
+ * If `sock` is NULL, nothing is removed from the set; this lets you query
+ * the number of sockets currently contained in the set.
+ *
+ * This will return -1 if the socket was not found in the set; in such a
+ * case, nothing is removed from the set.
+ *
+ * \param set the socket set to remove a socket from.
+ * \param sock the socket to remove from the set.
+ * \returns the total number of sockets contained in the set (after
+ *          `sock`'s removal), or -1 if `sock` was not in the set.
+ *
+ * \sa SDLNet_TCP_DelSocket
+ * \sa SDLNet_UDP_DelSocket
+ * \sa SDLNet_AddSocket
+ * \sa SDLNet_TCP_AddSocket
+ * \sa SDLNet_UDP_AddSocket
+ * \sa SDLNet_CheckSockets
+ */
 extern DECLSPEC int SDLCALL SDLNet_DelSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock);
+
+/**
+ * Remove a TCP socket from a socket set.
+ *
+ * This is a small TCP-specific wrapper over SDLNet_DelSocket; please refer
+ * to that function's documentation.
+ *
+ * \param set the socket set to remove a socket from.
+ * \param sock the socket to remove from the set.
+ * \returns the total number of sockets contained in the set (after
+ *          `sock`'s removal), or -1 if `sock` was not in the set.
+ *
+ * \sa SDLNet_DelSocket
+ */
 SDL_FORCE_INLINE int SDLNet_TCP_DelSocket(SDLNet_SocketSet set, TCPsocket sock)
 {
     return SDLNet_DelSocket(set, (SDLNet_GenericSocket)sock);
 }
+
+/**
+ * Remove a UDP socket from a socket set.
+ *
+ * This is a small UDP-specific wrapper over SDLNet_DelSocket; please refer
+ * to that function's documentation.
+ *
+ * \param set the socket set to remove a socket from.
+ * \param sock the socket to remove from the set.
+ * \returns the total number of sockets contained in the set (after
+ *          `sock`'s removal), or -1 if `sock` was not in the set.
+ *
+ * \sa SDLNet_DelSocket
+ */
 SDL_FORCE_INLINE int SDLNet_UDP_DelSocket(SDLNet_SocketSet set, UDPsocket sock)
 {
     return SDLNet_DelSocket(set, (SDLNet_GenericSocket)sock);
 }
 
-/* This function checks to see if data is available for reading on the
-   given set of sockets.  If 'timeout' is 0, it performs a quick poll,
-   otherwise the function returns when either data is available for
-   reading, or the timeout in milliseconds has elapsed, which ever occurs
-   first.  This function returns the number of sockets ready for reading,
-   or -1 if there was an error with the select() system call.
-*/
+/**
+ * Check a socket set for data availability.
+ *
+ * This function checks to see if data is available for reading on the
+ * given set of sockets.  If 'timeout' is 0, it performs a quick poll,
+ * otherwise the function returns when either data is available for
+ * reading, or the timeout in milliseconds has elapsed, whichever occurs
+ * first.
+ *
+ * \param set the socket set to check for ready sockets.
+ * \param timeout the time to wait _in milliseconds_ for new data to
+ *        arrive. A timeout of zero checks for new data and returns
+ *        without blocking.
+ * \returns the number of sockets ready for reading, or -1 if there was
+ *          an error with the select() system call.
+ */
 extern DECLSPEC int SDLCALL SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout);
 
-/* After calling SDLNet_CheckSockets(), you can use this function on a
-   socket that was in the socket set, to find out if data is available
-   for reading.
-*/
+/* !!! FIXME: wikiheaders.pl ignores macros, atm */
+/**
+ * See if a specific socket has data available after checking it in a set.
+ *
+ * After calling SDLNet_CheckSockets(), you can use this function on a
+ * socket that was in the socket set, to find out if data is available
+ * for reading.
+ *
+ * \param sock the socket to check.
+ * \returns non-zero if socket has new data available, zero otherwise.
+ */
 #define SDLNet_SocketReady(sock) _SDLNet_SocketReady((SDLNet_GenericSocket)(sock))
 SDL_FORCE_INLINE int _SDLNet_SocketReady(SDLNet_GenericSocket sock)
 {
     return (sock != NULL) && (sock->ready);
 }
 
-/* Free a set of sockets allocated by SDL_NetAllocSocketSet() */
+/**
+ * Free a set of sockets allocated by SDLNet_AllocSocketSet().
+ *
+ * When done with a socket set, call this function to free its
+ * resources.
+ *
+ * This only frees the socket set, not the individual sockets in
+ * the set, which would still (at some future point) need to be
+ * closed with SDLNet_TCP_Close or SDLNet_UDP_Close.
+ *
+ * \param set the socket set to free.
+ */
 extern DECLSPEC void SDLCALL SDLNet_FreeSocketSet(SDLNet_SocketSet set);
 
-/***********************************************************************/
-/* Error reporting functions                                           */
-/***********************************************************************/
 
+/* Error reporting functions */
+
+/**
+ * Set an error message to be retrieved with SDLNet_GetError.
+ *
+ * Generally you don't need to call this (SDL_net will use it
+ * internally to report errors), but it could be useful if you
+ * need to inject an error message of your own in here.
+ *
+ * \param fmt a printf-style format string for the error message.
+ */
 extern DECLSPEC void SDLCALL SDLNet_SetError(const char *fmt, ...);
+
+/**
+ * Get the latest error message from SDL_net.
+ *
+ * The error message, depending on how SDL_net was built, may or may not
+ * be thread-specific. Sometimes things will set an error message when
+ * no failure was reported; the error string is only meaningful right
+ * after a public API reports a failure, and should be ignored otherwise.
+ */
 extern DECLSPEC const char * SDLCALL SDLNet_GetError(void);
 
-/***********************************************************************/
-/* Inline functions to read/write network data                         */
-/***********************************************************************/
+/* Inline functions to read/write network data */
 
 /* Warning, most systems have data access alignment restrictions */
 #if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86) || defined(_M_AMD64)
