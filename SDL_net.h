@@ -176,7 +176,7 @@ extern DECLSPEC int SDLCALL SDLNet_ResolveHost(IPaddress *address, const char *h
  * If the IP couldn't be resolved, this function returns NULL, otherwise a
  * pointer to a static buffer containing the hostname is returned.
  *
- * **Warning**: Note that this function is not thread-safe!
+ * **Warning**: This function is not thread-safe!
  *
  * \param ip the IP address to resolve into a hostname.
  */
