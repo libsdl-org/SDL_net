@@ -295,7 +295,7 @@ extern DECLSPEC int SDLCALL SDLNet_TCP_Send(TCPsocket sock, const void *data, in
 extern DECLSPEC int SDLCALL SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxlen);
 
 /**
- * Close a TCP network socket
+ * Close a TCP network socket.
  *
  * All TCP sockets (server and non-server) are deinitialized through this
  * function. Call this once you are done with a socket, and assume the handle
