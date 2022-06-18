@@ -8,7 +8,7 @@ if(NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/../include/SDL_net.h")
     return()
 endif()
 
-file(READ "${CMAKE_CURRENT_LIST_DIR}/../SDL_net.h" _sdl_net_h)
+file(READ "${CMAKE_CURRENT_LIST_DIR}/../include/SDL_net.h" _sdl_net_h)
 string(REGEX MATCH "#define[ \t]+SDL_NET_MAJOR_VERSION[ \t]+([0-9]+)" _sdl_major_re "${_sdl_net_h}")
 set(_sdl_major "${CMAKE_MATCH_1}")
 string(REGEX MATCH "#define[ \t]+SDL_NET_MINOR_VERSION[ \t]+([0-9]+)" _sdl_minor_re "${_sdl_net_h}")
