@@ -592,6 +592,9 @@ extern DECLSPEC IPaddress * SDLCALL SDLNet_UDP_GetPeerAddress(UDPsocket sock, in
  * reasonably send in a single packet, the better, as it will be more reliable
  * and lower latency.
  *
+ * \param sock the UDP socket to send packets on.
+ * \param packets an array of packets to send to the network.
+ * \param npackets the number of packets in the `packets` array.
  * \returns the number of packets successfully sent from this machine.
  *
  * \since This function is available since SDL_net 2.0.0.
@@ -625,7 +628,9 @@ extern DECLSPEC int SDLCALL SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets
  * reasonably send in a single packet, the better, as it will be more reliable
  * and lower latency.
  *
- * This function returns 1 if the packet was sent, or 0 on error.
+ * \param sock the UDP socket to send packets on.
+ * \param packet a single packet to send to the network.
+ * \returns 1 if the packet was sent, or 0 on error.
  *
  * \since This function is available since SDL_net 2.0.0.
  */
@@ -950,6 +955,8 @@ extern DECLSPEC void SDLCALL SDLNet_SetError(const char *fmt, ...);
  * thread-local data. Sometimes things will set an error message when no
  * failure was reported; the error string is only meaningful right after a
  * public API reports a failure, and should be ignored otherwise.
+ *
+ * \returns the last set error message in UTF-8 encoding.
  *
  * \since This function is available since SDL_net 2.0.0.
  */
