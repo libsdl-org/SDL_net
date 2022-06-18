@@ -220,9 +220,9 @@ typedef struct _TCPsocket *TCPsocket;
  * \param ip The address to open a connection to (or to host a server on).
  * \returns the newly created socket, or NULL if there was an error.
  *
- * \sa SDLNet_TCP_Close
- *
  * \since This function is available since SDL_net 2.0.0.
+ *
+ * \sa SDLNet_TCP_Close
  */
 extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_Open(IPaddress *ip);
 
@@ -495,11 +495,11 @@ extern DECLSPEC UDPsocket SDLCALL SDLNet_UDP_Open(Uint16 port);
  *
  * You probably don't want to use this function outside of local testing.
  *
- * \since This function is available since SDL_net 2.0.0.
- *
  * \param sock the socket to simulate packet loss on.
  * \param percent a value from 0 to 100 of likelihood to drop a packet (higher
  *                the number means more likelihood of dropping.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC void SDLCALL SDLNet_UDP_SetPacketLoss(UDPsocket sock, int percent);
 
