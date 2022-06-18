@@ -20,7 +20,7 @@ else()
     return()
 endif()
 
-set(_sdl2net_incdir       "${CMAKE_CURRENT_LIST_DIR}/../include/SDL2")
+set(_sdl2net_incdir       "${CMAKE_CURRENT_LIST_DIR}/../include")
 set(_sdl2net_library      "${CMAKE_CURRENT_LIST_DIR}/../lib/${_sdl_arch_subdir}/SDL2_net.lib")
 set(_sdl2net_dll          "${CMAKE_CURRENT_LIST_DIR}/../lib/${_sdl_arch_subdir}/SDL2_net.dll")
 
