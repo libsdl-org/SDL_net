@@ -109,7 +109,7 @@ extern DECLSPEC const SDLNet_version * SDLCALL SDLNet_Linked_Version(void);
  * Initialize SDL_net.
  *
  * You must successfully call this function before it is safe to call any
- * other function in this library, with one exception: A human-readable error
+ * other function in this library, with one exception: a human-readable error
  * message can be retrieved from SDLNet_GetError() when if this function
  * fails.
  *
