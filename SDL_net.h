@@ -100,6 +100,8 @@ extern "C" {
  * This returns static internal data; do not free or modify it!
  *
  * \returns a pointer to the version information.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC const SDLNet_version * SDLCALL SDLNet_Linked_Version(void);
 
@@ -119,6 +121,8 @@ extern DECLSPEC const SDLNet_version * SDLCALL SDLNet_Linked_Version(void);
  * init and quit calls.
  *
  * \returns 0 on success, -1 on error.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC int SDLCALL SDLNet_Init(void);
 
@@ -131,6 +135,8 @@ extern DECLSPEC int SDLCALL SDLNet_Init(void);
  *
  * Once you have as many quit calls as you have had successful calls to
  * SDLNet_Init, the library will actually deinitialize.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC void SDLCALL SDLNet_Quit(void);
 
@@ -167,6 +173,8 @@ typedef struct {
  * \param host the hostname to lookup (like "libsdl.org")
  * \param port the port intended to be connected to, to fill into address.
  * \returns zero on success, -1 on error.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC int SDLCALL SDLNet_ResolveHost(IPaddress *address, const char *host, Uint16 port);
 
@@ -179,6 +187,8 @@ extern DECLSPEC int SDLCALL SDLNet_ResolveHost(IPaddress *address, const char *h
  * **Warning**: This function is not thread-safe!
  *
  * \param ip the IP address to resolve into a hostname.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC const char * SDLCALL SDLNet_ResolveIP(const IPaddress *ip);
 
@@ -188,6 +198,8 @@ extern DECLSPEC const char * SDLCALL SDLNet_ResolveIP(const IPaddress *ip);
  * \param addresses where to store the returned information.
  * \param maxcount the number of results that can be stored at `addresses`
  * \returns the number of addresses saved in `addresses`
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC int SDLCALL SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount);
 
@@ -209,6 +221,8 @@ typedef struct _TCPsocket *TCPsocket;
  * \returns the newly created socket, or NULL if there was an error.
  *
  * \sa SDLNet_TCP_Close
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_Open(IPaddress *ip);
 
@@ -221,6 +235,8 @@ extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_Open(IPaddress *ip);
  *
  * \param server the server socket to accept a connection on.
  * \returns the newly created socket, or NULL if there was an error.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_Accept(TCPsocket server);
 
@@ -235,6 +251,8 @@ extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_Accept(TCPsocket server);
  *
  * \param sock the socket to query.
  * \returns the address information for the socket.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC IPaddress * SDLCALL SDLNet_TCP_GetPeerAddress(TCPsocket sock);
 
@@ -259,6 +277,8 @@ extern DECLSPEC IPaddress * SDLCALL SDLNet_TCP_GetPeerAddress(TCPsocket sock);
  * \returns number of bytes sent, which might be less if there was a problem
  *          or connection failure. If the socket is invalid, this function can
  *          return -1, but in valid uses it'll return >= 0.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  *
  * \sa SDLNet_TCP_Recv
  */
@@ -289,6 +309,8 @@ extern DECLSPEC int SDLCALL SDLNet_TCP_Send(TCPsocket sock, const void *data, in
  * \param maxlen the maximum number of bytes that can be stored at `data`.
  * \returns number of bytes received, which might be less than `maxlen`.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_TCP_Send
  * \sa SDLNet_CheckSockets
  */
@@ -304,6 +326,8 @@ extern DECLSPEC int SDLCALL SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxl
  * Closing a socket will disconnect any communication and free its resources.
  *
  * \param sock socket to close.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC void SDLCALL SDLNet_TCP_Close(TCPsocket sock);
 
@@ -340,6 +364,8 @@ typedef struct {
  *             contain.
  * \returns the new packet, or NULL if the function ran out of memory.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_ResizePacket
  * \sa SDLNet_FreePacket
  * \sa SDLNet_AllocPacketV
@@ -370,6 +396,8 @@ extern DECLSPEC UDPpacket * SDLCALL SDLNet_AllocPacket(int size);
  * \returns the new maximum payload size, which will be unchanged from the
  *          previous if the system ran out of memory.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_AllocPacket
  * \sa SDLNet_FreePacket
  */
@@ -383,6 +411,8 @@ extern DECLSPEC int SDLCALL SDLNet_ResizePacket(UDPpacket *packet, int newsize);
  * completes, the packet's pointer is invalid and should not be used anymore.
  *
  * \param packet the packet to free.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  *
  * \sa SDLNet_AllocPacket
  * \sa SDLNet_ResizePacket
@@ -402,6 +432,8 @@ extern DECLSPEC void SDLCALL SDLNet_FreePacket(UDPpacket *packet);
  * \returns a pointer to the first packet in the array, or NULL if the
  *          function ran out of memory.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_FreePacketV
  */
 extern DECLSPEC UDPpacket ** SDLCALL SDLNet_AllocPacketV(int howmany, int size);
@@ -419,6 +451,8 @@ extern DECLSPEC UDPpacket ** SDLCALL SDLNet_AllocPacketV(int howmany, int size);
  * than SDLNet_AllocPacketV().
  *
  * \param packetV the results of a call to SDLNet_AllocPacketV().
+ *
+ * \since This function is available since SDL_net 2.0.0.
  *
  * \sa SDLNet_AllocPacketV
  */
@@ -443,6 +477,8 @@ extern DECLSPEC void SDLCALL SDLNet_FreePacketV(UDPpacket **packetV);
  * \param port the UDP port to bind this socket to.
  * \returns a new UDP socket, ready to communicate.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_UDP_Close
  * \sa SDLNet_UDP_Bind
  */
@@ -458,6 +494,8 @@ extern DECLSPEC UDPsocket SDLCALL SDLNet_UDP_Open(Uint16 port);
  * is robust against network problems even on a fast, reliable network.
  *
  * You probably don't want to use this function outside of local testing.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  *
  * \param sock the socket to simulate packet loss on.
  * \param percent a value from 0 to 100 of likelihood to drop a packet (higher
@@ -487,6 +525,8 @@ extern DECLSPEC void SDLCALL SDLNet_UDP_SetPacketLoss(UDPsocket sock, int percen
  * \param address the address to bind to the socket's channel.
  * \returns the channel which was bound, or -1 on error.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_UDP_Unbind
  */
 extern DECLSPEC int SDLCALL SDLNet_UDP_Bind(UDPsocket sock, int channel, const IPaddress *address);
@@ -500,6 +540,8 @@ extern DECLSPEC int SDLCALL SDLNet_UDP_Bind(UDPsocket sock, int channel, const I
  *
  * \param sock the UDP socket to unbind addresses from a channel on.
  * \param channel the channel of the socket to unbind.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  *
  * \sa SDLNet_UDP_Bind
  */
@@ -516,6 +558,8 @@ extern DECLSPEC void SDLCALL SDLNet_UDP_Unbind(UDPsocket sock, int channel);
  * \param sock the UDP socket to unbind addresses from a channel on.
  * \param channel the channel of the socket to unbind.
  * \returns the address bound to the socket's channel, or
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC IPaddress * SDLCALL SDLNet_UDP_GetPeerAddress(UDPsocket sock, int channel);
 
@@ -550,6 +594,8 @@ extern DECLSPEC IPaddress * SDLCALL SDLNet_UDP_GetPeerAddress(UDPsocket sock, in
  *
  * \returns the number of packets successfully sent from this machine.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_UDP_RecV
  */
 extern DECLSPEC int SDLCALL SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets);
@@ -580,6 +626,8 @@ extern DECLSPEC int SDLCALL SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets
  * and lower latency.
  *
  * This function returns 1 if the packet was sent, or 0 on error.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC int SDLCALL SDLNet_UDP_Send(UDPsocket sock, int channel, UDPpacket *packet);
 
@@ -608,6 +656,8 @@ extern DECLSPEC int SDLCALL SDLNet_UDP_Send(UDPsocket sock, int channel, UDPpack
  * \returns the number of packets read from the network, or -1 on error. 0
  *          means no packets were currently available.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_UDP_SendV
  * \sa SDLNet_UDP_Recv
  */
@@ -632,6 +682,8 @@ extern DECLSPEC int SDLCALL SDLNet_UDP_RecvV(UDPsocket sock, UDPpacket **packets
  * \returns 1 if a new packet is available, or -1 on error. 0 means no packets
  *          were currently available.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_UDP_Send
  * \sa SDLNet_UDP_RecvV
  */
@@ -645,6 +697,8 @@ extern DECLSPEC int SDLCALL SDLNet_UDP_Recv(UDPsocket sock, UDPpacket *packet);
  * This socket may not be used again once given to this function.
  *
  * \param sock UDP socket to close.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC void SDLCALL SDLNet_UDP_Close(UDPsocket sock);
 
@@ -674,6 +728,8 @@ typedef struct _SDLNet_GenericSocket {
  * \returns a socket set for up to `maxsockets` sockets, or NULL if the
  *          function ran out of memory.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_FreeSocketSet
  */
 extern DECLSPEC SDLNet_SocketSet SDLCALL SDLNet_AllocSocketSet(int maxsockets);
@@ -697,6 +753,8 @@ extern DECLSPEC SDLNet_SocketSet SDLCALL SDLNet_AllocSocketSet(int maxsockets);
  * \returns the total number of sockets contained in the set (including this
  *          new one), or -1 if the set is already full.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_TCP_AddSocket
  * \sa SDLNet_UDP_AddSocket
  * \sa SDLNet_DelSocket
@@ -717,6 +775,8 @@ extern DECLSPEC int SDLCALL SDLNet_AddSocket(SDLNet_SocketSet set, SDLNet_Generi
  * \returns the total number of sockets contained in the set (including this new one),
  *          or -1 if the set is already full.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_AddSocket
  */
 SDL_FORCE_INLINE int SDLNet_TCP_AddSocket(SDLNet_SocketSet set, TCPsocket sock)
@@ -734,6 +794,8 @@ SDL_FORCE_INLINE int SDLNet_TCP_AddSocket(SDLNet_SocketSet set, TCPsocket sock)
  * \param sock the socket to add to the set.
  * \returns the total number of sockets contained in the set (including this new one),
  *          or -1 if the set is already full.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  *
  * \sa SDLNet_AddSocket
  */
@@ -761,6 +823,8 @@ SDL_FORCE_INLINE int SDLNet_UDP_AddSocket(SDLNet_SocketSet set, UDPsocket sock)
  * \returns the total number of sockets contained in the set (after `sock`'s
  *          removal), or -1 if `sock` was not in the set.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_TCP_DelSocket
  * \sa SDLNet_UDP_DelSocket
  * \sa SDLNet_AddSocket
@@ -781,6 +845,8 @@ extern DECLSPEC int SDLCALL SDLNet_DelSocket(SDLNet_SocketSet set, SDLNet_Generi
  * \returns the total number of sockets contained in the set (after
  *          `sock`'s removal), or -1 if `sock` was not in the set.
  *
+ * \since This function is available since SDL_net 2.0.0.
+ *
  * \sa SDLNet_DelSocket
  */
 SDL_FORCE_INLINE int SDLNet_TCP_DelSocket(SDLNet_SocketSet set, TCPsocket sock)
@@ -798,6 +864,8 @@ SDL_FORCE_INLINE int SDLNet_TCP_DelSocket(SDLNet_SocketSet set, TCPsocket sock)
  * \param sock the socket to remove from the set.
  * \returns the total number of sockets contained in the set (after
  *          `sock`'s removal), or -1 if `sock` was not in the set.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  *
  * \sa SDLNet_DelSocket
  */
@@ -820,6 +888,8 @@ SDL_FORCE_INLINE int SDLNet_UDP_DelSocket(SDLNet_SocketSet set, UDPsocket sock)
  *                blocking.
  * \returns the number of sockets ready for reading, or -1 if there was an
  *          error with the select() system call.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC int SDLCALL SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout);
 
@@ -833,6 +903,8 @@ extern DECLSPEC int SDLCALL SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 tim
  *
  * \param sock the socket to check.
  * \returns non-zero if socket has new data available, zero otherwise.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 #define SDLNet_SocketReady(sock) _SDLNet_SocketReady((SDLNet_GenericSocket)(sock))
 SDL_FORCE_INLINE int _SDLNet_SocketReady(SDLNet_GenericSocket sock)
@@ -850,6 +922,8 @@ SDL_FORCE_INLINE int _SDLNet_SocketReady(SDLNet_GenericSocket sock)
  * SDLNet_TCP_Close or SDLNet_UDP_Close.
  *
  * \param set the socket set to free.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC void SDLCALL SDLNet_FreeSocketSet(SDLNet_SocketSet set);
 
@@ -864,6 +938,8 @@ extern DECLSPEC void SDLCALL SDLNet_FreeSocketSet(SDLNet_SocketSet set);
  * message of your own in here.
  *
  * \param fmt a printf-style format string for the error message.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC void SDLCALL SDLNet_SetError(const char *fmt, ...);
 
@@ -874,6 +950,8 @@ extern DECLSPEC void SDLCALL SDLNet_SetError(const char *fmt, ...);
  * thread-local data. Sometimes things will set an error message when no
  * failure was reported; the error string is only meaningful right after a
  * public API reports a failure, and should be ignored otherwise.
+ *
+ * \since This function is available since SDL_net 2.0.0.
  */
 extern DECLSPEC const char * SDLCALL SDLNet_GetError(void);
 
