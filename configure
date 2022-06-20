@@ -17710,11 +17710,11 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
     if test x$have_GUI != xyes; then
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: *** Can't find the GUI library - not building test programs
 The GUI library can be found at:
-http://www.libsdl.org/projects/GUIlib/
+https://github.com/libsdl-org/GUIlib
 " >&5
 printf "%s\n" "$as_me: WARNING: *** Can't find the GUI library - not building test programs
 The GUI library can be found at:
-http://www.libsdl.org/projects/GUIlib/
+https://github.com/libsdl-org/GUIlib
 " >&2;}
     fi
 fi

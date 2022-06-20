@@ -207,7 +207,7 @@ if test x$enable_gui = xyes; then
     if test x$have_GUI != xyes; then
         AC_MSG_WARN([*** Can't find the GUI library - not building test programs
 The GUI library can be found at:
-http://www.libsdl.org/projects/GUIlib/
+https://github.com/libsdl-org/GUIlib 
 ])
     fi
 fi
