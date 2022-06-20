@@ -72,7 +72,7 @@ void HandleServer(void)
                         people[which].sock);
                 SDLNet_TCP_Close(people[which].sock);
 #ifdef DEBUG
-                fprintf(stderr, "Killed inactive socket %d\n", which);
+                SDL_Log("Killed inactive socket %d\n", which);
 #endif
                 break;
             }
@@ -84,7 +84,7 @@ void HandleServer(void)
         SDLNet_TCP_Send(newsock, &data, 1);
         SDLNet_TCP_Close(newsock);
 #ifdef DEBUG
-        fprintf(stderr, "Connection refused -- chat room full\n");
+        SDL_Log("Connection refused -- chat room full\n");
 #endif
     } else {
         /* Add socket as an inactive person */
@@ -92,7 +92,7 @@ void HandleServer(void)
         people[which].peer = *SDLNet_TCP_GetPeerAddress(newsock);
         SDLNet_TCP_AddSocket(socketset, people[which].sock);
 #ifdef DEBUG
-        fprintf(stderr, "New inactive socket %d\n", which);
+        SDL_Log("New inactive socket %d\n", which);
 #endif
     }
 }
@@ -121,7 +121,7 @@ void HandleClient(int which)
     /* Has the connection been closed? */
     if ( SDLNet_TCP_Recv(people[which].sock, data, 512) <= 0 ) {
 #ifdef DEBUG
-        fprintf(stderr, "Closing socket %d (was%s active)\n",
+        SDL_Log("Closing socket %d (was%s active)\n",
                 which, people[which].active ? "" : " not");
 #endif
         /* Notify all active clients */
@@ -148,8 +148,8 @@ void HandleClient(int which)
                         &data[CHAT_HELLO_NAME], 256);
                 people[which].name[256] = 0;
 #ifdef DEBUG
-    fprintf(stderr, "Activating socket %d (%s)\n",
-                which, people[which].name);
+                SDL_Log("Activating socket %d (%s)\n",
+                        which, people[which].name);
 #endif
                 /* Notify all active clients */
                 for ( i=0; i<CHAT_MAXPEOPLE; ++i ) {
@@ -197,13 +197,17 @@ int main(int argc, char *argv[])
 
     /* Initialize SDL */
     if ( SDL_Init(0) < 0 ) {
-        fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Couldn't initialize SDL: %s\n", 
+                     SDL_GetError());
         exit(1);
     }
 
     /* Initialize the network */
     if ( SDLNet_Init() < 0 ) {
-        fprintf(stderr, "Couldn't initialize net: %s\n", SDLNet_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Couldn't initialize net: %s\n", 
+                     SDLNet_GetError());
         SDL_Quit();
         exit(1);
     }
@@ -217,18 +221,20 @@ int main(int argc, char *argv[])
     /* Allocate the socket set */
     socketset = SDLNet_AllocSocketSet(CHAT_MAXPEOPLE+1);
     if ( socketset == NULL ) {
-        fprintf(stderr, "Couldn't create socket set: %s\n",
-                        SDLNet_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Couldn't create socket set: %s\n",
+                     SDLNet_GetError());
         cleanup(2);
     }
 
     /* Create the server socket */
     SDLNet_ResolveHost(&serverIP, NULL, CHAT_PORT);
-    printf("Server IP: %x, %d\n", serverIP.host, serverIP.port);
+    SDL_Log("Server IP: %x, %d\n", serverIP.host, serverIP.port);
     servsock = SDLNet_TCP_Open(&serverIP);
     if ( servsock == NULL ) {
-        fprintf(stderr, "Couldn't create server socket: %s\n",
-                        SDLNet_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Couldn't create server socket: %s\n",
+                     SDLNet_GetError());
         cleanup(2);
     }
     SDLNet_TCP_AddSocket(socketset, servsock);
