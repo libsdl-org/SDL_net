@@ -58,13 +58,13 @@ enum image_names {
     IMAGE_SCROLL_DN,
     NUM_IMAGES
 };
-char *image_files[NUM_IMAGES] = {
+const char *image_files[NUM_IMAGES] = {
     "quit.bmp", "scroll_up.bmp", "scroll_dn.bmp"
 };
 SDL_Surface *images[NUM_IMAGES];
 
 
-void SendHello(char *name)
+void SendHello(const char *name)
 {
     IPaddress *myip;
     char hello[1+1+256];
@@ -122,51 +122,49 @@ void SendBuf(char *buf, int len)
         }
     }
 }
-void SendKey(SDLKey key, Uint16 unicode)
+void SendKey(SDL_Keycode key, Uint16 unicode)
 {
     static char keybuf[80-sizeof(CHAT_PROMPT)+1];
     static int  keypos = 0;
-    unsigned char ch;
+    char ch;
 
-    /* We don't handle wide UNICODE characters yet */
-    if ( unicode > 255 ) {
+    switch (key) {
+    case SDLK_RETURN:
+        /* Send our line of text */
+        SendBuf(keybuf, keypos);
+        keypos = 0;
+        break;
+    case SDLK_BACKSPACE:
+        /* If there's data, back up over it */
+        if ( keypos > 0 ) {
+            ch = '\b';
+            sendwin->AddText(&ch, 1);
+            --keypos;
+        }
+        break;
+    default:
+        break;
+    }
+
+    /* We don't handle non-ASCII characters yet */
+    if ( unicode == 0 || unicode > 127 ) {
         return;
     }
-    ch = (unsigned char)unicode;
+    ch = (char)unicode;
 
-    /* Add the key to the buffer, and send it if we have a line */
-    switch (ch) {
-        case '\0':
-            break;
-        case '\r':
-        case '\n':
-            /* Send our line of text */
-            SendBuf(keybuf, keypos);
-            keypos = 0;
-            break;
-        case '\b':
-            /* If there's data, back up over it */
-            if ( keypos > 0 ) {
-                sendwin->AddText((char *)&ch, 1);
-                --keypos;
-            }
-            break;
-        default:
-            /* If the buffer is full, send it */
-            if ( keypos == (sizeof(keybuf)/sizeof(keybuf[0]))-1 ) {
-                SendBuf(keybuf, keypos);
-                keypos = 0;
-            }
-            /* Add the text to our send buffer */
-            sendwin->AddText((char *)&ch, 1);
-            keybuf[keypos++] = ch;
-            break;
+    /* If the buffer is full, send it */
+    if ( keypos == (sizeof(keybuf)/sizeof(keybuf[0]))-1 ) {
+        SendBuf(keybuf, keypos);
+        keypos = 0;
     }
+    /* Add the text to our send buffer */
+    sendwin->AddText((char *)&ch, 1);
+    keybuf[keypos++] = ch;
 }
 
 int HandleServerData(Uint8 *data)
 {
-    int used;
+    int used = 0;
 
     switch (data[0]) {
         case CHAT_ADD: {
@@ -299,13 +297,14 @@ GUI_status HandleNet(void)
     }
 }
 
-void InitGUI(SDL_Surface *screen)
+void InitGUI(SDL_Window *window)
 {
+    SDL_Surface *screen = SDL_GetWindowSurface(window);
     int x1, y1, y2;
     SDL_Rect empty_rect = { 0, 0, 0, 0 };
-        GUI_Widget *widget;
+    GUI_Widget *widget;
 
-    gui = new GUI(screen);
+    gui = new GUI(window);
 
     /* Chat terminal window */
     termwin = new GUI_TermWin(0, 0, 80*8, 50*8, NULL,NULL,CHAT_SCROLLBACK);
@@ -330,9 +329,6 @@ void InitGUI(SDL_Surface *screen)
     y1 = sendwin->Y()+sendwin->H()+images[IMAGE_QUIT]->h/2;
     widget = new GUI_Button(NULL, x1, y1, images[IMAGE_QUIT], NULL);
     gui->AddWidget(widget);
-
-    /* That's all folks */
-    return;
 }
 
 extern "C"
@@ -376,7 +372,7 @@ void cleanup(int exitcode)
 
 int main(int argc, char *argv[])
 {
-        SDL_Surface *screen;
+    SDL_Window *window;
     int i;
     char *server;
     IPaddress serverIP;
@@ -387,18 +383,18 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-        /* Initialize SDL */
-        if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
-                fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
-                exit(1);
+    /* Initialize SDL */
+    if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
+        fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
+        exit(1);
     }
 
     /* Set a 640x480 video mode -- allows 80x50 window using 8x8 font */
-    screen = SDL_SetVideoMode(640, 480, 0, SDL_SWSURFACE);
-    if ( screen == NULL ) {
-                fprintf(stderr, "Couldn't set video mode: %s\n",SDL_GetError());
+    window = SDL_CreateWindow("Chat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, 0);
+    if ( window == NULL ) {
+        fprintf(stderr, "Couldn't create window: %s\n",SDL_GetError());
         SDL_Quit();
-                exit(1);
+        exit(1);
     }
 
     /* Initialize the network */
@@ -425,7 +421,7 @@ int main(int argc, char *argv[])
     }
 
     /* Go! */
-    InitGUI(screen);
+    InitGUI(window);
 
     /* Allocate a vector of packets for client messages */
     packets = SDLNet_AllocPacketV(4, CHAT_PACKETSIZE);
