@@ -422,27 +422,33 @@ int main(int argc, char *argv[])
 
     /* Check command line arguments */
     if ( argv[1] == NULL ) {
-        fprintf(stderr, "Usage: %s <server>\n", argv[0]);
+        SDL_Log("Usage: %s <server>\n", argv[0]);
         exit(1);
     }
 
     /* Initialize SDL */
     if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
-        fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                    "Couldn't initialize SDL: %s\n",
+                    SDL_GetError());
         exit(1);
     }
 
+
     /* Set a 640x480 video mode */
     if ( SDL_CreateWindowAndRenderer(640, 480, 0, &window, &renderer) < 0 ) {
-        fprintf(stderr, "Couldn't create window: %s\n",SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Couldn't create window: %s\n",
+                     SDL_GetError());
         SDL_Quit();
         exit(1);
     }
 
     /* Initialize the network */
     if ( SDLNet_Init() < 0 ) {
-        fprintf(stderr, "Couldn't initialize net: %s\n",
-                        SDLNet_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Couldn't initialize net: %s\n",
+                     SDLNet_GetError());
         SDL_Quit();
         exit(1);
     }
@@ -453,7 +459,8 @@ int main(int argc, char *argv[])
     /* Allocate a vector of packets for client messages */
     packets = SDLNet_AllocPacketV(4, CHAT_PACKETSIZE);
     if ( packets == NULL ) {
-        fprintf(stderr, "Couldn't allocate packets: Out of memory\n");
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Couldn't allocate packets: Out of memory\n");
         cleanup(2);
     }
 
@@ -486,8 +493,9 @@ int main(int argc, char *argv[])
     /* Allocate the socket set for polling the network */
     socketset = SDLNet_AllocSocketSet(2);
     if ( socketset == NULL ) {
-        fprintf(stderr, "Couldn't create socket set: %s\n",
-                        SDLNet_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Couldn't create socket set: %s\n",
+                     SDLNet_GetError());
         cleanup(2);
     }
     SDLNet_TCP_AddSocket(socketset, tcpsock);
