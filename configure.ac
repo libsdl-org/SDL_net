@@ -190,7 +190,7 @@ AC_ARG_ENABLE([examples],
 AM_CONDITIONAL(ENABLE_EXAMPLES, [test x$enable_examples = xyes])
 
 dnl Check for SDL
-SDL_VERSION=2.0.0
+SDL_VERSION=2.0.4
 AC_SUBST(SDL_VERSION)
 AM_PATH_SDL2($SDL_VERSION,
             :,
