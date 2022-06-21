@@ -23,9 +23,6 @@ EXTRA_DIST = CHANGES.txt LICENSE.txt README.txt \
 	VisualC			\
 	Xcode			\
 	Xcode-iOS		\
-	quit.bmp		\
-	scroll_dn.bmp		\
-	scroll_up.bmp		\
 	SDL2_net.spec		\
 	SDL2_net.spec.in	\
 	autogen.sh	\
@@ -45,17 +42,13 @@ endif
 .rc.o:
 	$(RC) $< $@
 
-if HAVE_GUI_LIB
 EXAMPLES = showinterfaces chat chatd
-else
-EXAMPLES = showinterfaces
-endif
 noinst_PROGRAMS = $(EXAMPLES)
 
 showinterfaces_SOURCES = showinterfaces.c
 showinterfaces_LDADD = libSDL2_net.la
-chat_SOURCES = chat.cpp chat.h
-chat_LDADD = libSDL2_net.la -lGUI
+chat_SOURCES = chat.c chat.h
+chat_LDADD = libSDL2_net.la -lSDL2_test
 chatd_SOURCES = chatd.c
 chatd_LDADD = libSDL2_net.la
 

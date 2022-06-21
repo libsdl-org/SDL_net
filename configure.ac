@@ -195,24 +195,6 @@ AM_PATH_SDL2($SDL_VERSION,
 CFLAGS="$CFLAGS $SDL_CFLAGS"
 LIBS="$LIBS $SDL_LIBS"
 
-dnl Check for GUI library for the chat client
-have_GUI=no
-AC_ARG_ENABLE(gui,
-[AS_HELP_STRING([--enable-gui],[Try to build the GUI test programs [default=yes]])],
-              , enable_gui=yes)
-if test x$enable_gui = xyes; then
-    AC_LANG_PUSH(C++)
-    AC_CHECK_LIB(GUI, GUI_Create, have_GUI=yes)
-    AC_LANG_POP(C++)
-    if test x$have_GUI != xyes; then
-        AC_MSG_WARN([*** Can't find the GUI library - not building test programs
-The GUI library can be found at:
-https://github.com/libsdl-org/GUIlib 
-])
-    fi
-fi
-AM_CONDITIONAL(HAVE_GUI_LIB, test x$have_GUI = xyes)
-
 dnl Calculate the location of the prefix, relative to the cmake folder
 eval pkg_prefix=$prefix
 eval pkg_cmakedir=$libdir/cmake/SDL2_net
@@ -224,9 +206,6 @@ CheckWarnAll
 
 dnl check for GCC visibility attributes
 CheckVisibilityHidden
-
-dnl C++ flags are the same as the C flags
-CXXFLAGS="$CXXFLAGS $CFLAGS"
 
 if test x$enable_shared = xyes; then
     ENABLE_SHARED_TRUE=
