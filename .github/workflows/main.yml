@@ -118,6 +118,10 @@ jobs:
         mkdir build-autotools
         ./autogen.sh
         set -- --prefix=$(pwd)/prefix_autotools
+        # mingw-w64-*-SDL2 doesn't have SDL_test, so only build this on Unix
+        if [ "${{ matrix.platform.shell }}" != 'sh' ]; then
+          set -- "$@" --disable-examples
+        fi
         ( cd build-autotools && ../configure "$@" )
 
     - name: Build (Autotools)
