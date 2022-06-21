@@ -71,7 +71,6 @@ AM_INIT_AUTOMAKE([foreign subdir-objects tar-ustar])
 
 dnl Check for tools
 AC_PROG_CC
-AC_PROG_CXX
 AC_CHECK_TOOL(RC,[windres],[:])
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
