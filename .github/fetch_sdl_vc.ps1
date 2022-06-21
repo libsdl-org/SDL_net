@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 $project_root = "$psScriptRoot\.."
 Write-Output "project_root: $project_root"
 
-$sdl2_version = "2.0.0"
+$sdl2_version = "2.0.4"
 $sdl2_zip = "SDL2-devel-$($sdl2_version)-VC.zip"
 
 $sdl2_url = "https://www.libsdl.org/release/$($sdl2_zip)"

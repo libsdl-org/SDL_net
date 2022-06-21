@@ -164,6 +164,8 @@ else
     not_ok "CMakeLists.txt DYLIB_COMPATIBILITY_VERSION is inconsistent"
 fi
 
+sdl_req=$(sed -ne 's/\$sdl2_version = "\([0-9.]*\)"$/\1/p' .github/fetch_sdl_vc.ps1)
+
 if [ "$ref_sdl_req" = "$sdl_req" ]; then
     ok ".github/fetch_sdl_vc.ps1 $sdl_req"
 else
