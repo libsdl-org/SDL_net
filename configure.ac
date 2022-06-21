@@ -184,6 +184,11 @@ CheckVisibilityHidden()
     fi
 }
 
+AC_ARG_ENABLE([examples],
+  AS_HELP_STRING([--disable-examples], [Do not build example programs]),,
+    enable_examples=yes)
+AM_CONDITIONAL(ENABLE_EXAMPLES, [test x$enable_examples = xyes])
+
 dnl Check for SDL
 SDL_VERSION=2.0.0
 AC_SUBST(SDL_VERSION)

@@ -42,8 +42,10 @@ endif
 .rc.o:
 	$(RC) $< $@
 
+if ENABLE_EXAMPLES
 EXAMPLES = showinterfaces chat chatd
 noinst_PROGRAMS = $(EXAMPLES)
+endif
 
 showinterfaces_SOURCES = showinterfaces.c
 showinterfaces_LDADD = libSDL2_net.la

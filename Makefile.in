@@ -92,7 +92,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @USE_VERSION_RC_FALSE@libSDL2_net_la_DEPENDENCIES =
-noinst_PROGRAMS = $(am__EXEEXT_1)
+@ENABLE_EXAMPLES_TRUE@noinst_PROGRAMS = $(am__EXEEXT_1)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude/libtool.m4 \
@@ -113,7 +113,8 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES = sdl2_net-config.cmake \
 	sdl2_net-config-version.cmake SDL2_net.spec SDL2_net.pc
 CONFIG_CLEAN_VPATH_FILES =
-am__EXEEXT_1 = showinterfaces$(EXEEXT) chat$(EXEEXT) chatd$(EXEEXT)
+@ENABLE_EXAMPLES_TRUE@am__EXEEXT_1 = showinterfaces$(EXEEXT) \
+@ENABLE_EXAMPLES_TRUE@	chat$(EXEEXT) chatd$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -435,7 +436,7 @@ libSDL2_net_la_LDFLAGS = \
 
 libSDL2_net_la_LIBADD = @INETLIB@
 @USE_VERSION_RC_TRUE@libSDL2_net_la_DEPENDENCIES = version.o
-EXAMPLES = showinterfaces chat chatd
+@ENABLE_EXAMPLES_TRUE@EXAMPLES = showinterfaces chat chatd
 showinterfaces_SOURCES = showinterfaces.c
 showinterfaces_LDADD = libSDL2_net.la
 chat_SOURCES = chat.c chat.h
