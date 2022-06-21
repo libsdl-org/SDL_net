@@ -22,6 +22,8 @@ project(SDL2_net
     VERSION "${FULL_VERSION}"
 )
 
+find_package(SDL2test)
+
 # Set defaults preventing destination file conflicts
 set(SDL2NET_DEBUG_POSTFIX "d"
     CACHE STRING "Name suffix for debug builds")
@@ -34,7 +36,12 @@ option(CMAKE_POSITION_INDEPENDENT_CODE "Build static libraries with -fPIC" ON)
 option(BUILD_SHARED_LIBS "Build the library as a shared library" ON)
 
 option(SDL2NET_INSTALL "Enable SDL2_net install target" ON)
-option(SDL2NET_SHOWINTERFACES "Build the showinterfaces test program" OFF)
+
+option(SDL2NET_SAMPLES "Build SDL2_net samples" "${SDL2test_FOUND}")
+
+if(SDL2NET_SAMPLES)
+    find_package(SDL2test REQUIRED)
+endif()
 
 # Save BUILD_SHARED_LIBS variable
 set(SDL2NET_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
@@ -229,8 +236,20 @@ if(SDL2NET_INSTALL)
     )
 endif()
 
-if(SDL2NET_SHOWINTERFACES)
+if(SDL2NET_SAMPLES)
+    find_package(SDL2main)
+
     add_executable(showinterfaces showinterfaces.c)
     target_compile_definitions(showinterfaces PRIVATE SDL_MAIN_HANDLED)
     target_link_libraries(showinterfaces PRIVATE SDL2_net::${sdl2_net_export_name} ${sdl2_target_name})
+
+    add_executable(chat chat.c chat.h)
+    if(TARGET SDL2::SDL2main)
+        target_link_libraries(chat PRIVATE SDL2::SDL2main)
+    endif()
+    target_link_libraries(chat PRIVATE SDL2_net::${sdl2_net_export_name} SDL2::SDL2test ${sdl2_target_name})
+
+    add_executable(chatd chatd.c)
+    target_compile_definitions(chatd PRIVATE SDL_MAIN_HANDLED)
+    target_link_libraries(chatd PRIVATE SDL2_net::${sdl2_net_export_name} ${sdl2_target_name})
 endif()

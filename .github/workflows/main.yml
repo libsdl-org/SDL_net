@@ -89,12 +89,12 @@ jobs:
       if: "matrix.platform.cmake"
       run: |
         set -eu
+        # FIXME: add -DSDL2NET_SAMPLES=ON when msys2 has SDL2test
         cmake -S . \
           -B build-cmake \
           -DBUILD_SHARED_LIBS=ON \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=prefix_cmake \
-          -DSDL2NET_SHOWINTERFACES=ON \
           ${{ matrix.platform.cmake }}
 
     - name: Build (CMake)
