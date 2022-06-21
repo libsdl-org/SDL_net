@@ -11,8 +11,7 @@ This library supports UNIX, Windows, MacOS Classic, MacOS X,
 BeOS and QNX.
 
 The demo program is a chat client and server.
-The chat client requires the sample GUI library available at:
-http://www.libsdl.org/projects/GUIlib/
+
 The chat client connects to the server via TCP, registering itself.
 The server sends back a list of connected clients, and keeps the
 client updated with the status of other clients.
