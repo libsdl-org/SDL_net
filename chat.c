@@ -20,17 +20,17 @@
 */
 
 /* Note that this isn't necessarily the way to run a chat system.
-   This is designed to excercise the network code more than be really
+   This is designed to exercise the network code more than be really
    functional.
 */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "SDL_net.h"
 #include "SDL_test.h"
 #include "chat.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 /* Global variables */
