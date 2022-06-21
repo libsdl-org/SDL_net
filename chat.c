@@ -536,7 +536,7 @@ int main(int argc, char *argv[])
                             keypos = 0;
                         }
                         /* Add the text to our send buffer */
-                        TextWindowAddText(sendwin, event.text.text, textlen);
+                        TextWindowAddTextWithLength(sendwin, event.text.text, textlen);
                         SDL_memcpy(&keybuf[keypos], event.text.text, textlen);
                         keypos += textlen;
                     }
