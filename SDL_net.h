@@ -354,7 +354,7 @@ typedef struct {
  * This allocates a packet with `size` bytes of space for payload.
  *
  * When done with this packet, you can free it with SDLNet_FreePacket. Packets
- * can be used multiple times; you don't have to allocate a new one for each
+ * can be reused multiple times; you don't have to allocate a new one for each
  * piece of data you intend to send.
  *
  * You can allocate multiple packets at once with SDLNet_AllocPacketV.
