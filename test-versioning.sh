@@ -135,7 +135,7 @@ ${major}.${minor}.0"
 if [ "$ref" = "$dylib_cur" ]; then
     ok "project.pbxproj DYLIB_CURRENT_VERSION is consistent"
 else
-    not_ok "project.pbxproj DYLIB_CURRENT_VERSION is inconsistent"
+    not_ok "project.pbxproj DYLIB_CURRENT_VERSION is inconsistent, expected $ref"
 fi
 
 major=$(sed -ne 's/^set(MAJOR_VERSION \([0-9]*\))$/\1/p' CMakeLists.txt)
