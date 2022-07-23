@@ -24,6 +24,12 @@ project(SDL2_net
 
 message(STATUS "Configuring ${PROJECT_NAME} ${PROJECT_VERSION}")
 
+if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    set(SDL2NET_ROOTPROJECT ON)
+else()
+    set(SDL2NET_ROOTPROJECT OFF)
+endif()
+
 if(TARGET SDL2::SDL2test)
     set(SDL2test_FOUND ON)
 else()
@@ -35,15 +41,16 @@ set(SDL2NET_DEBUG_POSTFIX "d"
     CACHE STRING "Name suffix for debug builds")
 mark_as_advanced(SDL2NET_DEBUG_POSTFIX)
 
+include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
 option(CMAKE_POSITION_INDEPENDENT_CODE "Build static libraries with -fPIC" ON)
 option(BUILD_SHARED_LIBS "Build the library as a shared library" ON)
 
-option(SDL2NET_INSTALL "Enable SDL2_net install target" ON)
+option(SDL2NET_INSTALL "Enable SDL2_net install target" ${SDL2NET_ROOTPROJECT})
 
-option(SDL2NET_SAMPLES "Build SDL2_net samples" "${SDL2test_FOUND}")
+cmake_dependent_option(SDL2NET_SAMPLES "Build SDL2_net samples" ${SDL2NET_ROOTPROJECT} "${SDL2test_FOUND}" OFF)
 
 if(SDL2NET_SAMPLES)
     find_package(SDL2test REQUIRED)
