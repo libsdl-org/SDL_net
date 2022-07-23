@@ -22,7 +22,13 @@ project(SDL2_net
     VERSION "${FULL_VERSION}"
 )
 
-find_package(SDL2test)
+message(STATUS "Configuring ${PROJECT_NAME} ${PROJECT_VERSION}")
+
+if(TARGET SDL2::SDL2test)
+    set(SDL2test_FOUND ON)
+else()
+    find_package(SDL2test)
+endif()
 
 # Set defaults preventing destination file conflicts
 set(SDL2NET_DEBUG_POSTFIX "d"
