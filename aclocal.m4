@@ -1148,6 +1148,9 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
+m4_include([acinclude/ax_compute_relative_paths.m4])
+m4_include([acinclude/ax_normalize_path.m4])
+m4_include([acinclude/ax_recursive_eval.m4])
 m4_include([acinclude/libtool.m4])
 m4_include([acinclude/ltoptions.m4])
 m4_include([acinclude/ltsugar.m4])
