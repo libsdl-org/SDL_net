@@ -14,10 +14,13 @@ Copy the SDL2_net.framework to /Library/Frameworks
 
 You may alternatively install it in <your home directory>/Library/Frameworks if your access privileges are not high enough. (Be aware that the Xcode templates we provide in the SDL Developer Extras package may require some adjustment for your system if you do this.)
 
-
-(Partial) History of PB/Xcode projects:
-2009-09-21 - Updated for 64-bit (Snow Leopard) Universal Binaries.
-	Switched to 10.4 minimum requirement.
-
-2006-01-31 - First entry in history. Updated for Universal Binaries.
-
+Use in CMake projects:
+SDL2_net.framework can be used in CMake projects using the following pattern:
+```
+find_package(SDL2_net REQUIRED)
+add_executable(my_game ${MY_SOURCES})
+target_link_libraries(my_game PRIVATE SDL2_net::SDL2_net)
+```
+If SDL2_net.framework is installed in a non-standard location,
+please refer to the following link for ways to configure CMake:
+https://cmake.org/cmake/help/latest/command/find_package.html#config-mode-search-procedure
