@@ -15,20 +15,22 @@ libSDL2_net_la_SOURCES =		\
 	SDLnetselect.c		\
 	SDLnetsys.h
 
-EXTRA_DIST = CHANGES.txt LICENSE.txt README.txt \
+EXTRA_DIST = \
 	Android.mk		\
-	debian			\
-	version.rc		\
+	CHANGES.txt 		\
+	CMakeLists.txt		\
+	LICENSE.txt 		\
 	Makefile.os2		\
+	README.txt 		\
+	SDL2_net.spec		\
+	SDL2_netConfig.cmake.in	\
 	VisualC			\
 	Xcode			\
 	Xcode-iOS		\
-	SDL2_net.spec		\
-	SDL2_net.spec.in	\
-	autogen.sh	\
-	CMakeLists.txt	\
-	cmake	\
-	SDL2_netConfig.cmake.in
+	autogen.sh		\
+	cmake			\
+	mingw			\
+	version.rc
 
 libSDL2_net_la_LDFLAGS = 	\
 	-no-undefined		\
