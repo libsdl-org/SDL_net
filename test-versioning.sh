@@ -103,10 +103,8 @@ fi
 
 # For simplicity this assumes we'll never break ABI before SDL 3.
 dylib_compat=$(sed -Ene 's/.*DYLIB_COMPATIBILITY_VERSION = (.*);$/\1/p' Xcode/SDL_net.xcodeproj/project.pbxproj)
-ref='1
-1
-1
-1'
+ref='1.0.0
+1.0.0'
 
 if [ "$ref" = "$dylib_compat" ]; then
     ok "project.pbxproj DYLIB_COMPATIBILITY_VERSION is consistent"
@@ -128,8 +126,6 @@ case "$ref_minor" in
 esac
 
 ref="${major}.${minor}.0
-${major}.${minor}.0
-${major}.${minor}.0
 ${major}.${minor}.0"
 
 if [ "$ref" = "$dylib_cur" ]; then
