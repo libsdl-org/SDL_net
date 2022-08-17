@@ -1,6 +1,5 @@
-2.0.2:
-Ozkan Sezer - Mon Oct 23 11:54:16 2017
- * Build fixes for OS/2
+2.2.0:
+ * Added support for building with CMake
 
 2.0.1:
 Mārtiņš Možeiko - Fri Sep 27 23:26:33 2013
