@@ -26,7 +26,6 @@ EXTRA_DIST = \
 	SDL2_netConfig.cmake.in	\
 	VisualC			\
 	Xcode			\
-	Xcode-iOS		\
 	autogen.sh		\
 	cmake			\
 	mingw			\
