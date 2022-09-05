@@ -89,12 +89,12 @@ jobs:
       if: "matrix.platform.cmake"
       run: |
         set -eu
-        # FIXME: add -DSDL2NET_SAMPLES=ON when msys2 has SDL2test
         cmake -S . \
           -B build-cmake \
           -DBUILD_SHARED_LIBS=ON \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=prefix_cmake \
+          -DSDL2NET_SAMPLES=ON \
           ${{ matrix.platform.cmake }}
 
     - name: Build (CMake)
@@ -118,10 +118,6 @@ jobs:
         mkdir build-autotools
         ./autogen.sh
         set -- --prefix=$(pwd)/prefix_autotools
-        # mingw-w64-*-SDL2 doesn't have SDL_test, so only build this on Unix
-        if [ "${{ matrix.platform.shell }}" != 'sh' ]; then
-          set -- "$@" --disable-examples
-        fi
         ( cd build-autotools && ../configure "$@" )
 
     - name: Build (Autotools)
