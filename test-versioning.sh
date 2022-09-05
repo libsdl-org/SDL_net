@@ -38,6 +38,35 @@ else
     not_ok "configure.ac $version disagrees with SDL_net.h $ref_version"
 fi
 
+major=$(sed -ne 's/^MAJOR_VERSION=//p' configure)
+minor=$(sed -ne 's/^MINOR_VERSION=//p' configure)
+micro=$(sed -ne 's/^MICRO_VERSION=//p' configure)
+version="${major}.${minor}.${micro}"
+
+if [ "$ref_version" = "$version" ]; then
+    ok "configure $version"
+else
+    not_ok "configure $version disagrees with SDL_net.h $ref_version"
+fi
+
+major=$(sed -ne 's/^set(MAJOR_VERSION \([0-9]*\))$/\1/p' CMakeLists.txt)
+minor=$(sed -ne 's/^set(MINOR_VERSION \([0-9]*\))$/\1/p' CMakeLists.txt)
+micro=$(sed -ne 's/^set(MICRO_VERSION \([0-9]*\))$/\1/p' CMakeLists.txt)
+sdl_req=$(sed -ne 's/^set(SDL_REQUIRED_VERSION \([0-9.]*\))$/\1/p' CMakeLists.txt)
+version="${major}.${minor}.${micro}"
+
+if [ "$ref_version" = "$version" ]; then
+    ok "CMakeLists.txt $version"
+else
+    not_ok "CMakeLists.txt $version disagrees with SDL_net.h $ref_version"
+fi
+
+if [ "$ref_sdl_req" = "$sdl_req" ]; then
+    ok "CMakeLists.txt SDL_REQUIRED_VERSION is consistent"
+else
+    not_ok "CMakeLists.txt SDL_REQUIRED_VERSION=$sdl_req disagrees with configure.ac SDL_VERSION=$ref_sdl_req"
+fi
+
 major=$(sed -ne 's/^MAJOR_VERSION *= *//p' Makefile.os2)
 minor=$(sed -ne 's/^MINOR_VERSION *= *//p' Makefile.os2)
 micro=$(sed -ne 's/^MICRO_VERSION *= *//p' Makefile.os2)
@@ -103,13 +132,25 @@ fi
 
 # For simplicity this assumes we'll never break ABI before SDL 3.
 dylib_compat=$(sed -Ene 's/.*DYLIB_COMPATIBILITY_VERSION = (.*);$/\1/p' Xcode/SDL_net.xcodeproj/project.pbxproj)
-ref='1.0.0
-1.0.0'
+
+case "$ref_minor" in
+    (*[02468])
+        major="$(( ref_minor * 100 + 1 ))"
+        minor="0"
+        ;;
+    (*)
+        major="$(( ref_minor * 100 + ref_micro + 1 ))"
+        minor="0"
+        ;;
+esac
+
+ref="${major}.${minor}.0
+${major}.${minor}.0"
 
 if [ "$ref" = "$dylib_compat" ]; then
     ok "project.pbxproj DYLIB_COMPATIBILITY_VERSION is consistent"
 else
-    not_ok "project.pbxproj DYLIB_COMPATIBILITY_VERSION is inconsistent"
+    not_ok "project.pbxproj DYLIB_COMPATIBILITY_VERSION is inconsistent, expected $ref, got $dylib_compat"
 fi
 
 dylib_cur=$(sed -Ene 's/.*DYLIB_CURRENT_VERSION = (.*);$/\1/p' Xcode/SDL_net.xcodeproj/project.pbxproj)
@@ -131,33 +172,7 @@ ${major}.${minor}.0"
 if [ "$ref" = "$dylib_cur" ]; then
     ok "project.pbxproj DYLIB_CURRENT_VERSION is consistent"
 else
-    not_ok "project.pbxproj DYLIB_CURRENT_VERSION is inconsistent, expected $ref"
-fi
-
-major=$(sed -ne 's/^set(MAJOR_VERSION \([0-9]*\))$/\1/p' CMakeLists.txt)
-minor=$(sed -ne 's/^set(MINOR_VERSION \([0-9]*\))$/\1/p' CMakeLists.txt)
-micro=$(sed -ne 's/^set(MICRO_VERSION \([0-9]*\))$/\1/p' CMakeLists.txt)
-sdl_req=$(sed -ne 's/^set(SDL_REQUIRED_VERSION \([0-9.]*\))$/\1/p' CMakeLists.txt)
-dylib_cmake=$(sed -ne 's/^set(DYLIB_COMPATIBILITY_VERSION "\([0-9]*\)")$/\1/p' CMakeLists.txt)
-ref='1'
-version="${major}.${minor}.${micro}"
-
-if [ "$ref_version" = "$version" ]; then
-    ok "CMakeLists.txt $version"
-else
-    not_ok "CMakeLists.txt $version disagrees with SDL_image.h $ref_version"
-fi
-
-if [ "$ref_sdl_req" = "$sdl_req" ]; then
-    ok "CMakeLists.txt SDL_REQUIRED_VERSION is consistent"
-else
-    not_ok "CMakeLists.txt SDL_REQUIRED_VERSION=$sdl_req disagrees with configure.ac SDL_VERSION=$ref_sdl_req"
-fi
-
-if [ "$ref" = "$dylib_cmake" ]; then
-    ok "CMakeLists.txt DYLIB_COMPATIBILITY_VERSION is consistent"
-else
-    not_ok "CMakeLists.txt DYLIB_COMPATIBILITY_VERSION is inconsistent"
+    not_ok "project.pbxproj DYLIB_CURRENT_VERSION is inconsistent, expected $ref, got $dylib_cur"
 fi
 
 sdl_req=$(sed -ne 's/\$sdl2_version = "\([0-9.]*\)"$/\1/p' .github/fetch_sdl_vc.ps1)

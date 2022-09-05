@@ -8,8 +8,6 @@ set(MINOR_VERSION 3)
 set(MICRO_VERSION 0)
 set(SDL_REQUIRED_VERSION 2.0.4)
 
-set(DYLIB_COMPATIBILITY_VERSION "1")
-
 include(PrivateSdlFunctions)
 sdl_calculate_derived_version_variables()
 
