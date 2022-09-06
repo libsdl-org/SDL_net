@@ -9,20 +9,10 @@ CFLAGS = -g -O2 -G0 -Wall -D__PSP__ -DHAVE_OPENGL $(shell $(PSPBIN)/sdl-config -
 CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
 ASFLAGS = $(CFLAGS)
 
-#Basic compiler stuff and paths
-PSPSDK = $(shell psp-config --pspsdk-path)
-PSPDEV = $(shell psp-config -d)
-PSPBIN = $(PSPDEV)/bin
-SDL_CONFIG = $(PSPBIN)/sdl-config
+PSPBIN = $(shell psp-config -d)/bin
 
-LDFLAGS=-L$(psp-config --pspsdk-path)/lib
+LDFLAGS=-L$(shell psp-config --pspsdk-path)/lib
 LIBS=-lc -lpspnet_inet -lpspnet_apctl -lpspnet_resolver -lpsputility -lpspuser
-#-lpsphttp -lpspssl -lpspwlan \
-#-lpspnet_adhocmatching -lpspnet_adhoc -lpspnet_adhocctl -lm
-
-#LIBS = -lGL -lGLU -lglut -lz \
-#         -lpspvfpu -lpsphprm -lpspsdk -lpspctrl -lpspumd -lpsprtc -lpsppower -lpspgum -lpspgu -lpspaudiolib -lpspaudio -lpsphttp -lpspssl -lpspwlan \
-#         -lpspnet_adhocmatching -lpspnet_adhoc -lpspnet_adhocctl -lm -lpspvram
 
 install: $(TARGET_LIB)
 	cp $(TARGET_LIB) $(shell psp-config --psp-prefix)/lib
