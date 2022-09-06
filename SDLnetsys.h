@@ -49,7 +49,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <netinet/in.h>
-#if !defined(__BEOS__) || defined(__PSP__)
+#ifndef __BEOS__
 #include <arpa/inet.h>
 #endif
 #ifdef __linux__ /* FIXME: what other platforms have this? */
