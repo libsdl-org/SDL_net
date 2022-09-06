@@ -66,7 +66,7 @@
 #include <sys/select.h> //Required for the FD_SET etc.
 #endif
 
-#if defined(__OS2__)
+#ifdef __OS2__
 typedef int socklen_t;
 #elif 0
 /* FIXME: What platforms need this? */
