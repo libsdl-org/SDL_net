@@ -34,6 +34,15 @@
 extern "C" {
 #endif
 
+//The SDL_reinterpret_cast isn't defined before 1.2.14, so define it if required
+#ifndef SDL_reinterpret_cast
+#ifdef __cplusplus
+#define SDL_reinterpret_cast(type, expression) reinterpret_cast<type>(expression)
+#else
+#define SDL_reinterpret_cast(type, expression) ((type)(expression))
+#endif
+#endif
+
 /* Printable format: "%d.%d.%d", MAJOR, MINOR, PATCHLEVEL
 */
 #define SDL_NET_MAJOR_VERSION	1
