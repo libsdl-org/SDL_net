@@ -34,7 +34,7 @@
 extern "C" {
 #endif
 
-//The SDL_reinterpret_cast isn't defined before 1.2.14, so define it if required
+/* SDL_reinterpret_cast isn't defined before 1.2.14, so define it if required */
 #ifndef SDL_reinterpret_cast
 #ifdef __cplusplus
 #define SDL_reinterpret_cast(type, expression) reinterpret_cast<type>(expression)

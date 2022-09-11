@@ -5,7 +5,7 @@ OBJS= SDLnet.o \
       SDLnetUDP.o \
 
 INCDIR = .
-CFLAGS = -g -O2 -G0 -Wall -D__PSP__ -DHAVE_OPENGL $(shell $(PSPBIN)/sdl-config --cflags)
+CFLAGS = -g -O2 -G0 -Wall -D__PSP__ $(shell $(PSPBIN)/sdl-config --cflags)
 CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
 ASFLAGS = $(CFLAGS)
 

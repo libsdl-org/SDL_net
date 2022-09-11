@@ -63,7 +63,7 @@
 #endif /* WIN32 */
 
 #ifdef __PSP__
-#include <sys/select.h> //Required for the FD_SET etc.
+#include <sys/select.h> /* for FD_SET, etc */
 #endif
 
 #ifdef __OS2__
