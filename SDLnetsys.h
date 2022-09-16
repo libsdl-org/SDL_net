@@ -41,7 +41,7 @@
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
 #else /* UNIX */
-#ifdef __OS2__
+#if defined(__OS2__) || defined(__PSP__)
 #include <sys/param.h>
 #endif
 #include <sys/types.h>
@@ -58,9 +58,15 @@
 #endif
 #include <netinet/tcp.h>
 #include <sys/socket.h>
+#ifndef __PSP__
 #include <net/if.h>
+#endif
 #include <netdb.h>
 #endif /* WIN32 */
+
+#ifdef __PSP__
+#include <sys/select.h> /* for FD_SET, etc */
+#endif
 
 #ifdef __OS2__
 typedef int socklen_t;
