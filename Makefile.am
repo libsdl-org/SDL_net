@@ -21,6 +21,7 @@ EXTRA_DIST = \
 	CMakeLists.txt		\
 	LICENSE.txt 		\
 	Makefile.os2		\
+	Makefile.psp		\
 	README.txt 		\
 	SDL2_net.spec		\
 	SDL2_netConfig.cmake.in	\
