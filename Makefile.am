@@ -22,6 +22,7 @@ EXTRA_DIST =			\
 	VisualC			\
 	Xcode			\
 	Xcode-iOS		\
+	Makefile.psp		\
 	MPWmake.sea.bin		\
 	Watcom-OS2.zip		\
 	quit.bmp		\
