@@ -22,7 +22,7 @@
 
 #define MAX_ADDRESSES	10
 
-int main(int argc, char *argv[])
+int main(void)
 {
 	IPaddress addresses[MAX_ADDRESSES];
 	int i, count;

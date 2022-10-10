@@ -190,7 +190,7 @@ static void cleanup(int exitcode)
 	exit(exitcode);
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
 	IPaddress serverIP;
 	int i;
@@ -255,4 +255,3 @@ int main(int argc, char *argv[])
 	/* Not reached, but fixes compiler warnings */
 	return 0;
 }
-
