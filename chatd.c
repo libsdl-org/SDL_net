@@ -190,10 +190,13 @@ static void cleanup(int exitcode)
     exit(exitcode);
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
     IPaddress serverIP;
     int i;
+
+    (void) argc;
+    (void) argv;
 
     /* Initialize SDL */
     if ( SDL_Init(0) < 0 ) {
@@ -261,3 +264,4 @@ int main(void)
     /* Not reached, but fixes compiler warnings */
     return 0;
 }
+

@@ -22,10 +22,13 @@
 
 #define MAX_ADDRESSES   10
 
-int main(void)
+int main(int argc, char *argv[])
 {
     IPaddress addresses[MAX_ADDRESSES];
     int i, count;
+
+    (void) argc;
+    (void) argv;
 
     count = SDLNet_GetLocalAddresses(addresses, MAX_ADDRESSES);
     SDL_Log("Found %d local addresses", count);
