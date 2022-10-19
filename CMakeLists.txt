@@ -176,13 +176,14 @@ if(SDL2NET_INSTALL)
     )
 
     if(WIN32 AND NOT MINGW)
-        set(PKG_PREFIX "cmake")
+        set(SDLNET_INSTALL_CMAKEDIR_DEFAULT "cmake")
     else()
-        set(PKG_PREFIX "${CMAKE_INSTALL_LIBDIR}/cmake/SDL2_net")
+        set(SDLNET_INSTALL_CMAKEDIR_DEFAULT "${CMAKE_INSTALL_LIBDIR}/cmake/SDL2_net")
     endif()
+    set(SDLNET_INSTALL_CMAKEDIR "${SDLNET_INSTALL_CMAKEDIR_DEFAULT}" CACHE STRING "Location where to install SDL2_netConfig.cmake")
 
     configure_package_config_file(SDL2_netConfig.cmake.in SDL2_netConfig.cmake
-        INSTALL_DESTINATION "${PKG_PREFIX}"
+        INSTALL_DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
     )
     write_basic_package_version_file("${PROJECT_BINARY_DIR}/SDL2_netConfigVersion.cmake"
         VERSION ${FULL_VERSION}
@@ -192,13 +193,13 @@ if(SDL2NET_INSTALL)
         FILES
             "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfig.cmake"
             "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfigVersion.cmake"
-        DESTINATION "${PKG_PREFIX}"
+        DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
         COMPONENT devel
     )
     install(EXPORT SDL2NetExports
         FILE SDL2_net-${sdl2_net_install_name_infix}-targets.cmake
         NAMESPACE SDL2_net::
-        DESTINATION "${PKG_PREFIX}"
+        DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
         COMPONENT devel
     )
 
