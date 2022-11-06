@@ -104,8 +104,7 @@ am__aclocal_m4_deps =  \
 	$(top_srcdir)/acinclude/ltsugar.m4 \
 	$(top_srcdir)/acinclude/ltversion.m4 \
 	$(top_srcdir)/acinclude/lt~obsolete.m4 \
-	$(top_srcdir)/acinclude/pkg.m4 $(top_srcdir)/acinclude/sdl2.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/acinclude/pkg.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
@@ -339,7 +338,6 @@ PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
 RC = @RC@
-SDL2_CONFIG = @SDL2_CONFIG@
 SDL_CFLAGS = @SDL_CFLAGS@
 SDL_LIBS = @SDL_LIBS@
 SDL_VERSION = @SDL_VERSION@
