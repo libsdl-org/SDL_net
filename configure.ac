@@ -192,7 +192,10 @@ AM_CONDITIONAL(ENABLE_EXAMPLES, [test x$enable_examples = xyes])
 dnl Check for SDL
 SDL_VERSION=2.0.4
 AC_SUBST(SDL_VERSION)
-PKG_CHECK_MODULES([SDL], [sdl2 >= $SDL_VERSION],, AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!]))
+AM_PATH_SDL2($SDL_VERSION,
+            :,
+	    AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
+)
 CFLAGS="$CFLAGS $SDL_CFLAGS"
 LIBS="$LIBS $SDL_LIBS"
 
