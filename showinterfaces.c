@@ -30,6 +30,13 @@ int main(int argc, char *argv[])
     (void) argc;
     (void) argv;
 
+    if (SDLNet_Init() < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Couldn't initialize net: %s\n",
+                     SDLNet_GetError());
+        return 1;
+    }
+
     count = SDLNet_GetLocalAddresses(addresses, MAX_ADDRESSES);
     SDL_Log("Found %d local addresses", count);
     for (i = 0; i < count; ++i) {
@@ -40,5 +47,8 @@ int main(int argc, char *argv[])
             (addresses[i].host >> 24) & 0xFF,
             SDLNet_ResolveIP(&addresses[i]));
     }
+
+    SDLNet_Quit();
+
     return 0;
 }
