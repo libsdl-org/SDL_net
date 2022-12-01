@@ -34,6 +34,8 @@ else()
     find_package(SDL2test)
 endif()
 
+set(SDLNET_PKGCONFIG_PRIVATE_LIBS)
+
 # Set defaults preventing destination file conflicts
 set(SDL2NET_DEBUG_POSTFIX "d"
     CACHE STRING "Name suffix for debug builds")
@@ -93,6 +95,7 @@ if(WIN32)
     endif()
     target_compile_definitions(SDL2_net PRIVATE _WINSOCK_DEPRECATED_NO_WARNINGS)
     target_link_libraries(SDL2_net PRIVATE ws2_32 iphlpapi)
+    list(APPEND SDLNET_PKGCONFIG_PRIVATE_LIBS -lws2_32 -liphlpapi)
     if(SDL2NET_BUILD_SHARED_LIBS)
         target_sources(SDL2_net PRIVATE version.rc)
     endif()
@@ -224,6 +227,7 @@ if(SDL2NET_INSTALL)
     set(SDL_VERSION "${SDL_REQUIRED_VERSION}")
     string(JOIN " " PC_REQUIRES ${PC_REQUIRES})
     string(JOIN " " PC_LIBS ${PC_LIBS})
+    string(JOIN " " INETLIB ${SDLNET_PKGCONFIG_PRIVATE_LIBS})
     configure_file("${PROJECT_SOURCE_DIR}/SDL2_net.pc.in" "${CMAKE_CURRENT_BINARY_DIR}/SDL2_net.pc.intermediate" @ONLY)
     file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/SDL2_net-$<CONFIG>.pc" INPUT "${CMAKE_CURRENT_BINARY_DIR}/SDL2_net.pc.intermediate")
 
