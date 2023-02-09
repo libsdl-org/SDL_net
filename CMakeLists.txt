@@ -41,6 +41,12 @@ set(SDL2NET_DEBUG_POSTFIX "d"
     CACHE STRING "Name suffix for debug builds")
 mark_as_advanced(SDL2NET_DEBUG_POSTFIX)
 
+set(sdl2net_install_enableable ON)
+if ((TARGET SDL2 OR TARGET SDL2-static) AND SDL2_DISABLE_INSTALL)
+    # Cannot install SDL2_net when SDL2 is built in same built, and is not installed.
+    set(sdl2net_install_enableable OFF)
+endif()
+
 include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
@@ -48,7 +54,7 @@ include(GNUInstallDirs)
 option(CMAKE_POSITION_INDEPENDENT_CODE "Build static libraries with -fPIC" ON)
 option(BUILD_SHARED_LIBS "Build the library as a shared library" ON)
 
-option(SDL2NET_INSTALL "Enable SDL2_net install target" ${SDL2NET_ROOTPROJECT})
+cmake_dependent_option(SDL2NET_INSTALL "Enable SDL2_net install target" ${SDL2NET_ROOTPROJECT} ${sdl2net_install_enableable} OFF)
 
 cmake_dependent_option(SDL2NET_SAMPLES "Build SDL2_net samples" ${SDL2NET_ROOTPROJECT} "${SDL2test_FOUND}" OFF)
 
