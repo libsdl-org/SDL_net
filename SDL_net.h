@@ -219,7 +219,7 @@ typedef struct _TCPsocket *TCPsocket;
  * \param ip The address to host a server on.
  * \returns the newly created socket, or NULL if there was an error.
  *
- * \since This function is available since SDL_net 2.0.0.
+ * \since This function is available since SDL_net 2.4.0.
  *
  * \sa SDLNet_TCP_Close
  * \sa SDLNet_TCP_OpenClient
