@@ -42,7 +42,7 @@ struct _TCPsocket {
    and port is attempted.
    The newly created socket is returned, or NULL if there was an error.
 */
-static TCPsocket _SDLNet_TCP_Open(IPaddress *ip, int openAsClient)
+static TCPsocket SDLNet_TCP_OpenInternal(IPaddress *ip, int openAsClient)
 {
     TCPsocket sock;
     struct sockaddr_in sock_addr;
@@ -164,7 +164,7 @@ error_return:
 */
 TCPsocket SDLNet_TCP_OpenServer(IPaddress *ip)
 {
-    return _SDLNet_TCP_Open(ip, 0);
+    return SDLNet_TCP_OpenInternal(ip, 0);
 }
 
 /* Open a client TCP network socket.
@@ -173,7 +173,7 @@ TCPsocket SDLNet_TCP_OpenServer(IPaddress *ip)
 */
 TCPsocket SDLNet_TCP_OpenClient(IPaddress *ip)
 {
-    return _SDLNet_TCP_Open(ip, 1);
+    return SDLNet_TCP_OpenInternal(ip, 1);
 }
 
 /* Open a client or server TCP network socket.
@@ -184,7 +184,7 @@ TCPsocket SDLNet_TCP_OpenClient(IPaddress *ip)
 */
 TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 {
-    return _SDLNet_TCP_Open(
+    return SDLNet_TCP_OpenInternal(
         ip,
         (ip->host != INADDR_NONE) && (ip->host != INADDR_ANY)
     );
