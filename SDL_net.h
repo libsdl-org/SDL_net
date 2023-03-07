@@ -238,7 +238,7 @@ extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_OpenServer(IPaddress *ip);
  * \param ip The address to open a connection to.
  * \returns the newly created socket, or NULL if there was an error.
  *
- * \since This function is available since SDL_net 2.0.0.
+ * \since This function is available since SDL_net 2.4.0.
  *
  * \sa SDLNet_TCP_Close
  * \sa SDLNet_TCP_OpenServer
