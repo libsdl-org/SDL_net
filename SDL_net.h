@@ -210,11 +210,10 @@ typedef struct _TCPsocket *TCPsocket;
 /**
  * Open a server TCP network socket.
  *
- * If `ip->host` is INADDR_NONE or INADDR_ANY, the socket is bound to
- * all interfaces, otherwise it is bound to the specified interface.
- * The address passed in should already be swapped to network byte order
- * (addresses returned from SDLNet_ResolveHost() are already in the
- * correct form).
+ * If `ip->host` is INADDR_NONE or INADDR_ANY, the socket is bound to all
+ * interfaces, otherwise it is bound to the specified interface. The address
+ * passed in should already be swapped to network byte order (addresses
+ * returned from SDLNet_ResolveHost() are already in the correct form).
  *
  * \param ip The address to host a server on.
  * \returns the newly created socket, or NULL if there was an error.
@@ -230,10 +229,9 @@ extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_OpenServer(IPaddress *ip);
 /**
  * Open a client TCP network socket.
  *
- * Attempt a TCP connection to the remote host and port.
- * The address passed in should already be swapped to network byte order
- * (addresses returned from SDLNet_ResolveHost() are already in the
- * correct form).
+ * Attempt a TCP connection to the remote host and port. The address passed in
+ * should already be swapped to network byte order (addresses returned from
+ * SDLNet_ResolveHost() are already in the correct form).
  *
  * \param ip The address to open a connection to.
  * \returns the newly created socket, or NULL if there was an error.
