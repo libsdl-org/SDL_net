@@ -36,12 +36,13 @@ struct _TCPsocket {
     int sflag;
 };
 
-/* Open a TCP network socket
-   If 'remote' is NULL, this creates a local server socket on the given port,
-   otherwise a TCP connection to the remote host and port is attempted.
+/* Open a TCP network socket.
+   If `openAsClient` is nonzero, this creates a local server socket
+   on the given port, otherwise a TCP connection to the remote host
+   and port is attempted.
    The newly created socket is returned, or NULL if there was an error.
 */
-TCPsocket SDLNet_TCP_Open(IPaddress *ip)
+static TCPsocket SDLNet_TCP_OpenInternal(IPaddress *ip, int openAsClient)
 {
     TCPsocket sock;
     struct sockaddr_in sock_addr;
@@ -59,9 +60,8 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
         SDLNet_SetError("Couldn't create socket");
         goto error_return;
     }
-
-    /* Connect to remote, or bind locally, as appropriate */
-    if ( (ip->host != INADDR_NONE) && (ip->host != INADDR_ANY) ) {
+    
+    if (openAsClient) {
 
     /* #########  Connecting to remote */
         SDL_memset(&sock_addr, 0, sizeof(sock_addr));
@@ -81,7 +81,8 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
     /* ##########  Binding locally */
         SDL_memset(&sock_addr, 0, sizeof(sock_addr));
         sock_addr.sin_family = AF_INET;
-        sock_addr.sin_addr.s_addr = INADDR_ANY;
+        sock_addr.sin_addr.s_addr = (ip->host == INADDR_NONE) ?
+                                    INADDR_ANY : ip->host;
         sock_addr.sin_port = ip->port;
 
 /*
@@ -154,6 +155,39 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
 error_return:
     SDLNet_TCP_Close(sock);
     return(NULL);
+}
+
+/* Open a server TCP network socket.
+   If `ip->host` is INADDR_NONE or INADDR_ANY, the socket is bound to
+   all interfaces, otherwise it is bound to the specified interface.
+   The newly created socket is returned, or NULL if there was an error.
+*/
+TCPsocket SDLNet_TCP_OpenServer(IPaddress *ip)
+{
+    return SDLNet_TCP_OpenInternal(ip, 0);
+}
+
+/* Open a client TCP network socket.
+   Attempt a TCP connection to the remote host and port.
+   The newly created socket is returned, or NULL if there was an error.
+*/
+TCPsocket SDLNet_TCP_OpenClient(IPaddress *ip)
+{
+    return SDLNet_TCP_OpenInternal(ip, 1);
+}
+
+/* Open a client or server TCP network socket.
+   If `ip->host` is INADDR_NONE or INADDR_ANY, this creates a local server
+   socket on the given port, otherwise a TCP connection to the remote host
+   and port is attempted.
+   The newly created socket is returned, or NULL if there was an error.
+*/
+TCPsocket SDLNet_TCP_Open(IPaddress *ip)
+{
+    return SDLNet_TCP_OpenInternal(
+        ip,
+        (ip->host != INADDR_NONE) && (ip->host != INADDR_ANY)
+    );
 }
 
 /* Accept an incoming connection on the given server socket.
