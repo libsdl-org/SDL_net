@@ -637,7 +637,7 @@ extern DECLSPEC IPaddress * SDLCALL SDLNet_UDP_GetPeerAddress(UDPsocket sock, in
  *
  * \since This function is available since SDL_net 2.0.0.
  *
- * \sa SDLNet_UDP_RecV
+ * \sa SDLNet_UDP_RecvV
  */
 extern DECLSPEC int SDLCALL SDLNet_UDP_SendV(UDPsocket sock, UDPpacket **packets, int npackets);
 
