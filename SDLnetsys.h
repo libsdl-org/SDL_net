@@ -48,7 +48,9 @@
 #ifdef __FreeBSD__
 #include <sys/socket.h>
 #endif
+#ifndef __vita__
 #include <sys/ioctl.h>
+#endif
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -58,7 +60,7 @@
 #endif
 #include <netinet/tcp.h>
 #include <sys/socket.h>
-#ifndef __PSP__
+#if !defined (__PSP__) && !defined (__vita__)
 #include <net/if.h>
 #endif
 #include <netdb.h>
