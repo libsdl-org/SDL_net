@@ -1268,7 +1268,7 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
     if (create_fromaddr) {
         // keep track of the last X addresses we saw.
         SDLNet_UnrefAddress(sock->latest_recv_addrs[sock->latest_recv_addrs_idx]);  // okay if "oldest" address slot is still NULL.
-        sock->latest_recv_addrs[sock->latest_recv_addrs_idx++] = fromaddr;
+        sock->latest_recv_addrs[sock->latest_recv_addrs_idx++] = SDLNet_RefAddress(fromaddr);
         sock->latest_recv_addrs_idx %= SDL_arraysize(sock->latest_recv_addrs);
     }
 
