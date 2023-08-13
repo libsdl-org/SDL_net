@@ -74,7 +74,6 @@ typedef struct SDLNet_Datagram
     int buflen;
 } SDLNet_Datagram;
 
-extern DECLSPEC int SDLCALL SDLNet_GetMaxDatagramSize(void);  /* Probably just hardcode to 1500? */
 extern DECLSPEC SDLNet_DatagramSocket * SDLCALL SDLNet_CreateDatagramSocket(SDLNet_Address *addr, Uint16 port);  /* Specify NULL for any/all interfaces, or something from GetLocalAddresses */
 extern DECLSPEC int SDLCALL SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *address, Uint16 port, const void *buf, int buflen);  /* always queues what it can't send immediately. Does not block, -1 on out of memory, dead socket, etc. */
 extern DECLSPEC int SDLCALL SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram);  /* Get next available packet. Does not block, returns 0 and sets *dgram=NULL if none available. -1 on errors, zero otherwise. */
