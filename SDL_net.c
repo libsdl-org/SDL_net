@@ -353,7 +353,7 @@ int SDLNet_WaitForResolution(SDLNet_Address *addr)
     }
     SDL_UnlockMutex(resolver_lock);
 
-    return SDL_AtomicGet(&addr->status);
+    return SDLNet_GetAddressStatus(addr);  // so we set the error string if necessary.
 }
 
 int SDLNet_GetAddressStatus(SDLNet_Address *addr)
