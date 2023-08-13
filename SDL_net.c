@@ -373,6 +373,40 @@ const char *SDLNet_GetAddressString(SDLNet_Address *addr)
     return addr ? (const char *) SDL_AtomicGetPtr((void **) &addr->human_readable) : NULL;
 }
 
+int SDLNet_CompareAddresses(const SDLNet_Address *sdlneta, const SDLNet_Address *sdlnetb)
+{
+    const struct addrinfo *a;
+    const struct addrinfo *b;
+
+    if (sdlneta == sdlnetb) {  // same pointer?
+        return 0;
+    } else if (sdlneta && !sdlnetb) {
+        return -1;
+    } else if (!sdlneta && sdlnetb) {
+        return 1;
+    }
+
+    a = sdlneta->ainfo;
+    b = sdlnetb->ainfo;
+    if (a == b) {  // same pointer?
+        return 0;
+    } else if (a && !b) {
+        return -1;
+    } else if (!a && b) {
+        return 1;
+    } else if (a->ai_family < b->ai_family) {
+        return -1;
+    } else if (a->ai_family > b->ai_family) {
+        return 1;
+    } else if (a->ai_addrlen < b->ai_addrlen) {
+        return -1;
+    } else if (a->ai_addrlen > b->ai_addrlen) {
+        return 1;
+    }
+
+    return SDL_memcmp(a->ai_addr, b->ai_addr, a->ai_addrlen);
+}
+
 SDLNet_Address *SDLNet_RefAddress(SDLNet_Address *addr)
 {
     if (addr) {

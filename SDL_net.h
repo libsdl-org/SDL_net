@@ -32,7 +32,7 @@ extern DECLSPEC const char * SDLCALL SDLNet_GetAddressString(SDLNet_Address *add
 extern DECLSPEC SDLNet_Address *SDLCALL SDLNet_RefAddress(SDLNet_Address *address);  /* +1 refcount; SDLNet_ResolveHost starts at 1. Returns `address` for convenience. */
 extern DECLSPEC void SDLCALL SDLNet_UnrefAddress(SDLNet_Address *address);  /* when totally unref'd, gets freed. */
 extern DECLSPEC void SDLCALL SDLNet_SimulateAddressResolutionLoss(int percent_loss);  /* make resolutions delay at random, fail some percent of them. */
-
+extern DECLSPEC int SDLCALL SDLNet_CompareAddresses(const SDLNet_Address *a, const SDLNet_Address *b);  /* can be used with SDL_qsort. */
 extern DECLSPEC SDLNet_Address **SDLCALL SDLNet_GetLocalAddresses(int *num_addresses);  /* returns NULL-terminated array of SDLNet_Address*, of all known interfaces. */
 extern DECLSPEC void SDLCALL SDLNet_FreeLocalAddresses(SDLNet_Address **addresses);  /* unrefs each address, frees array. */
 
