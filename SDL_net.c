@@ -373,11 +373,12 @@ const char *SDLNet_GetAddressString(SDLNet_Address *addr)
     return addr ? (const char *) SDL_AtomicGetPtr((void **) &addr->human_readable) : NULL;
 }
 
-void SDLNet_RefAddress(SDLNet_Address *addr)
+SDLNet_Address *SDLNet_RefAddress(SDLNet_Address *addr)
 {
     if (addr) {
         SDL_AtomicIncRef(&addr->refcount);
     }
+    return addr;
 }
 
 void SDLNet_UnrefAddress(SDLNet_Address *addr)
@@ -766,8 +767,7 @@ SDLNet_Address *SDLNet_GetStreamSocketAddress(SDLNet_StreamSocket *sock)
         SDL_InvalidParamError("sock");
         return NULL;
     }
-    SDLNet_RefAddress(sock->addr);
-    return sock->addr;
+    return SDLNet_RefAddress(sock->addr);
 }
 
 static void UpdateStreamSocketSimulatedFailure(SDLNet_StreamSocket *sock)
@@ -1119,10 +1119,9 @@ int SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint1
     dgram->buf = (Uint8 *) (dgram+1);
     SDL_memcpy(dgram->buf, buf, buflen);
 
-    dgram->addr = addr;
+    dgram->addr = SDLNet_RefAddress(addr);
     dgram->port = port;
     dgram->buflen = buflen;
-    SDLNet_RefAddress(addr);
 
     sock->pending_output[sock->pending_output_len++] = dgram;
 
@@ -1226,10 +1225,9 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
 
     dg->buf = (Uint8 *) (dg+1);
     SDL_memcpy(dg->buf, sock->recv_buffer, br);
-    dg->addr = fromaddr;
+    dg->addr = SDLNet_RefAddress(fromaddr);
     dg->port = (Uint16) SDL_atoi(portbuf);
     dg->buflen = br;
-    SDLNet_RefAddress(fromaddr);
 
     *dgram = dg;
 

@@ -29,7 +29,7 @@ extern DECLSPEC SDLNet_Address * SDLCALL SDLNet_ResolveHostname(const char *host
 extern DECLSPEC int SDLCALL SDLNet_WaitForResolution(SDLNet_Address *address);  /* blocks until success or failure. Optional. */
 extern DECLSPEC int SDLCALL SDLNet_GetAddressStatus(SDLNet_Address *address);  /* 0: still working, -1: failed (check SDL_GetError), 1: ready */
 extern DECLSPEC const char * SDLCALL SDLNet_GetAddressString(SDLNet_Address *address);  /* human-readable string, like "127.0.0.1" or "::1" or whatever. NULL if GetAddressStatus != 1. String owned by address! */
-extern DECLSPEC void SDLCALL SDLNet_RefAddress(SDLNet_Address *address);  /* +1 refcount; SDLNet_ResolveHost starts at 1. */
+extern DECLSPEC SDLNet_Address *SDLCALL SDLNet_RefAddress(SDLNet_Address *address);  /* +1 refcount; SDLNet_ResolveHost starts at 1. Returns `address` for convenience. */
 extern DECLSPEC void SDLCALL SDLNet_UnrefAddress(SDLNet_Address *address);  /* when totally unref'd, gets freed. */
 extern DECLSPEC void SDLCALL SDLNet_SimulateAddressResolutionLoss(int percent_loss);  /* make resolutions delay at random, fail some percent of them. */
 
