@@ -264,7 +264,6 @@ static void run_voipchat(int argc, char **argv)
 
     if (simulate_failure) {
         SDL_Log("Simulating failure at %d percent", simulate_failure);
-        SDLNet_SimulateAddressResolutionLoss(simulate_failure);
     }
 
     if (is_server && hostname) {
