@@ -39,7 +39,7 @@ struct SDLNet_Address
     char *human_readable;
     char *errstr;
     SDL_AtomicInt refcount;
-    SDL_AtomicInt status;  // 0==in progress, 1==resolved, 2==error
+    SDL_AtomicInt status;  // 0==in progress, 1==resolved, -1==error
     struct addrinfo *ainfo;
     SDLNet_Address *resolver_next;  // a linked list for the resolution job queue.
 };
