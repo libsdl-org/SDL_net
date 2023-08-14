@@ -9,6 +9,12 @@ target_include_directories(SDL3_net PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SO
 target_link_libraries(SDL3_net PRIVATE SDL3::SDL3)
 if(WIN32)
     target_link_libraries(SDL3_net PRIVATE ws2_32)
+    set_target_properties(SDL3_net PROPERTIES
+        OUTPUT_NAME "SDL3_net"
+        DEFINE_SYMBOL DLL_EXPORT
+        EXPORT_NAME SDL3_net
+        C_VISIBILITY_PRESET "hidden"
+    )
 endif()
 if(UNIX AND NOT APPLE)
     set_property(TARGET SDL3_net PROPERTY SOVERSION ${PROJECT_VERSION_MAJOR})

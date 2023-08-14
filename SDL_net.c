@@ -845,14 +845,14 @@ static int PumpStreamSocket(SDLNet_StreamSocket *sock)
             return 0;  // streams are reliable, so instead of packet loss, we introduce lag.
         }
 
-        const ssize_t bw = write(sock->handle, sock->pending_output_buffer, sock->pending_output_len);
+        const int bw = (int) write(sock->handle, sock->pending_output_buffer, sock->pending_output_len);
         if (bw < 0) {
             const int err = LastSocketError();
             return WouldBlock(err) ? 0 : SDL_SetError("Failed to write to socket: %s", strerror(err));
-        } else if (bw < (ssize_t) sock->pending_output_len) {
-            SDL_memmove(sock->pending_output_buffer, sock->pending_output_buffer + bw, sock->pending_output_len - (int) bw);
+        } else if (bw < sock->pending_output_len) {
+            SDL_memmove(sock->pending_output_buffer, sock->pending_output_buffer + bw, sock->pending_output_len - bw);
         }
-        sock->pending_output_len -= (int) bw;
+        sock->pending_output_len -= bw;
 
         UpdateStreamSocketSimulatedFailure(sock);
     }
