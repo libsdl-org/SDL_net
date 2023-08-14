@@ -3,10 +3,28 @@
 #ifdef __WINDOWS__
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
-#include <winsock.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 typedef SOCKET Socket;
 typedef int SockLen;
 typedef SOCKADDR_STORAGE AddressStorage;
+static int write(SOCKET s, const char *buf, size_t count) {
+    return send(s, buf, count, 0);
+}
+static int read(SOCKET s, char *buf, size_t count) {
+    WSABUF wsabuf;
+    wsabuf.buf = buf;
+    wsabuf.len = count;
+    DWORD count_received;
+    int res = WSARecv(s, &wsabuf, 1, &count_received, 0, NULL, NULL);
+    if (res != 0) {
+        SDL_SetError("WSARecv(%d)", WSAGetLastError());
+        return -1;
+    }
+    return (int)count_received;
+}
+#define EAI_SYSTEM 0
+#define poll WSAPoll
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -585,7 +603,7 @@ static int CheckClientConnection(SDLNet_StreamSocket *sock, int timeoutms)
             } else if ((pfd.revents & (POLLERR|POLLHUP|POLLNVAL)) != 0) {
                 int err = 0;
                 SockLen errsize = sizeof (err);
-                getsockopt(sock->handle, SOL_SOCKET, SO_ERROR, &err, &errsize);
+                getsockopt(sock->handle, SOL_SOCKET, SO_ERROR, (char*)&err, &errsize);
                 sock->status = SDL_SetError("Socket failed to connect: %s", strerror(err));
             } else if (pfd.revents & POLLOUT) {
                 sock->status = 1;  // good to go!
@@ -692,7 +710,7 @@ int SDLNet_WaitForServerIncoming(SDLNet_Server *server)
     } else if ((pfd.revents & (POLLERR|POLLHUP|POLLNVAL)) != 0) {
         int err = 0;
         SockLen errsize = sizeof (err);
-        getsockopt(server->handle, SOL_SOCKET, SO_ERROR, &err, &errsize);
+        getsockopt(server->handle, SOL_SOCKET, SO_ERROR, (char*)&err, &errsize);
         return SDL_SetError("Listen socket has failed: %s", strerror(err));
     } else if (pfd.revents & POLLIN) {
         return 0;
@@ -915,7 +933,7 @@ int SDLNet_WaitForStreamPendingWrites(SDLNet_StreamSocket *sock)
         } else if ((pfd.revents & (POLLERR|POLLHUP|POLLNVAL)) != 0) {
             int err = 0;
             SockLen errsize = sizeof (err);
-            getsockopt(sock->handle, SOL_SOCKET, SO_ERROR, &err, &errsize);
+            getsockopt(sock->handle, SOL_SOCKET, SO_ERROR, (char*)&err, &errsize);
             return SDL_SetError("Socket has failed: %s", strerror(err));
         } else if (pfd.revents & POLLOUT) {
             if (PumpStreamSocket(sock) < 0) {
