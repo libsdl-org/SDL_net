@@ -1,155 +1,62 @@
 name: Build
 
-on: [push, pull_request]
+on:
+  pull_request:
+  push:
 
 jobs:
   Build:
-    name: ${{ matrix.platform.name }}
-    runs-on: ${{ matrix.platform.os }}
-
-    defaults:
-      run:
-        shell: ${{ matrix.platform.shell }}
-
+    name: '${{ matrix.platform.name }}'
+    runs-on: '${{ matrix.platform.os }}'
     strategy:
       fail-fast: false
       matrix:
         platform:
-        - { name: Windows (MSVC+CMake),         os: windows-latest, shell: sh,   cmake: '-GNinja', msvc: 1, shared: 1, static: 0 }
-        - { name: Windows (mingw32+autotools),  os: windows-latest, shell: 'msys2 {0}', msystem: mingw32, msys-env: mingw-w64-i686, shared: 1, static: 1 }
-        - { name: Windows (mingw64+CMake),      os: windows-latest, shell: 'msys2 {0}', msystem: mingw64, msys-env: mingw-w64-x86_64, cmake: '-G "Ninja Multi-Config"', shared: 1, static: 0 }
-        - { name: Linux (autotools),            os: ubuntu-20.04,   shell: sh , shared: 1, static: 1 }
-        - { name: Linux (CMake),                os: ubuntu-20.04,   shell: sh,   cmake: '-GNinja', shared: 1, static: 0 }
-        - { name: 'Linux (CMake, static)',      os: ubuntu-20.04,   shell: sh,   cmake: '-DBUILD_SHARED_LIBS=OFF -GNinja', shared: 0, static: 1 }
-        - { name: macOS (autotools),            os: macos-latest,   shell: sh, shared: 1, static: 1 }
-        - { name: macOS (CMake),                os: macos-latest,   shell: sh,   cmake: '-GNinja', shared: 1, static: 0 }
-
+          - { name: 'Linux',                    os: ubuntu-latest,  shell: sh }
+#          - { name: 'MacOS',                    os: macos-latest,   shell: sh }
+#          - { name: 'Windows msys2 (mingw32)',  os: windows-latest, shell: 'msys2 {0}', msystem: mingw32, msys-env: mingw-w64-i686 }
+          - { name: 'Windows msys2 (mingw64)',  os: windows-latest, shell: 'msys2 {0}', msystem: mingw64, msys-env: mingw-w64-x86_64 }
+#          - { name: 'Windows msys2 (clang32)',  os: windows-latest, shell: 'msys2 {0}', msystem: clang32, msys-env: mingw-w64-clang-i686 }
+          - { name: 'Windows msys2 (clang64)',  os: windows-latest, shell: 'msys2 {0}', msystem: clang64, msys-env: mingw-w64-clang-x86_64 }
+#          - { name: 'Windows MSVC (x86)',       os: windows-latest, shell: sh, msvc: true, msvc-arch: x86 }
+          - { name: 'Windows MSVC (x64)',       os: windows-latest, shell: sh, msvc: true, msvc-arch: x64 }
+#          - { name: 'Windows MSVC (arm32)',     os: windows-latest, shell: sh, msvc: true, msvc-arch: amd64_arm, cross: true }
+#          - { name: 'Windows MSVC (arm64)',     os: windows-latest, shell: sh, msvc: true, msvc-arch: amd64_arm64, cross: true }
+    defaults:
+      run:
+        shell: ${{ matrix.platform.shell }}
     steps:
-    - name: Set up MSYS2
-      if: matrix.platform.shell == 'msys2 {0}'
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: ${{ matrix.platform.msystem }}
-        install: >-
-          ${{ matrix.platform.msys-env }}-SDL2
-          ${{ matrix.platform.msys-env }}-autotools
-          ${{ matrix.platform.msys-env }}-cmake
-          ${{ matrix.platform.msys-env }}-gcc
-          ${{ matrix.platform.msys-env }}-ninja
-          ${{ matrix.platform.msys-env }}-pkg-config
-
-    - name: Setup macOS dependencies
-      if: runner.os == 'macOS'
-      run: |
-          brew install \
-            autoconf \
-            automake \
-            ninja \
-            pkg-config \
-            sdl2 \
-            ${NULL+}
-
-    - name: Setup Linux dependencies
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get -y install \
-          autoconf \
-          automake \
-          cmake \
-          libsdl2-dev \
-          ninja-build \
-          pkg-config \
-          ${NULL+}
-
-    - uses: actions/checkout@v2
-
-    - name: Setup MSVC dependencies
-      if: "matrix.platform.msvc"
-      shell: pwsh
-      run: |
-        .github/fetch_sdl_vc.ps1
-        echo "SDL2_DIR=$Env:GITHUB_WORKSPACE/SDL2-devel-VC" >> $Env:GITHUB_ENV
-    - name: Setup Ninja for MSVC
-      if: "matrix.platform.msvc"
-      uses: ashutoshvarma/setup-ninja@master
-      with:
-        version: 1.10.2
-    - uses: ilammy/msvc-dev-cmd@v1
-      if: "matrix.platform.msvc"
-      with:
-        arch: x64
-
-    - name: Check that versioning is consistent
-      # We only need to run this once: arbitrarily use the Linux/CMake build
-      if: "runner.os == 'Linux' && matrix.platform.cmake"
-      run: ./test-versioning.sh
-
-    - name: Configure (CMake)
-      if: "matrix.platform.cmake"
-      run: |
-        set -eu
-        cmake -S . \
-          -B build-cmake \
-          -DBUILD_SHARED_LIBS=ON \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_INSTALL_PREFIX=prefix_cmake \
-          -DSDL2NET_SAMPLES=ON \
-          ${{ matrix.platform.cmake }}
-
-    - name: Build (CMake)
-      if: "matrix.platform.cmake"
-      run: cmake --build build-cmake/ --config Release --parallel --verbose
-
-    - name: Install (CMake)
-      if: "matrix.platform.cmake"
-      run: |
-        set -eu
-        rm -rf prefix_cmake
-        cmake --install build-cmake/ --config Release --verbose
-        echo "SDL2_net_DIR=$(pwd)/prefix_cmake" >> $GITHUB_ENV
-        ( cd prefix_cmake; find . ) | LC_ALL=C sort -u
-
-    - name: Configure (Autotools)
-      if: "! matrix.platform.cmake"
-      run: |
-        set -eu
-        rm -fr build-autotools
-        mkdir build-autotools
-        ./autogen.sh
-        set -- --prefix=$(pwd)/prefix_autotools
-        ( cd build-autotools && ../configure "$@" )
-
-    - name: Build (Autotools)
-      if: "! matrix.platform.cmake"
-      run: |
-        set -eu
-        parallel="$(getconf _NPROCESSORS_ONLN)"
-        make -j"${parallel}" -C build-autotools V=1
-
-    - name: Install (Autotools)
-      if: "! matrix.platform.cmake"
-      run: |
-        set -eu
-        curdir="$(pwd)"
-        parallel="$(getconf _NPROCESSORS_ONLN)"
-        rm -rf prefix_autotools
-        make -j"${parallel}" -C build-autotools install V=1
-        echo "SDL2_net_DIR=$(pwd)/prefix_autotools" >> $GITHUB_ENV
-        ( cd prefix_autotools; find . ) | LC_ALL=C sort -u
-
-    - name: Distcheck (Autotools)
-      if: "runner.os == 'Linux' && ! matrix.platform.cmake"
-      run: |
-        set -eu
-        parallel="$(getconf _NPROCESSORS_ONLN)"
-        make -j"${parallel}" -C build-autotools distcheck V=1
-
-    - name: Verify CMake configuration files
-      run: |
-        cmake -S cmake/test -B cmake_config_build \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_PREFIX_PATH="${{ env.SDL2_net_DIR }};${{ env.SDL2_DIR }}" \
-          -DTEST_SHARED=${{ matrix.platform.shared }} \
-          -DTEST_STATIC=${{ matrix.platform.static }}
-        cmake --build cmake_config_build --verbose
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: ${{ matrix.platform.msvc }}
+        with:
+          arch: ${{ matrix.platform.msvc-arch }}
+      - name: Set up MSYS2
+        if: ${{ contains(matrix.platform.shell, 'msys2') }}
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.platform.msystem }}
+          install: >-
+            ${{ matrix.platform.msys-env }}-cc
+            ${{ matrix.platform.msys-env }}-cmake
+            ${{ matrix.platform.msys-env }}-crt
+            ${{ matrix.platform.msys-env }}-ninja
+      - name: Get SDL3_net sources
+        uses: actions/checkout@v3
+      - name: Install Ninja
+        if: ${{ !contains(matrix.platform.shell, 'msys2') }}
+        uses: turtlesec-no/get-ninja@main
+      - name: Set up SDL3
+        uses: libsdl-org/setup-sdl@main
+        id: sdl
+        with:
+          cmake-generator: Ninja
+          version: 3-head
+          sdl-test: true
+          shell: ${{ matrix.platform.shell }}
+          add-to-environment: true
+      - name: Configure (CMake)
+        run: |
+          cmake -B build -GNinja
+      - name: Build (CMake)
+        run: |
+          cmake --build build/ --verbose
