@@ -228,6 +228,8 @@ static void DestroyAddress(SDLNet_Address *addr)
 
 int SDLNet_Init(void)
 {
+    char *origerrstr = NULL;
+
     #ifdef __WINDOWS__
     WSADATA data;
     if (WSAStartup(MAKEWORD(1, 1), &data) != 0) {
@@ -265,7 +267,7 @@ int SDLNet_Init(void)
     return 0;  // good to go.
 
 failed:
-    char *origerrstr = SDL_strdup(SDL_GetError());
+    origerrstr = SDL_strdup(SDL_GetError());
 
     SDLNet_Quit();
 
