@@ -2,7 +2,7 @@
 
 #ifdef __WINDOWS__
 #define WIN32_LEAN_AND_MEAN 1
-#include <windows.h>
+#define _WIN32_WINNT 0x0600  /* we need APIs that didn't arrive until Windows Vista. */
 #include <winsock2.h>
 #include <ws2tcpip.h>
 typedef SOCKET Socket;
