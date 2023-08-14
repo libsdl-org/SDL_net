@@ -83,9 +83,18 @@ add_library(SDL2_net
     SDLnetTCP.c
     SDLnetUDP.c
 )
+
+file(
+  COPY "${CMAKE_CURRENT_SOURCE_DIR}/SDL_net.h"
+  DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/SDL2/"
+)
+
 add_library(SDL2_net::${sdl2_net_export_name} ALIAS SDL2_net)
-target_include_directories(SDL2_net PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+target_include_directories(SDL2_net
+  PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}"
+  PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/SDL2>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SDL2>"
 )
 target_compile_definitions(SDL2_net PRIVATE
