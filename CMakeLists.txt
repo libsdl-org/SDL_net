@@ -170,7 +170,7 @@ endif()
 
 # Use `Compatible Interface Properties` to ensure a shared SDL2_net is built with a shared SDL2
 if(SDL2NET_BUILD_SHARED_LIBS)
-    set_target_properties(SDL2_net PROPERTIES 
+    set_target_properties(SDL2_net PROPERTIES
         INTERFACE_SDL2_SHARED ${SDL2NET_BUILD_SHARED_LIBS}
         COMPATIBLE_INTERFACE_BOOL SDL2_SHARED
     )
@@ -179,6 +179,25 @@ endif()
 if(SDL2NET_BUILD_SHARED_LIBS)
     sdl_target_link_options_no_undefined(SDL2_net)
 endif()
+
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfigVersion.cmake"
+  VERSION ${FULL_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/SDL2_netConfig.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfig.cmake"
+  NO_SET_AND_CHECK_MACRO
+  INSTALL_DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
+  INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
+)
+
+export(TARGETS SDL2_net
+  NAMESPACE SDL2_net::
+  FILE "SDL2_net-${sdl2_net_install_name_infix}-targets.cmake"
+)
 
 if(SDL2NET_INSTALL)
     install(
@@ -200,16 +219,16 @@ if(SDL2NET_INSTALL)
     endif()
     set(SDLNET_INSTALL_CMAKEDIR "${SDLNET_INSTALL_CMAKEDIR_DEFAULT}" CACHE STRING "Location where to install SDL2_netConfig.cmake")
 
-    configure_package_config_file(SDL2_netConfig.cmake.in SDL2_netConfig.cmake
-        INSTALL_DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
+    configure_package_config_file(
+      "${CMAKE_CURRENT_SOURCE_DIR}/SDL2_netConfig.cmake.in"
+      "${CMAKE_CURRENT_BINARY_DIR}/install-config/SDL2_netConfig.cmake"
+      NO_SET_AND_CHECK_MACRO
+      INSTALL_DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
     )
-    write_basic_package_version_file("${PROJECT_BINARY_DIR}/SDL2_netConfigVersion.cmake"
-        VERSION ${FULL_VERSION}
-        COMPATIBILITY AnyNewerVersion
-    )
+
     install(
         FILES
-            "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfig.cmake"
+            "${CMAKE_CURRENT_BINARY_DIR}/install-config/SDL2_netConfig.cmake"
             "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfigVersion.cmake"
         DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
         COMPONENT devel
