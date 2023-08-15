@@ -5,7 +5,7 @@ OBJS= src/SDLnet.o \
       src/SDLnetUDP.o \
 
 INCDIR = include src
-CFLAGS = -g -O2 -G0 -Wall -D__PSP__ -I$(shell psp-config --psp-prefix)/include
+CFLAGS = -g -O2 -G0 -Wall -D__PSP__ -I$(shell psp-config --psp-prefix)/include/SDL2
 CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
 ASFLAGS = $(CFLAGS)
 
@@ -14,7 +14,7 @@ LIBS=-lc -lpspnet_inet -lpspnet_apctl -lpspnet_resolver -lpsputility -lpspuser
 
 install: $(TARGET_LIB)
 	cp $(TARGET_LIB) $(shell psp-config --psp-prefix)/lib
-	cp include/SDL_net.h $(shell psp-config --psp-prefix)/include
+	cp include/SDL_net.h $(shell psp-config --psp-prefix)/include/SDL2
 
 PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
