@@ -78,23 +78,18 @@ endif()
 sdl_find_sdl2(${sdl2_target_name} ${SDL_REQUIRED_VERSION})
 
 add_library(SDL2_net
-    SDLnet.c
-    SDLnetselect.c
-    SDLnetTCP.c
-    SDLnetUDP.c
-)
-
-file(
-  COPY "${CMAKE_CURRENT_SOURCE_DIR}/SDL_net.h"
-  DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/SDL2/"
+    src/SDLnet.c
+    src/SDLnetselect.c
+    src/SDLnetTCP.c
+    src/SDLnetUDP.c
 )
 
 add_library(SDL2_net::${sdl2_net_export_name} ALIAS SDL2_net)
 target_include_directories(SDL2_net
   PRIVATE
-    "${CMAKE_CURRENT_LIST_DIR}"
+    "${CMAKE_CURRENT_LIST_DIR}/src"
   PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/SDL2>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/SDL2>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SDL2>"
 )
 target_compile_definitions(SDL2_net PRIVATE
@@ -112,7 +107,7 @@ if(WIN32)
     target_link_libraries(SDL2_net PRIVATE ws2_32 iphlpapi)
     list(APPEND SDLNET_PKGCONFIG_PRIVATE_LIBS -lws2_32 -liphlpapi)
     if(SDL2NET_BUILD_SHARED_LIBS)
-        target_sources(SDL2_net PRIVATE version.rc)
+        target_sources(SDL2_net PRIVATE src/version.rc)
     endif()
 endif()
 set_target_properties(SDL2_net PROPERTIES
@@ -208,7 +203,7 @@ if(SDL2NET_INSTALL)
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT library
     )
     install(FILES
-        "${CMAKE_CURRENT_SOURCE_DIR}/SDL_net.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/SDL2/SDL_net.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/SDL2" COMPONENT devel
     )
 
@@ -300,17 +295,17 @@ endif()
 if(SDL2NET_SAMPLES)
     find_package(SDL2main)
 
-    add_executable(showinterfaces showinterfaces.c)
+    add_executable(showinterfaces examples/showinterfaces.c)
     target_compile_definitions(showinterfaces PRIVATE SDL_MAIN_HANDLED)
     target_link_libraries(showinterfaces PRIVATE SDL2_net::${sdl2_net_export_name} ${sdl2_target_name})
 
-    add_executable(chat chat.c chat.h)
+    add_executable(chat examples/chat.c examples/chat.h)
     if(TARGET SDL2::SDL2main)
         target_link_libraries(chat PRIVATE SDL2::SDL2main)
     endif()
     target_link_libraries(chat PRIVATE SDL2_net::${sdl2_net_export_name} SDL2::SDL2test ${sdl2_target_name})
 
-    add_executable(chatd chatd.c)
+    add_executable(chatd examples/chatd.c examples/chat.h)
     target_compile_definitions(chatd PRIVATE SDL_MAIN_HANDLED)
     target_link_libraries(chatd PRIVATE SDL2_net::${sdl2_net_export_name} ${sdl2_target_name})
 endif()

@@ -6,6 +6,7 @@ Makefile
 libtool
 .deps
 .libs
+.dirstamp
 *.so
 *.so.*
 *.dll

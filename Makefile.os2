@@ -21,7 +21,7 @@ DEPS_INC=-IC:\SDL2DEV\h\SDL2
 # change DEPS_LIB in order to point to the dependency libraries.
 DEPS_LIB=C:\SDL2DEV\lib
 
-SRCS = SDLnetTCP.c SDLnetUDP.c SDLnetselect.c SDLnet.c
+SRCS = src/SDLnetTCP.c src/SDLnetUDP.c src/SDLnetselect.c src/SDLnet.c
 
 OBJS = $(SRCS:.c=.obj)
 
@@ -34,7 +34,7 @@ CFLAGS_BASE+= -wx
 CFLAGS_BASE+= -wcd=303
 # include paths:
 CFLAGS_BASE+= -I$(%WATCOM)/h/os2 -I$(%WATCOM)/h
-CFLAGS_BASE+= -I. $(DEPS_INC)
+CFLAGS_BASE+= -Iinclude/SDL2 -Isrc $(DEPS_INC)
 
 CFLAGS =$(CFLAGS_BASE)
 # to build a dll:
@@ -75,18 +75,18 @@ $(LNKFILE):
 .c.obj:
   wcc386 $(CFLAGS) -fo=$^@ $<
 
-showinterfaces.obj: showinterfaces.c
+examples/showinterfaces.obj: examples/showinterfaces.c
   wcc386 $(CFLAGS_BASE) -fo=$^@ $<
-chat.obj: chat.c
+examples/chat.obj: examples/chat.c
   wcc386 $(CFLAGS_BASE) -fo=$^@ $<
-chatd.obj: chatd.c
+examples/chatd.obj: examples/chatd.c
   wcc386 $(CFLAGS_BASE) -fo=$^@ $<
 
-showinterfaces.exe: $(LIBFILE) showinterfaces.obj
+examples/showinterfaces.exe: $(LIBFILE) examples/showinterfaces.obj
   wlink SYS os2v2 OP q LIBPATH $(DEPS_LIB) LIBR {$(LIBFILE) SDL2.lib} F {showinterfaces.obj} N showinterfaces.exe
-chat.exe: $(LIBFILE) chat.obj
+examples/chat.exe: $(LIBFILE) examples/chat.obj
   wlink SYS os2v2 OP q LIBPATH $(DEPS_LIB) LIBR {$(LIBFILE) SDL2test.lib SDL2.lib} F {chat.obj} N chat.exe
-chatd.exe: $(LIBFILE) chatd.obj
+examples/chatd.exe: $(LIBFILE) examples/chatd.obj
   wlink SYS os2v2 OP q LIBPATH $(DEPS_LIB) LIBR {$(LIBFILE) SDL2.lib} F {chatd.obj} N chatd.exe
 
 clean: .SYMBOLIC
