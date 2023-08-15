@@ -21,7 +21,7 @@ DEPS_INC=-IC:\SDL2DEV\h\SDL2
 # change DEPS_LIB in order to point to the dependency libraries.
 DEPS_LIB=C:\SDL2DEV\lib
 
-SRCS = src/SDLnetTCP.c src/SDLnetUDP.c src/SDLnetselect.c src/SDLnet.c
+SRCS = SDLnetTCP.c SDLnetUDP.c SDLnetselect.c SDLnet.c
 
 OBJS = $(SRCS:.c=.obj)
 
@@ -72,21 +72,22 @@ $(LNKFILE):
   @%append $@ OPTION OSNAME='OS/2 and eComStation'
   @%append $@ OPTION SHOWDEAD
 
+.c: ./src
 .c.obj:
   wcc386 $(CFLAGS) -fo=$^@ $<
 
-examples/showinterfaces.obj: examples/showinterfaces.c
+showinterfaces.obj: examples/showinterfaces.c
   wcc386 $(CFLAGS_BASE) -fo=$^@ $<
-examples/chat.obj: examples/chat.c
+chat.obj: examples/chat.c
   wcc386 $(CFLAGS_BASE) -fo=$^@ $<
-examples/chatd.obj: examples/chatd.c
+chatd.obj: examples/chatd.c
   wcc386 $(CFLAGS_BASE) -fo=$^@ $<
 
-examples/showinterfaces.exe: $(LIBFILE) examples/showinterfaces.obj
+showinterfaces.exe: $(LIBFILE) showinterfaces.obj
   wlink SYS os2v2 OP q LIBPATH $(DEPS_LIB) LIBR {$(LIBFILE) SDL2.lib} F {showinterfaces.obj} N showinterfaces.exe
-examples/chat.exe: $(LIBFILE) examples/chat.obj
+chat.exe: $(LIBFILE) chat.obj
   wlink SYS os2v2 OP q LIBPATH $(DEPS_LIB) LIBR {$(LIBFILE) SDL2test.lib SDL2.lib} F {chat.obj} N chat.exe
-examples/chatd.exe: $(LIBFILE) examples/chatd.obj
+chatd.exe: $(LIBFILE) chatd.obj
   wlink SYS os2v2 OP q LIBPATH $(DEPS_LIB) LIBR {$(LIBFILE) SDL2.lib} F {chatd.obj} N chatd.exe
 
 clean: .SYMBOLIC
