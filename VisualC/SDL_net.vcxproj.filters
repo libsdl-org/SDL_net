@@ -26,7 +26,7 @@
     <ClInclude Include="..\src\SDLnetsys.h">
       <Filter>Sources</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\SDL2\SDL_net.h">
+    <ClInclude Include="..\include\SDL_net.h">
       <Filter>Public Headers</Filter>
     </ClInclude>
   </ItemGroup>

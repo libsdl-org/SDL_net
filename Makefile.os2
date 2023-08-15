@@ -34,7 +34,7 @@ CFLAGS_BASE+= -wx
 CFLAGS_BASE+= -wcd=303
 # include paths:
 CFLAGS_BASE+= -I$(%WATCOM)/h/os2 -I$(%WATCOM)/h
-CFLAGS_BASE+= -Iinclude/SDL2 -Isrc $(DEPS_INC)
+CFLAGS_BASE+= -Iinclude -Isrc $(DEPS_INC)
 
 CFLAGS =$(CFLAGS_BASE)
 # to build a dll:

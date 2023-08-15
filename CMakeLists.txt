@@ -89,7 +89,7 @@ target_include_directories(SDL2_net
   PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/src"
   PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/SDL2>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SDL2>"
 )
 target_compile_definitions(SDL2_net PRIVATE
@@ -207,7 +207,7 @@ if(SDL2NET_INSTALL)
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT library
     )
     install(FILES
-        "${CMAKE_CURRENT_SOURCE_DIR}/include/SDL2/SDL_net.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/SDL_net.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/SDL2" COMPONENT devel
     )
 

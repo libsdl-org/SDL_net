@@ -37,7 +37,7 @@
 		0E06A2830119C8317F000001 /* SDLnetsys.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SDLnetsys.h; path = ../src/SDLnetsys.h; sourceTree = SOURCE_ROOT; };
 		0E06A2840119C8317F000001 /* SDLnetTCP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetTCP.c; path = ../src/SDLnetTCP.c; sourceTree = SOURCE_ROOT; };
 		0E06A2850119C8317F000001 /* SDLnetUDP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetUDP.c; path = ../src/SDLnetUDP.c; sourceTree = SOURCE_ROOT; };
-		1014BAEA010A4B677F000001 /* SDL_net.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SDL_net.h; path = ../include/SDL2/SDL_net.h; sourceTree = SOURCE_ROOT; };
+		1014BAEA010A4B677F000001 /* SDL_net.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SDL_net.h; path = ../include/SDL_net.h; sourceTree = SOURCE_ROOT; };
 		1014BAEB010A4B677F000001 /* SDLnet.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnet.c; path = ../src/SDLnet.c; sourceTree = SOURCE_ROOT; };
 		1014BAEC010A4B677F000001 /* SDLnetselect.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetselect.c; path = ../src/SDLnetselect.c; sourceTree = SOURCE_ROOT; };
 		1014BAED010A4B677F000001 /* SDLnetTCP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetTCP.c; path = ../src/SDLnetTCP.c; sourceTree = SOURCE_ROOT; };
@@ -434,7 +434,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../include/SDL2\"",
+					"\"$(SRCROOT)/../include\"",
 					"\"$(SRCROOT)/../src\"",
 					"\"$(SRCROOT)/$(PLATFORM)/SDL2.framework/Headers\""
 				);
@@ -467,7 +467,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../include/SDL2\"",
+					"\"$(SRCROOT)/../include\"",
 					"\"$(SRCROOT)/../src\"",
 					"\"$(SRCROOT)/$(PLATFORM)/SDL2.framework/Headers\""
 				);

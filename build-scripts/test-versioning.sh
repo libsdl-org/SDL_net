@@ -7,9 +7,9 @@ set -eu
 # Needed so sed doesn't report illegal byte sequences on macOS
 export LC_CTYPE=C
 
-ref_major=$(sed -ne 's/^#define SDL_NET_MAJOR_VERSION  *//p' include/SDL2/SDL_net.h)
-ref_minor=$(sed -ne 's/^#define SDL_NET_MINOR_VERSION  *//p' include/SDL2/SDL_net.h)
-ref_micro=$(sed -ne 's/^#define SDL_NET_PATCHLEVEL  *//p' include/SDL2/SDL_net.h)
+ref_major=$(sed -ne 's/^#define SDL_NET_MAJOR_VERSION  *//p' include/SDL_net.h)
+ref_minor=$(sed -ne 's/^#define SDL_NET_MINOR_VERSION  *//p' include/SDL_net.h)
+ref_micro=$(sed -ne 's/^#define SDL_NET_PATCHLEVEL  *//p' include/SDL_net.h)
 ref_version="${ref_major}.${ref_minor}.${ref_micro}"
 ref_sdl_req=$(sed -ne 's/^SDL_VERSION=//p' configure.ac)
 
