@@ -1,5 +1,3 @@
-@PACKAGE_INIT@
-
 include(FeatureSummary)
 set_package_properties(SDL2_net PROPERTIES
     URL "https://www.libsdl.org/projects/SDL_net/"

@@ -175,29 +175,6 @@ if(SDL2NET_BUILD_SHARED_LIBS)
     sdl_target_link_options_no_undefined(SDL2_net)
 endif()
 
-write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfigVersion.cmake"
-  VERSION ${FULL_VERSION}
-  COMPATIBILITY AnyNewerVersion
-)
-
-# Only generate build exports when SDL2 is not a subproject
-if(NOT TARGET SDL2)
-  configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/SDL2_netConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfig.cmake"
-    NO_SET_AND_CHECK_MACRO
-    NO_CHECK_REQUIRED_COMPONENTS_MACRO
-    INSTALL_DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
-    INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
-  )
-
-  export(TARGETS SDL2_net
-    NAMESPACE SDL2_net::
-    FILE "SDL2_net-${sdl2_net_install_name_infix}-targets.cmake"
-  )
-endif()
-
 if(SDL2NET_INSTALL)
     install(
         TARGETS SDL2_net
@@ -219,16 +196,20 @@ if(SDL2NET_INSTALL)
     set(SDLNET_INSTALL_CMAKEDIR "${SDLNET_INSTALL_CMAKEDIR_DEFAULT}" CACHE STRING "Location where to install SDL2_netConfig.cmake")
 
     configure_package_config_file(
-      "${CMAKE_CURRENT_SOURCE_DIR}/SDL2_netConfig.cmake.in"
-      "${CMAKE_CURRENT_BINARY_DIR}/install-config/SDL2_netConfig.cmake"
-      NO_SET_AND_CHECK_MACRO
-      NO_CHECK_REQUIRED_COMPONENTS_MACRO
-      INSTALL_DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SDL2_netConfig.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfig.cmake"
+        INSTALL_DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
+    )
+
+    write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfigVersion.cmake"
+        VERSION ${FULL_VERSION}
+        COMPATIBILITY AnyNewerVersion
     )
 
     install(
         FILES
-            "${CMAKE_CURRENT_BINARY_DIR}/install-config/SDL2_netConfig.cmake"
+            "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfig.cmake"
             "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfigVersion.cmake"
         DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
         COMPONENT devel
@@ -239,6 +220,14 @@ if(SDL2NET_INSTALL)
         DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
         COMPONENT devel
     )
+
+    # Only generate build exports when SDL2 is not a subproject
+    if(NOT TARGET SDL2)
+        export(TARGETS SDL2_net
+            NAMESPACE SDL2_net::
+            FILE "SDL2_net-${sdl2_net_install_name_infix}-targets.cmake"
+        )
+    endif()
 
     if(SDL2NET_BUILD_SHARED_LIBS)
         set(ENABLE_SHARED_TRUE "")
