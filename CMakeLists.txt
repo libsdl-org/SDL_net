@@ -181,18 +181,22 @@ write_basic_package_version_file(
   COMPATIBILITY AnyNewerVersion
 )
 
-configure_package_config_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/SDL2_netConfig.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfig.cmake"
-  NO_SET_AND_CHECK_MACRO
-  INSTALL_DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
-  INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
-)
+# Only generate build exports when SDL2 is not a subproject
+if(NOT TARGET SDL2)
+  configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/SDL2_netConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/SDL2_netConfig.cmake"
+    NO_SET_AND_CHECK_MACRO
+    NO_CHECK_REQUIRED_COMPONENTS_MACRO
+    INSTALL_DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
+    INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
+  )
 
-export(TARGETS SDL2_net
-  NAMESPACE SDL2_net::
-  FILE "SDL2_net-${sdl2_net_install_name_infix}-targets.cmake"
-)
+  export(TARGETS SDL2_net
+    NAMESPACE SDL2_net::
+    FILE "SDL2_net-${sdl2_net_install_name_infix}-targets.cmake"
+  )
+endif()
 
 if(SDL2NET_INSTALL)
     install(
@@ -218,6 +222,7 @@ if(SDL2NET_INSTALL)
       "${CMAKE_CURRENT_SOURCE_DIR}/SDL2_netConfig.cmake.in"
       "${CMAKE_CURRENT_BINARY_DIR}/install-config/SDL2_netConfig.cmake"
       NO_SET_AND_CHECK_MACRO
+      NO_CHECK_REQUIRED_COMPONENTS_MACRO
       INSTALL_DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
     )
 
