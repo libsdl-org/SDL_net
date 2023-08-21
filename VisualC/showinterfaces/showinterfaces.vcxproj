@@ -221,7 +221,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\showinterfaces.c" />
+    <ClCompile Include="..\..\examples\showinterfaces.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SDL_net.vcxproj">

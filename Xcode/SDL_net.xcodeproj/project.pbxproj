@@ -78,6 +78,7 @@
 				1014BAEA010A4B677F000001 /* SDL_net.h */,
 			);
 			name = "Public Headers";
+			path = ../include;
 			sourceTree = "<group>";
 		};
 		034768DDFF38A45A11DB9C8B /* Products */ = {
@@ -125,6 +126,7 @@
 				0E06A2850119C8317F000001 /* SDLnetUDP.c */,
 			);
 			name = "Library Source";
+			path = ../src;
 			sourceTree = "<group>";
 		};
 		BE48FF8007AFAA4100BB41DA /* Frameworks */ = {
