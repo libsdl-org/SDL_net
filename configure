@@ -765,7 +765,7 @@ PACKAGE_STRING='SDL2_net 2.3.0'
 PACKAGE_BUGREPORT='https://github.com/libsdl-org/SDL_net/issues'
 PACKAGE_URL=''
 
-ac_unique_file="SDLnet.c"
+ac_unique_file="src/SDLnet.c"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stddef.h>
@@ -12654,7 +12654,7 @@ case "$host" in
             fi
         fi
         use_version_rc=true
-        LT_EXTRA="-Wl,version.o"
+        LT_EXTRA="-Wl,src/version.o"
         ;;
     *-*-os2*)
         # disable static builds on os/2

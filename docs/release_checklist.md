@@ -6,7 +6,7 @@
 
 * Bump version number to 2.EVEN.0 in all these locations:
 
-    * `SDL_net.h`:
+    * `include/SDL_net.h`:
         `SDL_NET_MAJOR_VERSION`, `SDL_NET_MINOR_VERSION`, `SDL_NET_PATCHLEVEL`
     * `configure.ac`:
         `MAJOR_VERSION`, `MINOR_VERSION`, `MICRO_VERSION`
@@ -14,7 +14,7 @@
         `MAJOR_VERSION`, `MINOR_VERSION`, `MICRO_VERSION`
     * `Makefile.os2`:
         `MAJOR_VERSION`, `MINOR_VERSION`, `MICRO_VERSION`
-    * `version.rc`:
+    * `src/version.rc`:
         `FILEVERSION`, `PRODUCTVERSION`, `FileVersion`, `ProductVersion`
     * `VisualC/Version.rc`:
         `FILEVERSION`, `PRODUCTVERSION`, `FileVersion`, `ProductVersion`
@@ -32,7 +32,7 @@
 
 * Regenerate `configure`
 
-* Run `./test-versioning.sh` to verify that everything is consistent
+* Run `./build-scripts/test-versioning.sh` to verify that everything is consistent
 
 * Do the release
 

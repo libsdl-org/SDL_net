@@ -336,7 +336,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\..\showinterfaces.c"
+			RelativePath="..\..\examples\showinterfaces.c"
 			>
 			<FileConfiguration
 				Name="Release|Win32"
