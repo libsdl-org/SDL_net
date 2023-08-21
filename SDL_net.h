@@ -224,7 +224,7 @@ typedef struct _TCPsocket *TCPsocket;
  * \sa SDLNet_TCP_OpenClient
  * \sa SDLNet_TCP_Open
  */
-extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_OpenServer(IPaddress *ip);
+extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_OpenServer(const IPaddress *ip);
 
 /**
  * Open a client TCP network socket.
@@ -242,7 +242,7 @@ extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_OpenServer(IPaddress *ip);
  * \sa SDLNet_TCP_OpenServer
  * \sa SDLNet_TCP_Open
  */
-extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_OpenClient(IPaddress *ip);
+extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_OpenClient(const IPaddress *ip);
 
 /**
  * Open a TCP network socket.
@@ -262,7 +262,7 @@ extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_OpenClient(IPaddress *ip);
  * \sa SDLNet_TCP_OpenServer
  * \sa SDLNet_TCP_OpenClient
  */
-extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_Open(IPaddress *ip);
+extern DECLSPEC TCPsocket SDLCALL SDLNet_TCP_Open(const IPaddress *ip);
 
 /**
  * Accept an incoming connection on the given server socket.
