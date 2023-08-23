@@ -47,7 +47,7 @@ extern DECLSPEC int SDLCALL SDLNet_WaitForConnection(SDLNet_StreamSocket *sock);
 /* Servers listen for and accept connections from clients, and then send/receive data on a stream socket. */
 typedef struct SDLNet_Server SDLNet_Server;   /* a listen socket internally. Binds to a port, accepts connections. */
 extern DECLSPEC SDLNet_Server * SDLCALL SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port);  /* Specify NULL for any/all interfaces, or something from GetLocalAddresses */
-extern DECLSPEC int SDLCALL SDLNet_WaitForServerIncoming(SDLNet_Server *server);  /* blocks until a client is ready for to be accepted or there's a serious error. Optional. */
+extern DECLSPEC int SDLCALL SDLNet_WaitForClientConnection(SDLNet_Server *server);  /* blocks until a client is ready for to be accepted or there's a serious error. Optional. */
 extern DECLSPEC int SDLCALL SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stream);  /* Accept pending connection. Does not block, returns 0 and sets *client_stream=NULL if none available. -1 on errors, zero otherwise. */
 extern DECLSPEC void SDLCALL SDLNet_DestroyServer(SDLNet_Server *server);
 

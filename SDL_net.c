@@ -697,7 +697,7 @@ SDLNet_Server *SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port)
     return server;
 }
 
-int SDLNet_WaitForServerIncoming(SDLNet_Server *server)
+int SDLNet_WaitForClientConnection(SDLNet_Server *server)
 {
     if (!server) {
         return SDL_InvalidParamError("server");
@@ -1351,7 +1351,7 @@ int main(int argc, char **argv)
     SDLNet_StreamSocket *stream;
     if (argc > 1) {
         SDLNet_Server *server = SDLNet_CreateServer(NULL, 7997);
-        SDLNet_WaitForServerIncoming(server);
+        SDLNet_WaitForClientConnection(server);
         SDLNet_AcceptClient(server, &stream);
     } else {
         SDLNet_Address *addr = SDLNet_ResolveHostname("localhost");
