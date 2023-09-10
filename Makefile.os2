@@ -34,7 +34,7 @@ CFLAGS_BASE+= -wx
 CFLAGS_BASE+= -wcd=303
 # include paths:
 CFLAGS_BASE+= -I$(%WATCOM)/h/os2 -I$(%WATCOM)/h
-CFLAGS_BASE+= -I. $(DEPS_INC)
+CFLAGS_BASE+= -Iinclude -Isrc $(DEPS_INC)
 
 CFLAGS =$(CFLAGS_BASE)
 # to build a dll:
@@ -72,14 +72,15 @@ $(LNKFILE):
   @%append $@ OPTION OSNAME='OS/2 and eComStation'
   @%append $@ OPTION SHOWDEAD
 
+.c: ./src
 .c.obj:
   wcc386 $(CFLAGS) -fo=$^@ $<
 
-showinterfaces.obj: showinterfaces.c
+showinterfaces.obj: examples/showinterfaces.c
   wcc386 $(CFLAGS_BASE) -fo=$^@ $<
-chat.obj: chat.c
+chat.obj: examples/chat.c
   wcc386 $(CFLAGS_BASE) -fo=$^@ $<
-chatd.obj: chatd.c
+chatd.obj: examples/chatd.c
   wcc386 $(CFLAGS_BASE) -fo=$^@ $<
 
 showinterfaces.exe: $(LIBFILE) showinterfaces.obj

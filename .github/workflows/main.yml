@@ -83,7 +83,7 @@ jobs:
     - name: Check that versioning is consistent
       # We only need to run this once: arbitrarily use the Linux/CMake build
       if: "runner.os == 'Linux' && matrix.platform.cmake"
-      run: ./test-versioning.sh
+      run: ./build-scripts/test-versioning.sh
 
     - name: Configure (CMake)
       if: "matrix.platform.cmake"
@@ -145,11 +145,22 @@ jobs:
         parallel="$(getconf _NPROCESSORS_ONLN)"
         make -j"${parallel}" -C build-autotools distcheck V=1
 
-    - name: Verify CMake configuration files
+    - name: Verify CMake configuration files from the installation
       run: |
-        cmake -S cmake/test -B cmake_config_build \
+        cmake -S cmake/test -B cmake_install_config_build \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_PREFIX_PATH="${{ env.SDL2_net_DIR }};${{ env.SDL2_DIR }}" \
           -DTEST_SHARED=${{ matrix.platform.shared }} \
           -DTEST_STATIC=${{ matrix.platform.static }}
-        cmake --build cmake_config_build --verbose
+        cmake --build cmake_install_config_build --config Release --verbose
+
+    - name: Verify CMake configuration files from the build directory
+      if: "matrix.platform.cmake"
+      run: |
+        cmake -S cmake/test -B cmake_build_config_build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_PREFIX_PATH="${{ env.SDL2_DIR }}" \
+          -DSDL2_net_DIR="$(pwd)/build-cmake" \
+          -DTEST_SHARED=${{ matrix.platform.shared }} \
+          -DTEST_STATIC=${{ matrix.platform.static }}
+        cmake --build cmake_build_config_build --config Release --verbose

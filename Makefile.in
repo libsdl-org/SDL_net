@@ -150,8 +150,11 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)" \
 	"$(DESTDIR)$(libSDL2_netincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-am_libSDL2_net_la_OBJECTS = SDLnet.lo SDLnetTCP.lo SDLnetUDP.lo \
-	SDLnetselect.lo
+am__dirstamp = $(am__leading_dot)dirstamp
+am_libSDL2_net_la_OBJECTS = src/libSDL2_net_la-SDLnet.lo \
+	src/libSDL2_net_la-SDLnetTCP.lo \
+	src/libSDL2_net_la-SDLnetUDP.lo \
+	src/libSDL2_net_la-SDLnetselect.lo
 libSDL2_net_la_OBJECTS = $(am_libSDL2_net_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -161,13 +164,14 @@ libSDL2_net_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libSDL2_net_la_LDFLAGS) $(LDFLAGS) -o \
 	$@
-am_chat_OBJECTS = chat.$(OBJEXT)
+am_chat_OBJECTS = examples/chat-chat.$(OBJEXT)
 chat_OBJECTS = $(am_chat_OBJECTS)
 chat_DEPENDENCIES = libSDL2_net.la
-am_chatd_OBJECTS = chatd.$(OBJEXT)
+am_chatd_OBJECTS = examples/chatd-chatd.$(OBJEXT)
 chatd_OBJECTS = $(am_chatd_OBJECTS)
 chatd_DEPENDENCIES = libSDL2_net.la
-am_showinterfaces_OBJECTS = showinterfaces.$(OBJEXT)
+am_showinterfaces_OBJECTS =  \
+	examples/showinterfaces-showinterfaces.$(OBJEXT)
 showinterfaces_OBJECTS = $(am_showinterfaces_OBJECTS)
 showinterfaces_DEPENDENCIES = libSDL2_net.la
 AM_V_P = $(am__v_P_@AM_V@)
@@ -185,10 +189,13 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/SDLnet.Plo ./$(DEPDIR)/SDLnetTCP.Plo \
-	./$(DEPDIR)/SDLnetUDP.Plo ./$(DEPDIR)/SDLnetselect.Plo \
-	./$(DEPDIR)/chat.Po ./$(DEPDIR)/chatd.Po \
-	./$(DEPDIR)/showinterfaces.Po
+am__depfiles_remade = examples/$(DEPDIR)/chat-chat.Po \
+	examples/$(DEPDIR)/chatd-chatd.Po \
+	examples/$(DEPDIR)/showinterfaces-showinterfaces.Po \
+	src/$(DEPDIR)/libSDL2_net_la-SDLnet.Plo \
+	src/$(DEPDIR)/libSDL2_net_la-SDLnetTCP.Plo \
+	src/$(DEPDIR)/libSDL2_net_la-SDLnetUDP.Plo \
+	src/$(DEPDIR)/libSDL2_net_la-SDLnetselect.Plo
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -409,14 +416,14 @@ AUTOMAKE_OPTIONS = foreign
 lib_LTLIBRARIES = libSDL2_net.la
 libSDL2_netincludedir = $(includedir)/SDL2
 libSDL2_netinclude_HEADERS = \
-	SDL_net.h
+	include/SDL_net.h
 
 libSDL2_net_la_SOURCES = \
-	SDLnet.c		\
-	SDLnetTCP.c		\
-	SDLnetUDP.c		\
-	SDLnetselect.c		\
-	SDLnetsys.h
+	src/SDLnet.c		\
+	src/SDLnetTCP.c		\
+	src/SDLnetUDP.c		\
+	src/SDLnetselect.c		\
+	src/SDLnetsys.h
 
 EXTRA_DIST = \
 	Android.mk		\
@@ -433,21 +440,25 @@ EXTRA_DIST = \
 	autogen.sh		\
 	cmake			\
 	mingw			\
-	version.rc
+	src/version.rc
 
+libSDL2_net_la_CPPFLAGS = -I$(srcdir)/include
 libSDL2_net_la_LDFLAGS = \
 	-no-undefined		\
 	-release $(LT_RELEASE)	\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) $(LT_EXTRA)
 
 libSDL2_net_la_LIBADD = @INETLIB@
-@USE_VERSION_RC_TRUE@libSDL2_net_la_DEPENDENCIES = version.o
+@USE_VERSION_RC_TRUE@libSDL2_net_la_DEPENDENCIES = src/version.o
 @ENABLE_EXAMPLES_TRUE@EXAMPLES = showinterfaces chat chatd
-showinterfaces_SOURCES = showinterfaces.c
+showinterfaces_SOURCES = examples/showinterfaces.c
+showinterfaces_CPPFLAGS = -I$(srcdir)/include
 showinterfaces_LDADD = libSDL2_net.la
-chat_SOURCES = chat.c chat.h
+chat_SOURCES = examples/chat.c examples/chat.h
+chat_CPPFLAGS = -I$(srcdir)/include
 chat_LDADD = libSDL2_net.la -lSDL2_test
-chatd_SOURCES = chatd.c
+chatd_SOURCES = examples/chatd.c
+chatd_CPPFLAGS = -I$(srcdir)/include
 chatd_LDADD = libSDL2_net.la
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = SDL2_net.pc
@@ -540,17 +551,43 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
+src/$(am__dirstamp):
+	@$(MKDIR_P) src
+	@: > src/$(am__dirstamp)
+src/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) src/$(DEPDIR)
+	@: > src/$(DEPDIR)/$(am__dirstamp)
+src/libSDL2_net_la-SDLnet.lo: src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/libSDL2_net_la-SDLnetTCP.lo: src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/libSDL2_net_la-SDLnetUDP.lo: src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/libSDL2_net_la-SDLnetselect.lo: src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 libSDL2_net.la: $(libSDL2_net_la_OBJECTS) $(libSDL2_net_la_DEPENDENCIES) $(EXTRA_libSDL2_net_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libSDL2_net_la_LINK) -rpath $(libdir) $(libSDL2_net_la_OBJECTS) $(libSDL2_net_la_LIBADD) $(LIBS)
+examples/$(am__dirstamp):
+	@$(MKDIR_P) examples
+	@: > examples/$(am__dirstamp)
+examples/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) examples/$(DEPDIR)
+	@: > examples/$(DEPDIR)/$(am__dirstamp)
+examples/chat-chat.$(OBJEXT): examples/$(am__dirstamp) \
+	examples/$(DEPDIR)/$(am__dirstamp)
 
 chat$(EXEEXT): $(chat_OBJECTS) $(chat_DEPENDENCIES) $(EXTRA_chat_DEPENDENCIES) 
 	@rm -f chat$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(chat_OBJECTS) $(chat_LDADD) $(LIBS)
+examples/chatd-chatd.$(OBJEXT): examples/$(am__dirstamp) \
+	examples/$(DEPDIR)/$(am__dirstamp)
 
 chatd$(EXEEXT): $(chatd_OBJECTS) $(chatd_DEPENDENCIES) $(EXTRA_chatd_DEPENDENCIES) 
 	@rm -f chatd$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(chatd_OBJECTS) $(chatd_LDADD) $(LIBS)
+examples/showinterfaces-showinterfaces.$(OBJEXT):  \
+	examples/$(am__dirstamp) examples/$(DEPDIR)/$(am__dirstamp)
 
 showinterfaces$(EXEEXT): $(showinterfaces_OBJECTS) $(showinterfaces_DEPENDENCIES) $(EXTRA_showinterfaces_DEPENDENCIES) 
 	@rm -f showinterfaces$(EXEEXT)
@@ -558,17 +595,20 @@ showinterfaces$(EXEEXT): $(showinterfaces_OBJECTS) $(showinterfaces_DEPENDENCIES
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f examples/*.$(OBJEXT)
+	-rm -f src/*.$(OBJEXT)
+	-rm -f src/*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SDLnet.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SDLnetTCP.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SDLnetUDP.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SDLnetselect.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chat.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chatd.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/showinterfaces.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@examples/$(DEPDIR)/chat-chat.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@examples/$(DEPDIR)/chatd-chatd.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@examples/$(DEPDIR)/showinterfaces-showinterfaces.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/libSDL2_net_la-SDLnet.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/libSDL2_net_la-SDLnetTCP.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/libSDL2_net_la-SDLnetUDP.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/libSDL2_net_la-SDLnetselect.Plo@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -600,11 +640,82 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
+src/libSDL2_net_la-SDLnet.lo: src/SDLnet.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libSDL2_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/libSDL2_net_la-SDLnet.lo -MD -MP -MF src/$(DEPDIR)/libSDL2_net_la-SDLnet.Tpo -c -o src/libSDL2_net_la-SDLnet.lo `test -f 'src/SDLnet.c' || echo '$(srcdir)/'`src/SDLnet.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/libSDL2_net_la-SDLnet.Tpo src/$(DEPDIR)/libSDL2_net_la-SDLnet.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/SDLnet.c' object='src/libSDL2_net_la-SDLnet.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libSDL2_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/libSDL2_net_la-SDLnet.lo `test -f 'src/SDLnet.c' || echo '$(srcdir)/'`src/SDLnet.c
+
+src/libSDL2_net_la-SDLnetTCP.lo: src/SDLnetTCP.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libSDL2_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/libSDL2_net_la-SDLnetTCP.lo -MD -MP -MF src/$(DEPDIR)/libSDL2_net_la-SDLnetTCP.Tpo -c -o src/libSDL2_net_la-SDLnetTCP.lo `test -f 'src/SDLnetTCP.c' || echo '$(srcdir)/'`src/SDLnetTCP.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/libSDL2_net_la-SDLnetTCP.Tpo src/$(DEPDIR)/libSDL2_net_la-SDLnetTCP.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/SDLnetTCP.c' object='src/libSDL2_net_la-SDLnetTCP.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libSDL2_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/libSDL2_net_la-SDLnetTCP.lo `test -f 'src/SDLnetTCP.c' || echo '$(srcdir)/'`src/SDLnetTCP.c
+
+src/libSDL2_net_la-SDLnetUDP.lo: src/SDLnetUDP.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libSDL2_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/libSDL2_net_la-SDLnetUDP.lo -MD -MP -MF src/$(DEPDIR)/libSDL2_net_la-SDLnetUDP.Tpo -c -o src/libSDL2_net_la-SDLnetUDP.lo `test -f 'src/SDLnetUDP.c' || echo '$(srcdir)/'`src/SDLnetUDP.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/libSDL2_net_la-SDLnetUDP.Tpo src/$(DEPDIR)/libSDL2_net_la-SDLnetUDP.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/SDLnetUDP.c' object='src/libSDL2_net_la-SDLnetUDP.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libSDL2_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/libSDL2_net_la-SDLnetUDP.lo `test -f 'src/SDLnetUDP.c' || echo '$(srcdir)/'`src/SDLnetUDP.c
+
+src/libSDL2_net_la-SDLnetselect.lo: src/SDLnetselect.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libSDL2_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/libSDL2_net_la-SDLnetselect.lo -MD -MP -MF src/$(DEPDIR)/libSDL2_net_la-SDLnetselect.Tpo -c -o src/libSDL2_net_la-SDLnetselect.lo `test -f 'src/SDLnetselect.c' || echo '$(srcdir)/'`src/SDLnetselect.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/libSDL2_net_la-SDLnetselect.Tpo src/$(DEPDIR)/libSDL2_net_la-SDLnetselect.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/SDLnetselect.c' object='src/libSDL2_net_la-SDLnetselect.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libSDL2_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/libSDL2_net_la-SDLnetselect.lo `test -f 'src/SDLnetselect.c' || echo '$(srcdir)/'`src/SDLnetselect.c
+
+examples/chat-chat.o: examples/chat.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(chat_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT examples/chat-chat.o -MD -MP -MF examples/$(DEPDIR)/chat-chat.Tpo -c -o examples/chat-chat.o `test -f 'examples/chat.c' || echo '$(srcdir)/'`examples/chat.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) examples/$(DEPDIR)/chat-chat.Tpo examples/$(DEPDIR)/chat-chat.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='examples/chat.c' object='examples/chat-chat.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(chat_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o examples/chat-chat.o `test -f 'examples/chat.c' || echo '$(srcdir)/'`examples/chat.c
+
+examples/chat-chat.obj: examples/chat.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(chat_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT examples/chat-chat.obj -MD -MP -MF examples/$(DEPDIR)/chat-chat.Tpo -c -o examples/chat-chat.obj `if test -f 'examples/chat.c'; then $(CYGPATH_W) 'examples/chat.c'; else $(CYGPATH_W) '$(srcdir)/examples/chat.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) examples/$(DEPDIR)/chat-chat.Tpo examples/$(DEPDIR)/chat-chat.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='examples/chat.c' object='examples/chat-chat.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(chat_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o examples/chat-chat.obj `if test -f 'examples/chat.c'; then $(CYGPATH_W) 'examples/chat.c'; else $(CYGPATH_W) '$(srcdir)/examples/chat.c'; fi`
+
+examples/chatd-chatd.o: examples/chatd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(chatd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT examples/chatd-chatd.o -MD -MP -MF examples/$(DEPDIR)/chatd-chatd.Tpo -c -o examples/chatd-chatd.o `test -f 'examples/chatd.c' || echo '$(srcdir)/'`examples/chatd.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) examples/$(DEPDIR)/chatd-chatd.Tpo examples/$(DEPDIR)/chatd-chatd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='examples/chatd.c' object='examples/chatd-chatd.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(chatd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o examples/chatd-chatd.o `test -f 'examples/chatd.c' || echo '$(srcdir)/'`examples/chatd.c
+
+examples/chatd-chatd.obj: examples/chatd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(chatd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT examples/chatd-chatd.obj -MD -MP -MF examples/$(DEPDIR)/chatd-chatd.Tpo -c -o examples/chatd-chatd.obj `if test -f 'examples/chatd.c'; then $(CYGPATH_W) 'examples/chatd.c'; else $(CYGPATH_W) '$(srcdir)/examples/chatd.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) examples/$(DEPDIR)/chatd-chatd.Tpo examples/$(DEPDIR)/chatd-chatd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='examples/chatd.c' object='examples/chatd-chatd.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(chatd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o examples/chatd-chatd.obj `if test -f 'examples/chatd.c'; then $(CYGPATH_W) 'examples/chatd.c'; else $(CYGPATH_W) '$(srcdir)/examples/chatd.c'; fi`
+
+examples/showinterfaces-showinterfaces.o: examples/showinterfaces.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(showinterfaces_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT examples/showinterfaces-showinterfaces.o -MD -MP -MF examples/$(DEPDIR)/showinterfaces-showinterfaces.Tpo -c -o examples/showinterfaces-showinterfaces.o `test -f 'examples/showinterfaces.c' || echo '$(srcdir)/'`examples/showinterfaces.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) examples/$(DEPDIR)/showinterfaces-showinterfaces.Tpo examples/$(DEPDIR)/showinterfaces-showinterfaces.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='examples/showinterfaces.c' object='examples/showinterfaces-showinterfaces.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(showinterfaces_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o examples/showinterfaces-showinterfaces.o `test -f 'examples/showinterfaces.c' || echo '$(srcdir)/'`examples/showinterfaces.c
+
+examples/showinterfaces-showinterfaces.obj: examples/showinterfaces.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(showinterfaces_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT examples/showinterfaces-showinterfaces.obj -MD -MP -MF examples/$(DEPDIR)/showinterfaces-showinterfaces.Tpo -c -o examples/showinterfaces-showinterfaces.obj `if test -f 'examples/showinterfaces.c'; then $(CYGPATH_W) 'examples/showinterfaces.c'; else $(CYGPATH_W) '$(srcdir)/examples/showinterfaces.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) examples/$(DEPDIR)/showinterfaces-showinterfaces.Tpo examples/$(DEPDIR)/showinterfaces-showinterfaces.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='examples/showinterfaces.c' object='examples/showinterfaces-showinterfaces.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(showinterfaces_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o examples/showinterfaces-showinterfaces.obj `if test -f 'examples/showinterfaces.c'; then $(CYGPATH_W) 'examples/showinterfaces.c'; else $(CYGPATH_W) '$(srcdir)/examples/showinterfaces.c'; fi`
+
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
+	-rm -rf src/.libs src/_libs
 
 distclean-libtool:
 	-rm -f libtool config.lt
@@ -914,6 +1025,10 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-rm -f examples/$(DEPDIR)/$(am__dirstamp)
+	-rm -f examples/$(am__dirstamp)
+	-rm -f src/$(DEPDIR)/$(am__dirstamp)
+	-rm -f src/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -925,13 +1040,13 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-		-rm -f ./$(DEPDIR)/SDLnet.Plo
-	-rm -f ./$(DEPDIR)/SDLnetTCP.Plo
-	-rm -f ./$(DEPDIR)/SDLnetUDP.Plo
-	-rm -f ./$(DEPDIR)/SDLnetselect.Plo
-	-rm -f ./$(DEPDIR)/chat.Po
-	-rm -f ./$(DEPDIR)/chatd.Po
-	-rm -f ./$(DEPDIR)/showinterfaces.Po
+		-rm -f examples/$(DEPDIR)/chat-chat.Po
+	-rm -f examples/$(DEPDIR)/chatd-chatd.Po
+	-rm -f examples/$(DEPDIR)/showinterfaces-showinterfaces.Po
+	-rm -f src/$(DEPDIR)/libSDL2_net_la-SDLnet.Plo
+	-rm -f src/$(DEPDIR)/libSDL2_net_la-SDLnetTCP.Plo
+	-rm -f src/$(DEPDIR)/libSDL2_net_la-SDLnetUDP.Plo
+	-rm -f src/$(DEPDIR)/libSDL2_net_la-SDLnetselect.Plo
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
@@ -980,13 +1095,13 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-		-rm -f ./$(DEPDIR)/SDLnet.Plo
-	-rm -f ./$(DEPDIR)/SDLnetTCP.Plo
-	-rm -f ./$(DEPDIR)/SDLnetUDP.Plo
-	-rm -f ./$(DEPDIR)/SDLnetselect.Plo
-	-rm -f ./$(DEPDIR)/chat.Po
-	-rm -f ./$(DEPDIR)/chatd.Po
-	-rm -f ./$(DEPDIR)/showinterfaces.Po
+		-rm -f examples/$(DEPDIR)/chat-chat.Po
+	-rm -f examples/$(DEPDIR)/chatd-chatd.Po
+	-rm -f examples/$(DEPDIR)/showinterfaces-showinterfaces.Po
+	-rm -f src/$(DEPDIR)/libSDL2_net_la-SDLnet.Plo
+	-rm -f src/$(DEPDIR)/libSDL2_net_la-SDLnetTCP.Plo
+	-rm -f src/$(DEPDIR)/libSDL2_net_la-SDLnetUDP.Plo
+	-rm -f src/$(DEPDIR)/libSDL2_net_la-SDLnetselect.Plo
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

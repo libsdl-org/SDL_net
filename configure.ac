@@ -11,7 +11,7 @@ AC_INIT([SDL2_net],
         [https://github.com/libsdl-org/SDL_net/issues],
         [SDL2_net])
 AC_CONFIG_MACRO_DIR([acinclude])
-AC_CONFIG_SRCDIR([SDLnet.c])
+AC_CONFIG_SRCDIR([src/SDLnet.c])
 
 AC_SUBST([MAJOR_VERSION], MAJOR_VERSION_MACRO)
 AC_SUBST([MINOR_VERSION], MINOR_VERSION_MACRO)
@@ -90,7 +90,7 @@ case "$host" in
             fi
         fi
         use_version_rc=true
-        LT_EXTRA="-Wl,version.o"
+        LT_EXTRA="-Wl,src/version.o"
         ;;
     *-*-os2*)
         # disable static builds on os/2

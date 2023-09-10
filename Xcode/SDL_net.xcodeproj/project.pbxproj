@@ -32,16 +32,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0E06A2810119C8317F000001 /* SDLnet.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnet.c; path = ../SDLnet.c; sourceTree = SOURCE_ROOT; };
-		0E06A2820119C8317F000001 /* SDLnetselect.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetselect.c; path = ../SDLnetselect.c; sourceTree = SOURCE_ROOT; };
-		0E06A2830119C8317F000001 /* SDLnetsys.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SDLnetsys.h; path = ../SDLnetsys.h; sourceTree = SOURCE_ROOT; };
-		0E06A2840119C8317F000001 /* SDLnetTCP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetTCP.c; path = ../SDLnetTCP.c; sourceTree = SOURCE_ROOT; };
-		0E06A2850119C8317F000001 /* SDLnetUDP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetUDP.c; path = ../SDLnetUDP.c; sourceTree = SOURCE_ROOT; };
-		1014BAEA010A4B677F000001 /* SDL_net.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SDL_net.h; path = ../SDL_net.h; sourceTree = SOURCE_ROOT; };
-		1014BAEB010A4B677F000001 /* SDLnet.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnet.c; path = ../SDLnet.c; sourceTree = SOURCE_ROOT; };
-		1014BAEC010A4B677F000001 /* SDLnetselect.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetselect.c; path = ../SDLnetselect.c; sourceTree = SOURCE_ROOT; };
-		1014BAED010A4B677F000001 /* SDLnetTCP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetTCP.c; path = ../SDLnetTCP.c; sourceTree = SOURCE_ROOT; };
-		1014BAEE010A4B677F000001 /* SDLnetUDP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetUDP.c; path = ../SDLnetUDP.c; sourceTree = SOURCE_ROOT; };
+		0E06A2810119C8317F000001 /* SDLnet.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnet.c; path = ../src/SDLnet.c; sourceTree = SOURCE_ROOT; };
+		0E06A2820119C8317F000001 /* SDLnetselect.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetselect.c; path = ../src/SDLnetselect.c; sourceTree = SOURCE_ROOT; };
+		0E06A2830119C8317F000001 /* SDLnetsys.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SDLnetsys.h; path = ../src/SDLnetsys.h; sourceTree = SOURCE_ROOT; };
+		0E06A2840119C8317F000001 /* SDLnetTCP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetTCP.c; path = ../src/SDLnetTCP.c; sourceTree = SOURCE_ROOT; };
+		0E06A2850119C8317F000001 /* SDLnetUDP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetUDP.c; path = ../src/SDLnetUDP.c; sourceTree = SOURCE_ROOT; };
+		1014BAEA010A4B677F000001 /* SDL_net.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SDL_net.h; path = ../include/SDL_net.h; sourceTree = SOURCE_ROOT; };
+		1014BAEB010A4B677F000001 /* SDLnet.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnet.c; path = ../src/SDLnet.c; sourceTree = SOURCE_ROOT; };
+		1014BAEC010A4B677F000001 /* SDLnetselect.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetselect.c; path = ../src/SDLnetselect.c; sourceTree = SOURCE_ROOT; };
+		1014BAED010A4B677F000001 /* SDLnetTCP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetTCP.c; path = ../src/SDLnetTCP.c; sourceTree = SOURCE_ROOT; };
+		1014BAEE010A4B677F000001 /* SDLnetUDP.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = SDLnetUDP.c; path = ../src/SDLnetUDP.c; sourceTree = SOURCE_ROOT; };
 		7F1CA4C12854D77600FE6C2E /* CMake */ = {isa = PBXFileReference; lastKnownFileType = folder; path = CMake; sourceTree = "<group>"; };
 		BE48FF6307AFA9A800BB41DA /* Info-Framework.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-Framework.plist"; sourceTree = "<group>"; };
 		BE48FF6407AFA9A800BB41DA /* SDL2_net.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDL2_net.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -78,6 +78,7 @@
 				1014BAEA010A4B677F000001 /* SDL_net.h */,
 			);
 			name = "Public Headers";
+			path = ../include;
 			sourceTree = "<group>";
 		};
 		034768DDFF38A45A11DB9C8B /* Products */ = {
@@ -125,6 +126,7 @@
 				0E06A2850119C8317F000001 /* SDLnetUDP.c */,
 			);
 			name = "Library Source";
+			path = ../src;
 			sourceTree = "<group>";
 		};
 		BE48FF8007AFAA4100BB41DA /* Frameworks */ = {
@@ -433,7 +435,11 @@
 				FRAMEWORK_SEARCH_PATHS = "\"$(SRCROOT)/$(PLATFORM)\"";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/$(PLATFORM)/SDL2.framework/Headers\"";
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../include\"",
+					"\"$(SRCROOT)/../src\"",
+					"\"$(SRCROOT)/$(PLATFORM)/SDL2.framework/Headers\""
+				);
 				INFOPLIST_FILE = "Info-Framework.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -462,7 +468,11 @@
 				FRAMEWORK_SEARCH_PATHS = "\"$(SRCROOT)/$(PLATFORM)\"";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/$(PLATFORM)/SDL2.framework/Headers\"";
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../include\"",
+					"\"$(SRCROOT)/../src\"",
+					"\"$(SRCROOT)/$(PLATFORM)/SDL2.framework/Headers\""
+				);
 				INFOPLIST_FILE = "Info-Framework.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";

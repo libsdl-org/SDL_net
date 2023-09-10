@@ -7,9 +7,9 @@ set -eu
 # Needed so sed doesn't report illegal byte sequences on macOS
 export LC_CTYPE=C
 
-ref_major=$(sed -ne 's/^#define SDL_NET_MAJOR_VERSION  *//p' SDL_net.h)
-ref_minor=$(sed -ne 's/^#define SDL_NET_MINOR_VERSION  *//p' SDL_net.h)
-ref_micro=$(sed -ne 's/^#define SDL_NET_PATCHLEVEL  *//p' SDL_net.h)
+ref_major=$(sed -ne 's/^#define SDL_NET_MAJOR_VERSION  *//p' include/SDL_net.h)
+ref_minor=$(sed -ne 's/^#define SDL_NET_MINOR_VERSION  *//p' include/SDL_net.h)
+ref_micro=$(sed -ne 's/^#define SDL_NET_PATCHLEVEL  *//p' include/SDL_net.h)
 ref_version="${ref_major}.${ref_minor}.${ref_micro}"
 ref_sdl_req=$(sed -ne 's/^SDL_VERSION=//p' configure.ac)
 
@@ -78,7 +78,7 @@ else
     not_ok "Makefile.os2 $version disagrees with SDL_net.h $ref_version"
 fi
 
-for rcfile in version.rc VisualC/Version.rc; do
+for rcfile in src/version.rc VisualC/Version.rc; do
     tuple=$(sed -ne 's/^ *FILEVERSION *//p' "$rcfile" | tr -d '\r')
     ref_tuple="${ref_major},${ref_minor},${ref_micro},0"
 
