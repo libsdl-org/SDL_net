@@ -22,7 +22,7 @@
 #include "SDLnetsys.h"
 #include "SDL_net.h"
 
-#if defined(__WIN32__) || defined(__OS2__)
+#if defined(__WIN32__) || defined(__WINRT__) || defined(__OS2__)
 #define srandom srand
 #define random  rand
 #endif
