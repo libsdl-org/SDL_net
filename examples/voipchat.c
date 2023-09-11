@@ -282,7 +282,7 @@ static void run_voipchat(int argc, char **argv)
         SDL_Log("CLIENT: Resolving server hostname '%s' ...", hostname);
         server_addr = SDLNet_ResolveHostname(hostname);
         if (server_addr) {
-            if (SDLNet_WaitForResolution(server_addr) < 0) {
+            if (SDLNet_WaitUntilResolved(server_addr, -1) < 0) {
                 SDLNet_UnrefAddress(server_addr);
                 server_addr = NULL;
             }

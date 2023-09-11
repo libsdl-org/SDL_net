@@ -26,7 +26,7 @@ extern DECLSPEC void SDLCALL SDLNet_Quit(void);
 typedef struct SDLNet_Address SDLNet_Address;
 
 extern DECLSPEC SDLNet_Address * SDLCALL SDLNet_ResolveHostname(const char *host);  /* does not block! */
-extern DECLSPEC int SDLCALL SDLNet_WaitForResolution(SDLNet_Address *address);  /* blocks until success or failure. Optional. */
+extern DECLSPEC int SDLCALL SDLNet_WaitUntilResolved(SDLNet_Address *address, Sint32 timeout);  /* blocks until success or failure. Optional. timeout: 0: check once and don't block, -1: block until there's a definite answer, else: block for `timeout` milliseconds. */
 extern DECLSPEC int SDLCALL SDLNet_GetAddressStatus(SDLNet_Address *address);  /* 0: still working, -1: failed (check SDL_GetError), 1: ready */
 extern DECLSPEC const char * SDLCALL SDLNet_GetAddressString(SDLNet_Address *address);  /* human-readable string, like "127.0.0.1" or "::1" or whatever. NULL if GetAddressStatus != 1. String owned by address! */
 extern DECLSPEC SDLNet_Address *SDLCALL SDLNet_RefAddress(SDLNet_Address *address);  /* +1 refcount; SDLNet_ResolveHost starts at 1. Returns `address` for convenience. */
@@ -42,12 +42,11 @@ typedef struct SDLNet_StreamSocket SDLNet_StreamSocket;  /* a TCP socket. Reliab
 
 /* Clients connect to servers, and then send/receive data on a stream socket. */
 extern DECLSPEC SDLNet_StreamSocket * SDLCALL SDLNet_CreateClient(SDLNet_Address *address, Uint16 port);  /* Start connection to address:port. does not block! */
-extern DECLSPEC int SDLCALL SDLNet_WaitForConnection(SDLNet_StreamSocket *sock);  /* blocks until success or failure. Optional. */
+extern DECLSPEC int SDLCALL SDLNet_WaitUntilConnected(SDLNet_StreamSocket *sock, Sint32 timeout);  /* blocks until success or failure. Optional. timeout: 0: check once and don't block, -1: block until there's a definite answer, else: block for `timeout` milliseconds. */
 
 /* Servers listen for and accept connections from clients, and then send/receive data on a stream socket. */
 typedef struct SDLNet_Server SDLNet_Server;   /* a listen socket internally. Binds to a port, accepts connections. */
 extern DECLSPEC SDLNet_Server * SDLCALL SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port);  /* Specify NULL for any/all interfaces, or something from GetLocalAddresses */
-extern DECLSPEC int SDLCALL SDLNet_WaitForClientConnection(SDLNet_Server *server);  /* blocks until a client is ready for to be accepted or there's a serious error. Optional. */
 extern DECLSPEC int SDLCALL SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stream);  /* Accept pending connection. Does not block, returns 0 and sets *client_stream=NULL if none available. -1 on errors, zero otherwise. */
 extern DECLSPEC void SDLCALL SDLNet_DestroyServer(SDLNet_Server *server);
 
@@ -56,7 +55,7 @@ extern DECLSPEC SDLNet_Address * SDLCALL SDLNet_GetStreamSocketAddress(SDLNet_St
 extern DECLSPEC int SDLCALL SDLNet_GetConnectionStatus(SDLNet_StreamSocket *sock);  /* -1: connecting, 0: failed/dropped (check SDL_GetError), 1: okay */
 extern DECLSPEC int SDLCALL SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int buflen);  /* always queues what it can't send immediately. Does not block, -1 on out of memory, dead socket, etc */
 extern DECLSPEC int SDLCALL SDLNet_GetStreamSocketPendingWrites(SDLNet_StreamSocket *sock);  /* returns number of bytes still pending to write, or -1 on dead socket, etc. 0 if no data pending to send. */
-extern DECLSPEC int SDLCALL SDLNet_WaitForStreamPendingWrites(SDLNet_StreamSocket *sock); /* blocks until all pending data is sent. returns 0 on success, -1 on dead socket, etc. Optional. */
+extern DECLSPEC int SDLCALL SDLNet_WaitUntilStreamSocketDrained(SDLNet_StreamSocket *sock, int timeoutms); /* blocks until all pending data is sent. returns 0 on success, -1 on dead socket, bytes remaining to send on timeout. Optional. timeout: 0: check once and don't block, -1: block until all sent or error, else: block for `timeout` milliseconds. */
 extern DECLSPEC int SDLCALL SDLNet_ReadStreamSocket(SDLNet_StreamSocket *sock, void *buf, int buflen);  /* read up to buflen bytes. Does not block, -1 on dead socket, etc, 0 if no data available. */
 extern DECLSPEC void SDLCALL SDLNet_SimulateStreamPacketLoss(SDLNet_StreamSocket *sock, int percent_loss);  /* since streams are reliable, this holds back data and connections for some amount of time, and maybe even drops connections. */
 extern DECLSPEC void SDLCALL SDLNet_DestroyStreamSocket(SDLNet_StreamSocket *sock);  /* Destroy your sockets when finished with them. Does not block, handles shutdown internally. */
@@ -82,4 +81,6 @@ extern DECLSPEC void SDLCALL SDLNet_FreeDatagram(SDLNet_Datagram *dgram);  /* ca
 extern DECLSPEC void SDLCALL SDLNet_SimulateDatagramPacketLoss(SDLNet_DatagramSocket *sock, int percent_loss);
 extern DECLSPEC void SDLCALL SDLNet_DestroyDatagramSocket(SDLNet_DatagramSocket *sock);  /* Destroy your sockets when finished with them. Does not block. */
 
+
+extern DECLSPEC int SDLCALL SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms);  /* put thread to sleep until one of sockets has new input. Optional. Returns > 0 if something is ready, -1 on error, 0 on timeout. timeout: 0: check once and don't block, -1: block until there's a definite answer, else: block for `timeout` milliseconds. */
 
