@@ -29,3 +29,6 @@ target_link_libraries(voipchat PRIVATE SDL3_net::SDL3_net SDL3::SDL3)
 
 add_executable(simple-http-get examples/simple-http-get.c)
 target_link_libraries(simple-http-get PRIVATE SDL3_net::SDL3_net SDL3::SDL3)
+
+add_executable(resolve-hostnames examples/resolve-hostnames.c)
+target_link_libraries(resolve-hostnames PRIVATE SDL3_net::SDL3_net SDL3::SDL3)
