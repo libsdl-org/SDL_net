@@ -35,7 +35,7 @@ static SDL_Renderer *renderer = NULL;
 static SDL_AudioDeviceID audio_device = 0;
 static SDL_AudioDeviceID capture_device = 0;
 static SDL_AudioStream *capture_stream = NULL;
-static const SDL_AudioSpec audio_spec = { SDL_AUDIO_S16LSB, 1, 8000 };
+static const SDL_AudioSpec audio_spec = { SDL_AUDIO_S16LE, 1, 8000 };
 static Uint8 scratch_area[4096];
 
 static Voice *FindVoiceByAddr(const SDLNet_Address *addr, const Uint16 port)
@@ -159,7 +159,10 @@ static void mainloop(void)
                         SDL_Log("CLIENT: Creating voice idnum=#%llu", (unsigned long long) idnum);
                         voice = (Voice *) SDL_calloc(1, sizeof (Voice));
                         if (audio_device) {
-                            voice->stream = SDL_CreateAndBindAudioStream(audio_device, &audio_spec);
+                            voice->stream = SDL_CreateAudioStream(&audio_spec, &audio_spec);
+                            if (voice->stream) {
+                                SDL_BindAudioStream(audio_device, voice->stream);
+                            }
                         }
                         voice->idnum = idnum;
                         if (voices) {
