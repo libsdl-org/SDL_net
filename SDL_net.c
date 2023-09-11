@@ -1509,42 +1509,6 @@ int main(int argc, char **argv)
 #endif
 
 #if 0
-    for (int i = 1; i < argc; i++) {
-        SDL_Log("Looking up %s ...", argv[i]);
-        SDLNet_Address *addr = SDLNet_ResolveHostname(argv[i]);
-        if (SDLNet_WaitUntilResolved(addr, -1) == -1) {
-            SDL_Log("Failed to lookup %s: %s", argv[i], SDL_GetError());
-        } else {
-            SDL_Log("%s is %s", argv[i], SDLNet_GetAddressString(addr));
-            const char *req = "GET / HTTP/1.0\r\n\r\n";
-            SDLNet_StreamSocket *sock = SDLNet_CreateClient(addr, 80);
-            if (!sock) {
-                SDL_Log("Failed to create stream socket to %s: %s\n", argv[i], SDL_GetError());
-            } else if (SDLNet_WaitUntilConnected(sock, -1) < 0) {
-                SDL_Log("Failed to connect to %s: %s", argv[i], SDL_GetError());
-            } else if (SDLNet_WriteToStreamSocket(sock, req, SDL_strlen(req)) < 0) {
-                SDL_Log("Failed to write to %s: %s", argv[i], SDL_GetError());
-            } else if (SDLNet_WaitStreamSocketPendingWrites(sock) < 0) {
-                SDL_Log("Failed to finish write to %s: %s", argv[i], SDL_GetError());
-            } else {
-                char buf[512];
-                int br;
-                while ((br = SDLNet_ReadStreamSocket(sock, buf, sizeof (buf))) >= 0) {
-                    fwrite(buf, 1, br, stdout);
-                }
-
-                printf("\n\n\n%s\n\n\n", SDL_GetError());
-                fflush(stdout);
-            }
-
-            if (sock) {
-                SDLNet_DestroyStreamSocket(sock);
-            }
-        }
-    }
-#endif
-
-#if 0
     //SDLNet_SimulateAddressResolutionLoss(3000, 30);
 
     SDLNet_Address **addrs = (SDLNet_Address **) SDL_calloc(argc, sizeof (SDLNet_Address *));
