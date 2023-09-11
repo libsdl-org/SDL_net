@@ -910,7 +910,7 @@ int SDLNet_GetStreamSocketPendingWrites(SDLNet_StreamSocket *sock)
     return sock->pending_output_len;
 }
 
-int SDLNet_WaitUntilStreamDrained(SDLNet_StreamSocket *sock, int timeoutms)
+int SDLNet_WaitUntilStreamSocketDrained(SDLNet_StreamSocket *sock, int timeoutms)
 {
     if (!sock) {
         return SDL_InvalidParamError("sock");
