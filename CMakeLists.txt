@@ -20,7 +20,7 @@ if(UNIX AND NOT APPLE)
     set_property(TARGET SDL3_net PROPERTY SOVERSION ${PROJECT_VERSION_MAJOR})
     set_property(TARGET SDL3_net PROPERTY VERSION ${PROJECT_VERSION})
 endif()
-if(NOT MSVC)
+if(NOT MSVC AND NOT APPLE)
     target_link_options(SDL3_net PRIVATE -Wl,--no-undefined)
 endif()
 
