@@ -8,7 +8,7 @@ add_library(SDL3_net::SDL3_net ALIAS SDL3_net)
 target_include_directories(SDL3_net PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
 target_link_libraries(SDL3_net PRIVATE SDL3::SDL3)
 if(WIN32)
-    target_link_libraries(SDL3_net PRIVATE ws2_32)
+    target_link_libraries(SDL3_net PRIVATE ws2_32 iphlpapi)
     set_target_properties(SDL3_net PROPERTIES
         OUTPUT_NAME "SDL3_net"
         DEFINE_SYMBOL DLL_EXPORT
