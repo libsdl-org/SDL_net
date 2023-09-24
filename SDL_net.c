@@ -8,21 +8,23 @@
 typedef SOCKET Socket;
 typedef int SockLen;
 typedef SOCKADDR_STORAGE AddressStorage;
+
 static int write(SOCKET s, const char *buf, size_t count) {
     return send(s, buf, count, 0);
 }
+
 static int read(SOCKET s, char *buf, size_t count) {
     WSABUF wsabuf;
     wsabuf.buf = buf;
     wsabuf.len = count;
     DWORD count_received;
-    int res = WSARecv(s, &wsabuf, 1, &count_received, 0, NULL, NULL);
+    const int res = WSARecv(s, &wsabuf, 1, &count_received, 0, NULL, NULL);
     if (res != 0) {
-        SDL_SetError("WSARecv(%d)", WSAGetLastError());
         return -1;
     }
     return (int)count_received;
 }
+
 #define EAI_SYSTEM 0
 #define poll WSAPoll
 #else
@@ -97,16 +99,6 @@ static int RandomNumberBetween(const int lo, const int hi)
     return (RandomNumber() % (hi + 1 - lo)) + lo;
 }
 
-// !!! FIXME: replace strerror.
-// !!! FIXME: replace errno.
-static int LastSocketError(void)
-{
-#ifdef __WINDOWS__
-    return WSAGetLastError();
-#else
-    return errno;
-#endif
-}
 
 static int CloseSocketHandle(Socket handle)
 {
@@ -117,6 +109,68 @@ static int CloseSocketHandle(Socket handle)
 #endif
 }
 
+static int LastSocketError(void)
+{
+#ifdef __WINDOWS__
+    return WSAGetLastError();
+#else
+    return errno;
+#endif
+}
+
+static char *CreateSocketErrorString(int rc)
+{
+#ifdef __WINDOWS__
+    WCHAR msgbuf[256];
+    const DWORD bw = FormatMessageW(
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        err,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
+        msgbuf,
+        SDL_arraysize(msgbuf),
+        NULL 
+    );
+    if (bw == 0) {
+        return SDL_strdup("Unknown error");
+    }
+    return SDL_iconv_string("UTF-8", "UTF-16LE", (const char *)msgbuf, (bw+1) * sizeof (WCHAR));
+#else
+    return SDL_strdup(strerror(rc));
+#endif
+}
+
+static char *CreateGetAddrInfoErrorString(int rc)
+{
+#ifdef __WINDOWS__
+    return CreateSocketErrorString(rc);  // same error codes.
+#else
+    return SDL_strdup((rc == EAI_SYSTEM) ? strerror(errno) : gai_strerror(rc));
+#endif
+}
+
+static int SetSocketError(const char *msg, int err)
+{
+    char *errmsg = CreateSocketErrorString(err);
+    SDL_SetError("%s: %s", msg, errmsg);
+    SDL_free(errmsg);
+    return -1;
+}
+
+static int SetLastSocketError(const char *msg)
+{
+    return SetSocketError(msg, LastSocketError());
+}
+
+static int SetGetAddrInfoError(const char *msg, int err)
+{
+    char *errmsg = CreateGetAddrInfoErrorString(err);
+    SDL_SetError("%s: %s", msg, errmsg);
+    SDL_free(errmsg);
+    return -1;
+}
+
 // this blocks!
 static int ResolveAddress(SDLNet_Address *addr)
 {
@@ -124,11 +178,11 @@ static int ResolveAddress(SDLNet_Address *addr)
     struct addrinfo *ainfo = NULL;
     int rc;
 
-//SDL_Log("getaddrinfo '%s'", addr->hostname);
+    //SDL_Log("getaddrinfo '%s'", addr->hostname);
     rc = getaddrinfo(addr->hostname, NULL, NULL, &ainfo);
-//SDL_Log("rc=%d", rc);
+    //SDL_Log("rc=%d", rc);
     if (rc != 0) {
-        addr->errstr = SDL_strdup((rc == EAI_SYSTEM) ? strerror(errno) : gai_strerror(rc));
+        addr->errstr = CreateGetAddrInfoErrorString(rc);
         return -1;  // error
     } else if (ainfo == NULL) {
         addr->errstr = SDL_strdup("Unknown error (query succeeded but result was NULL!)");
@@ -138,7 +192,7 @@ static int ResolveAddress(SDLNet_Address *addr)
     char buf[128];
     rc = getnameinfo(ainfo->ai_addr, ainfo->ai_addrlen, buf, sizeof (buf), NULL, 0, NI_NUMERICHOST);
     if (rc != 0) {
-        addr->errstr = SDL_strdup((rc == EAI_SYSTEM) ? strerror(errno) : gai_strerror(rc));
+        addr->errstr = CreateGetAddrInfoErrorString(rc);
         freeaddrinfo(ainfo);
         return -1;  // error
     }
@@ -241,7 +295,7 @@ int SDLNet_Init(void)
     #ifdef __WINDOWS__
     WSADATA data;
     if (WSAStartup(MAKEWORD(1, 1), &data) != 0) {
-        return SDL_SetError("WSAStartup() failed");
+        return SetSocketError("WSAStartup() failed", LastSocketError());
     }
     #else
     signal(SIGPIPE, SIG_IGN);
@@ -508,7 +562,9 @@ static struct addrinfo *MakeAddrInfoWithPort(const SDLNet_Address *addr, const i
     struct addrinfo *addrwithport = NULL;
     int rc = getaddrinfo(addr ? addr->human_readable : NULL, service, &hints, &addrwithport);
     if (rc != 0) {
-        SDL_SetError("Failed to prepare address with port: %s", (rc == EAI_SYSTEM) ? strerror(errno) : gai_strerror(rc));
+        char *errstr = CreateGetAddrInfoErrorString(rc);
+        SDL_SetError("Failed to prepare address with port: %s", errstr);
+        SDL_free(errstr);
         return NULL;
     }
 
@@ -579,7 +635,7 @@ SDLNet_StreamSocket *SDLNet_CreateClient(SDLNet_Address *addr, Uint16 port)
 
     sock->handle = socket(addrwithport->ai_family, addrwithport->ai_socktype, addrwithport->ai_protocol);
     if (sock->handle == INVALID_SOCKET) {
-        SDL_SetError("Failed to create socket: %s", strerror(errno));
+        SetLastSocketError("Failed to create socket");
         freeaddrinfo(addrwithport);
         SDL_free(sock);
         return NULL;
@@ -600,7 +656,7 @@ SDLNet_StreamSocket *SDLNet_CreateClient(SDLNet_Address *addr, Uint16 port)
     if (rc == SOCKET_ERROR) {
         const int err = LastSocketError();
         if (!WouldBlock(err)) {
-            SDL_SetError("Connection failed at startup: %s", strerror(err));
+            SetSocketError("Connection failed at startup", err);
             CloseSocketHandle(sock->handle);
             SDL_free(sock);
             return NULL;
@@ -672,7 +728,7 @@ SDLNet_Server *SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port)
 
     server->handle = socket(addrwithport->ai_family, addrwithport->ai_socktype, addrwithport->ai_protocol);
     if (server->handle == INVALID_SOCKET) {
-        SDL_SetError("Failed to create listen socket: %s", strerror(errno));
+        SetLastSocketError("Failed to create listen socket");
         freeaddrinfo(addrwithport);
         SDL_free(server);
         return NULL;
@@ -692,7 +748,7 @@ SDLNet_Server *SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port)
     if (rc == SOCKET_ERROR) {
         const int err = LastSocketError();
         SDL_assert(!WouldBlock(err));  // binding shouldn't be a blocking operation.
-        SDL_SetError("Failed to bind listen socket: %s", strerror(err));
+        SetSocketError("Failed to bind listen socket", err);
         CloseSocketHandle(server->handle);
         SDL_free(server);
         return NULL;
@@ -702,7 +758,7 @@ SDLNet_Server *SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port)
     if (rc == SOCKET_ERROR) {
         const int err = LastSocketError();
         SDL_assert(!WouldBlock(err));  // listen shouldn't be a blocking operation.
-        SDL_SetError("Failed to listen on socket: %s", strerror(err));
+        SetSocketError("Failed to listen on socket", err);
         CloseSocketHandle(server->handle);
         SDL_free(server);
         return NULL;
@@ -729,7 +785,7 @@ int SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stre
     const Socket handle = accept(server->handle, (struct sockaddr *) &from, &fromlen);
     if (handle == INVALID_SOCKET) {
         const int err = LastSocketError();
-        return WouldBlock(err) ? 0 : SDL_SetError("Failed to accept new connection: %s", strerror(err));
+        return WouldBlock(err) ? 0 : SetSocketError("Failed to accept new connection", err);
     }
 
     if (MakeSocketNonblocking(handle) < 0) {
@@ -743,7 +799,7 @@ int SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stre
     const int rc = getnameinfo((struct sockaddr *) &from, fromlen, hostbuf, sizeof (hostbuf), portbuf, sizeof (portbuf), NI_NUMERICHOST | NI_NUMERICSERV);
     if (rc != 0) {
         CloseSocketHandle(handle);
-        return SDL_SetError("Failed to determine incoming connection's address: %s", (rc == EAI_SYSTEM) ? strerror(errno) : gai_strerror(rc));
+        return SetGetAddrInfoError("Failed to determine incoming connection's address", rc);
     }
 
     SDLNet_Address *fromaddr = (SDLNet_Address *) SDL_calloc(1, sizeof (SDLNet_Address));
@@ -764,7 +820,7 @@ int SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stre
     if (gairc != 0) {
         SDL_free(fromaddr);
         CloseSocketHandle(handle);
-        return SDL_SetError("Failed to determine incoming connection's address: %s", (rc == EAI_SYSTEM) ? strerror(errno) : gai_strerror(rc));
+        return SetGetAddrInfoError("Failed to determine incoming connection's address: %s", rc);
     }
 
     fromaddr->human_readable = SDL_strdup(hostbuf);
@@ -839,7 +895,7 @@ static int PumpStreamSocket(SDLNet_StreamSocket *sock)
         const int bw = (int) write(sock->handle, sock->pending_output_buffer, sock->pending_output_len);
         if (bw < 0) {
             const int err = LastSocketError();
-            return WouldBlock(err) ? 0 : SDL_SetError("Failed to write to socket: %s", strerror(err));
+            return WouldBlock(err) ? 0 : SetSocketError("Failed to write to socket", err);
         } else if (bw < sock->pending_output_len) {
             SDL_memmove(sock->pending_output_buffer, sock->pending_output_buffer + bw, sock->pending_output_len - bw);
         }
@@ -870,7 +926,7 @@ int SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int b
             if (bw < 0) {
                 const int err = LastSocketError();
                 if (!WouldBlock(err)) {
-                    return SDL_SetError("Failed to write to socket: %s", strerror(err));
+                    return SetSocketError("Failed to write to socket", err);
                 }
             } else if (bw == buflen) {  // sent the whole thing? We're good to go here.
                 return 0;
@@ -925,7 +981,7 @@ int SDLNet_WaitUntilStreamSocketDrained(SDLNet_StreamSocket *sock, int timeoutms
             pfd.events = POLLOUT;
             const int rc = poll(&pfd, 1, timeoutms);
             if (rc == SOCKET_ERROR) {
-                return SDL_SetError("Socket poll failed: %s", strerror(errno));
+                return SetLastSocketError("Socket poll failed");
             } else if (rc == 0) {
                 break;  // timed out
             }
@@ -965,7 +1021,7 @@ int SDLNet_ReadStreamSocket(SDLNet_StreamSocket *sock, void *buf, int buflen)
         return SDL_SetError("End of stream");
     } else if (br < 0) {
         const int err = LastSocketError();
-        return WouldBlock(err) ? 0 : SDL_SetError("Failed to read from socket: %s", strerror(err));
+        return WouldBlock(err) ? 0 : SetSocketError("Failed to read from socket", err);
     }
 
     UpdateStreamSocketSimulatedFailure(sock);
@@ -1046,7 +1102,7 @@ SDLNet_DatagramSocket *SDLNet_CreateDatagramSocket(SDLNet_Address *addr, Uint16 
 
     sock->handle = socket(addrwithport->ai_family, addrwithport->ai_socktype, addrwithport->ai_protocol);
     if (sock->handle == INVALID_SOCKET) {
-        SDL_SetError("Failed to create socket: %s", strerror(errno));
+        SetLastSocketError("Failed to create socket");
         freeaddrinfo(addrwithport);
         SDL_free(sock);
         return NULL;
@@ -1066,7 +1122,7 @@ SDLNet_DatagramSocket *SDLNet_CreateDatagramSocket(SDLNet_Address *addr, Uint16 
     if (rc == SOCKET_ERROR) {
         const int err = LastSocketError();
         SDL_assert(!WouldBlock(err));  // binding shouldn't be a blocking operation.
-        SDL_SetError("Failed to bind socket: %s", strerror(err));
+        SetSocketError("Failed to bind socket", err);
         CloseSocketHandle(sock->handle);
         SDL_free(sock);
         return NULL;
@@ -1087,7 +1143,7 @@ static int SendOneDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Ui
 
     if (rc == SOCKET_ERROR) {
         const int err = LastSocketError();
-        return WouldBlock(err) ? 0 : SDL_SetError("Failed to send from socket: %s", strerror(err));
+        return WouldBlock(err) ? 0 : SetSocketError("Failed to send from socket", err);
     }
 
     SDL_assert(rc == buflen);
@@ -1199,7 +1255,7 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
     const int br = recvfrom(sock->handle, sock->recv_buffer, sizeof (sock->recv_buffer), 0, (struct sockaddr *) &from, &fromlen);
     if (br == SOCKET_ERROR) {
         const int err = LastSocketError();
-        return WouldBlock(err) ? 0 : SDL_SetError("Failed to receive datagrams: %s", strerror(err));
+        return WouldBlock(err) ? 0 : SetSocketError("Failed to receive datagrams", err);
     } else if (sock->percent_loss && (RandomNumberBetween(0, 100) > sock->percent_loss)) {
         // you won the percent_loss lottery. Drop this packet as if it never arrived.
         return 0;
@@ -1210,7 +1266,7 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
     char portbuf[16];
     const int rc = getnameinfo((struct sockaddr *) &from, fromlen, hostbuf, sizeof (hostbuf), portbuf, sizeof (portbuf), NI_NUMERICHOST | NI_NUMERICSERV);
     if (rc != 0) {
-        return SDL_SetError("Failed to determine incoming packet's address: %s", (rc == EAI_SYSTEM) ? strerror(errno) : gai_strerror(rc));
+        return SetGetAddrInfoError("Failed to determine incoming packet's address", rc);
     }
 
     // Cache the last X addresses we saw; if we see it again, refcount it and reuse it.
@@ -1256,7 +1312,7 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
         const int gairc = getaddrinfo(hostbuf, NULL, &hints, &fromaddr->ainfo);
         if (gairc != 0) {
             SDL_free(fromaddr);
-            return SDL_SetError("Failed to determine incoming packet's address: %s", (rc == EAI_SYSTEM) ? strerror(errno) : gai_strerror(rc));
+            return SetGetAddrInfoError("Failed to determine incoming packet's address", gairc);
         }
 
         fromaddr->human_readable = SDL_strdup(hostbuf);
@@ -1407,7 +1463,7 @@ int SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutm
 
         if (rc == SOCKET_ERROR) {
             SDL_free(malloced_pfds);
-            return SDL_SetError("Socket poll failed: %s", strerror(errno));
+            return SetLastSocketError("Socket poll failed");
         }
 
         for (int i = 0; i < numsockets; i++) {
@@ -1428,7 +1484,7 @@ int SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutm
                             int err = 0;
                             SockLen errsize = sizeof (err);
                             getsockopt(pfd->fd, SOL_SOCKET, SO_ERROR, (char*)&err, &errsize);
-                            sock->stream.status = SDL_SetError("Socket failed to connect: %s", strerror(err));
+                            sock->stream.status = SetSocketError("Socket failed to connect", err);
                         } else if (writable) {
                             sock->stream.status = 1;
                         }

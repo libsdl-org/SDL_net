@@ -25,10 +25,14 @@ int main(int argc, char **argv)
     }
 
     for (int i = 1; i < argc; i++) {
-        const char *str;
         SDLNet_WaitUntilResolved(addrs[i], -1);
-        str = SDLNet_GetAddressString(addrs[i]);
-        SDL_Log("%s: %s", argv[i], str ? str : "[FAILED TO RESOLVE]");
+
+        if (SDLNet_GetAddressStatus(addrs[i]) == -1) {
+            SDL_Log("%s: [FAILED TO RESOLVE: %s]", argv[i], SDL_GetError());
+        } else {
+            SDL_Log("%s: %s", argv[i], SDLNet_GetAddressString(addrs[i]));
+        }
+
         SDLNet_UnrefAddress(addrs[i]);
     }
 
