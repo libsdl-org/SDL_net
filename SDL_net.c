@@ -5,6 +5,7 @@
 #define _WIN32_WINNT 0x0600  /* we need APIs that didn't arrive until Windows Vista. */
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <iphlpapi.h>
 typedef SOCKET Socket;
 typedef int SockLen;
 typedef SOCKADDR_STORAGE AddressStorage;
@@ -24,8 +25,6 @@ static int read(SOCKET s, char *buf, size_t count) {
     }
     return (int)count_received;
 }
-
-#define EAI_SYSTEM 0
 #define poll WSAPoll
 #else
 #include <sys/types.h>
@@ -38,6 +37,7 @@ static int read(SOCKET s, char *buf, size_t count) {
 #include <poll.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <ifaddrs.h>
 #define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
 typedef int Socket;
@@ -126,7 +126,7 @@ static char *CreateSocketErrorString(int rc)
         FORMAT_MESSAGE_FROM_SYSTEM |
         FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL,
-        err,
+        rc,
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
         msgbuf,
         SDL_arraysize(msgbuf),
@@ -286,6 +286,48 @@ static void DestroyAddress(SDLNet_Address *addr)
         SDL_free(addr->errstr);
         SDL_free(addr);
     }
+}
+
+static SDLNet_Address *CreateSDLNetAddrFromSockAddr(struct sockaddr *saddr, SockLen saddrlen)
+{
+    // !!! FIXME: this all seems inefficient in the name of keeping addresses generic.
+    char hostbuf[128];
+    int gairc = getnameinfo(saddr, saddrlen, hostbuf, sizeof (hostbuf), NULL, 0, NI_NUMERICHOST);
+    if (gairc != 0) {
+        SetGetAddrInfoError("Failed to determine address", gairc);
+        return NULL;
+    }
+
+    SDLNet_Address *addr = (SDLNet_Address *) SDL_calloc(1, sizeof (SDLNet_Address));
+    if (!addr) {
+        SDL_OutOfMemory();
+        return NULL;
+    }
+    SDL_AtomicSet(&addr->status, 1);
+
+    struct addrinfo hints;
+    SDL_zero(hints);
+    hints.ai_family = saddr->sa_family;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_protocol = 0;
+    hints.ai_flags = AI_NUMERICHOST;
+
+    gairc = getaddrinfo(hostbuf, NULL, &hints, &addr->ainfo);
+    if (gairc != 0) {
+        SDL_free(addr);
+        SetGetAddrInfoError("Failed to determine address", gairc);
+        return NULL;
+    }
+
+    addr->human_readable = SDL_strdup(hostbuf);
+    if (!addr->human_readable) {
+        freeaddrinfo(addr->ainfo);
+        SDL_free(addr);
+        SDL_OutOfMemory();
+        return NULL;
+    }
+
+    return SDLNet_RefAddress(addr);
 }
 
 int SDLNet_Init(void)
@@ -528,8 +570,118 @@ void SDLNet_SimulateAddressResolutionLoss(int percent_loss)
 
 SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
 {
-    // !!! FIXME: write me!
-    return NULL;
+    int count = 0;
+    SDLNet_Address **retval = NULL;
+
+    *num_addresses = 0;
+
+#ifdef __WINDOWS__
+    // !!! FIXME: maybe LoadLibrary(iphlpapi) on the first call, since most
+    // !!! FIXME: things won't ever use this.
+
+    // MSDN docs say start with a 15K buffer, which usually works on the first
+    //  try, instead of trying to query for size, allocate, and then retry,
+    //  since this tends to be more expensive.
+    ULONG buflen = 15 * 1024;
+    IP_ADAPTER_ADDRESSES *addrs = NULL;
+    ULONG rc;
+
+    do {
+        SDL_free(addrs);
+        addrs = (IP_ADAPTER_ADDRESSES *) SDL_malloc(buflen);
+        if (!addrs) {
+            SDL_OutOfMemory();
+            return NULL;
+        }
+
+        const ULONG flags = GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME;
+        rc = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, addrs, &buflen);
+    } while (rc == ERROR_BUFFER_OVERFLOW);
+
+    if (rc != NO_ERROR) {
+        SetSocketError("GetAdaptersAddresses failed", rc);
+        SDL_free(addrs);
+        return NULL;
+    }
+
+    for (IP_ADAPTER_ADDRESSES *i = addrs; i != NULL; i = i->Next) {
+        for (IP_ADAPTER_UNICAST_ADDRESS *j = i->FirstUnicastAddress; j != NULL; j = j->Next) {
+            count++;
+        }
+    }
+
+    retval = (SDLNet_Address **) SDL_calloc(count + 1, sizeof (SDLNet_Address *));
+    if (!retval) {
+        SDL_OutOfMemory();
+        SDL_free(addrs);
+        return NULL;
+    }
+
+    count = 0;
+    for (IP_ADAPTER_ADDRESSES *i = addrs; i != NULL; i = i->Next) {
+        for (IP_ADAPTER_UNICAST_ADDRESS *j = i->FirstUnicastAddress; j != NULL; j = j->Next) {
+            SDLNet_Address *addr = CreateSDLNetAddrFromSockAddr(j->Address.lpSockaddr, j->Address.iSockaddrLength);
+            if (addr) {
+                retval[count++] = addr;
+            }
+        }
+    }
+
+    SDL_free(addrs);
+
+#else
+    struct ifaddrs *ifaddr;
+    if (getifaddrs(&ifaddr) == -1) {
+        SDL_SetError("getifaddrs failed: %s", strerror(errno));
+        return NULL;  // oh well.
+    }
+
+    for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next) {
+        if (i->ifa_name != NULL) {
+            count++;
+        }
+    }
+
+    retval = (SDLNet_Address **) SDL_calloc(count + 1, sizeof (SDLNet_Address *));
+    if (!retval) {
+        if (ifaddr) {
+            freeifaddrs(ifaddr);
+        }
+        SDL_OutOfMemory();
+        return NULL;
+    }
+
+    count = 0;
+    for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next) {
+        if (i->ifa_name != NULL) {
+            SDLNet_Address *addr = NULL;
+            // !!! FIXME: getifaddrs doesn't return the sockaddr length, so we have to go with known protocols.  :/
+            if (i->ifa_addr->sa_family == AF_INET) {
+                addr = CreateSDLNetAddrFromSockAddr(i->ifa_addr, sizeof (struct sockaddr_in));
+            } else if (i->ifa_addr->sa_family == AF_INET6) {
+                addr = CreateSDLNetAddrFromSockAddr(i->ifa_addr, sizeof (struct sockaddr_in6));
+            }
+
+            if (addr) {
+                retval[count++] = addr;
+            }
+        }
+    }
+
+    if (ifaddr) {
+        freeifaddrs(ifaddr);
+    }
+#endif
+
+    *num_addresses = count;
+
+    // try to shrink allocation.
+    void *ptr = SDL_realloc(retval, (count + 1) * sizeof (SDLNet_Address *));
+    if (ptr) {
+        retval = (SDLNet_Address **) ptr;
+    }
+
+    return retval;
 }
 
 void SDLNet_FreeLocalAddresses(SDLNet_Address **addresses)
@@ -793,49 +945,22 @@ int SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stre
         return SDL_SetError("Failed to make incoming socket non-blocking");
     }
 
-    // !!! FIXME: this all seems inefficient in the name of keeping addresses generic.
-    char hostbuf[128];
     char portbuf[16];
-    const int rc = getnameinfo((struct sockaddr *) &from, fromlen, hostbuf, sizeof (hostbuf), portbuf, sizeof (portbuf), NI_NUMERICHOST | NI_NUMERICSERV);
-    if (rc != 0) {
+    const int gairc = getnameinfo((struct sockaddr *) &from, fromlen, NULL, 0, portbuf, sizeof (portbuf), NI_NUMERICSERV);
+    if (gairc != 0) {
         CloseSocketHandle(handle);
-        return SetGetAddrInfoError("Failed to determine incoming connection's address", rc);
+        return SetGetAddrInfoError("Failed to determine port number", gairc);
     }
 
-    SDLNet_Address *fromaddr = (SDLNet_Address *) SDL_calloc(1, sizeof (SDLNet_Address));
+    SDLNet_Address *fromaddr = CreateSDLNetAddrFromSockAddr((struct sockaddr *) &from, fromlen);
     if (!fromaddr) {
         CloseSocketHandle(handle);
-        return SDL_OutOfMemory();
-    }
-    SDL_AtomicSet(&fromaddr->status, 1);
-
-    struct addrinfo hints;
-    SDL_zero(hints);
-    hints.ai_family = ((struct sockaddr *) &from)->sa_family;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_protocol = 0;
-    hints.ai_flags = AI_NUMERICHOST;
-
-    const int gairc = getaddrinfo(hostbuf, NULL, &hints, &fromaddr->ainfo);
-    if (gairc != 0) {
-        SDL_free(fromaddr);
-        CloseSocketHandle(handle);
-        return SetGetAddrInfoError("Failed to determine incoming connection's address: %s", rc);
-    }
-
-    fromaddr->human_readable = SDL_strdup(hostbuf);
-    if (!fromaddr->human_readable) {
-        freeaddrinfo(fromaddr->ainfo);
-        SDL_free(fromaddr);
-        CloseSocketHandle(handle);
-        return SDL_OutOfMemory();
+        return -1;  // error string was already set.
     }
 
     SDLNet_StreamSocket *sock = (SDLNet_StreamSocket *) SDL_calloc(1, sizeof (SDLNet_StreamSocket));
     if (!sock) {
-        SDL_free(fromaddr->human_readable);
-        freeaddrinfo(fromaddr->ainfo);
-        SDL_free(fromaddr);
+        SDLNet_UnrefAddress(fromaddr);
         CloseSocketHandle(handle);
         return SDL_OutOfMemory();
     }
@@ -1261,7 +1386,6 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
         return 0;
     }
 
-    // !!! FIXME: this all seems inefficient in the name of keeping addresses generic.
     char hostbuf[128];
     char portbuf[16];
     const int rc = getnameinfo((struct sockaddr *) &from, fromlen, hostbuf, sizeof (hostbuf), portbuf, sizeof (portbuf), NI_NUMERICHOST | NI_NUMERICSERV);
@@ -1296,45 +1420,23 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
 
     const SDL_bool create_fromaddr = (!fromaddr) ? SDL_TRUE : SDL_FALSE;
     if (create_fromaddr) {
-        fromaddr = (SDLNet_Address *) SDL_calloc(1, sizeof (SDLNet_Address));
+        fromaddr = CreateSDLNetAddrFromSockAddr((struct sockaddr *) &from, fromlen);
         if (!fromaddr) {
-            return SDL_OutOfMemory();
-        }
-        SDL_AtomicSet(&fromaddr->status, 1);
-
-        struct addrinfo hints;
-        SDL_zero(hints);
-        hints.ai_family = ((struct sockaddr *) &from)->sa_family;
-        hints.ai_socktype = SOCK_DGRAM;
-        hints.ai_protocol = 0;
-        hints.ai_flags = AI_NUMERICHOST;
-
-        const int gairc = getaddrinfo(hostbuf, NULL, &hints, &fromaddr->ainfo);
-        if (gairc != 0) {
-            SDL_free(fromaddr);
-            return SetGetAddrInfoError("Failed to determine incoming packet's address", gairc);
-        }
-
-        fromaddr->human_readable = SDL_strdup(hostbuf);
-        if (!fromaddr->human_readable) {
-            freeaddrinfo(fromaddr->ainfo);
-            SDL_free(fromaddr);
-            return SDL_OutOfMemory();
+            return -1;  // already set the error string.
         }
     }
 
     SDLNet_Datagram *dg = SDL_malloc(sizeof (SDLNet_Datagram) + br);
     if (!dg) {
         if (create_fromaddr) {
-            freeaddrinfo(fromaddr->ainfo);
-            SDL_free(fromaddr);
+            SDLNet_UnrefAddress(fromaddr);
         }
         return SDL_OutOfMemory();
     }
 
     dg->buf = (Uint8 *) (dg+1);
     SDL_memcpy(dg->buf, sock->recv_buffer, br);
-    dg->addr = SDLNet_RefAddress(fromaddr);
+    dg->addr = create_fromaddr ? fromaddr : SDLNet_RefAddress(fromaddr);
     dg->port = (Uint16) SDL_atoi(portbuf);
     dg->buflen = br;
 
