@@ -330,8 +330,14 @@ static SDLNet_Address *CreateSDLNetAddrFromSockAddr(struct sockaddr *saddr, Sock
     return SDLNet_RefAddress(addr);
 }
 
+static SDL_AtomicInt initialize_count;
+
 int SDLNet_Init(void)
 {
+    if (SDL_AtomicAdd(&initialize_count, 1) > 0) {
+        return 0;  // already initialized, call it a success.
+    }
+
     char *origerrstr = NULL;
 
     #ifdef __WINDOWS__
@@ -385,6 +391,14 @@ failed:
 
 void SDLNet_Quit(void)
 {
+    const int prevcount = SDL_AtomicAdd(&initialize_count, -1);
+    if (prevcount <= 0) {
+        SDL_AtomicAdd(&initialize_count, 1);  // bump back up.
+        return;  // we weren't initialized!
+    } else if (prevcount > 1) {
+        return;  // need to quit more, to match previous init calls.
+    }
+
     if (resolver_lock && resolver_condition) {
         SDL_LockMutex(resolver_lock);
         SDL_AtomicSet(&resolver_shutdown, 1);
