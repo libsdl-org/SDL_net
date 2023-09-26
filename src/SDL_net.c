@@ -1,4 +1,4 @@
-#include "SDL_net.h"
+#include "SDL3_net/SDL_net.h"
 
 #ifdef __WINDOWS__
 #define WIN32_LEAN_AND_MEAN 1

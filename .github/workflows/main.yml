@@ -13,7 +13,7 @@ jobs:
       matrix:
         platform:
           - { name: 'Linux',                    os: ubuntu-latest,  shell: sh }
-#          - { name: 'MacOS',                    os: macos-latest,   shell: sh }
+          - { name: 'MacOS',                    os: macos-latest,   shell: sh }
 #          - { name: 'Windows msys2 (mingw32)',  os: windows-latest, shell: 'msys2 {0}', msystem: mingw32, msys-env: mingw-w64-i686 }
           - { name: 'Windows msys2 (mingw64)',  os: windows-latest, shell: 'msys2 {0}', msystem: mingw64, msys-env: mingw-w64-x86_64 }
 #          - { name: 'Windows msys2 (clang32)',  os: windows-latest, shell: 'msys2 {0}', msystem: clang32, msys-env: mingw-w64-clang-i686 }
@@ -56,7 +56,33 @@ jobs:
           add-to-environment: true
       - name: Configure (CMake)
         run: |
-          cmake -B build -GNinja
+          cmake -B build -GNinja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=prefix \
+            -DSDL3NET_WERROR=OFF \
+            -DCMAKE_INSTALL_PREFIX=prefix
+        # FIXME: enable SDL3NET_WERROR
+
       - name: Build (CMake)
         run: |
           cmake --build build/ --verbose
+      - name: Install (CMake)
+        if: ${{ matrix.platform.shell == 'sh' || contains(matrix.platform.shell, 'msys2') }}
+        run: |
+          set -eu
+          rm -fr DESTDIR-cmake
+          cmake --install build/ --config Release
+          echo "SDL3_net_ROOT=$(pwd)/prefix" >> $GITHUB_ENV
+          ( cd prefix; find . ) | LC_ALL=C sort -u
+      - name: Verify CMake configuration files
+        run: |
+          cmake -S cmake/test -B cmake_config_build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DTEST_SHARED=TRUE \
+            -DTEST_STATIC=FALSE
+          cmake --build cmake_config_build --verbose
+
+      - name: Check that versioning is consistent
+        # We only need to run this once: arbitrarily use the Linux build
+        if: ${{ runner.os == 'Linux' }}
+        run: ./build-scripts/test-versioning.sh

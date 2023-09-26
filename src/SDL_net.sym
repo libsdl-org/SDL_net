@@ -1,0 +1,37 @@
+SDL3_net_0.0.0 {
+  global:
+    SDLNet_AcceptClient;
+    SDLNet_CompareAddresses;
+    SDLNet_CreateClient;
+    SDLNet_CreateDatagramSocket;
+    SDLNet_CreateServer;
+    SDLNet_DestroyDatagram;
+    SDLNet_DestroyDatagramSocket;
+    SDLNet_DestroyServer;
+    SDLNet_DestroyStreamSocket;
+    SDLNet_FreeLocalAddresses;
+    SDLNet_GetAddressStatus;
+    SDLNet_GetAddressString;
+    SDLNet_GetConnectionStatus;
+    SDLNet_GetLocalAddresses;
+    SDLNet_GetStreamSocketAddress;
+    SDLNet_GetStreamSocketPendingWrites;
+    SDLNet_Init;
+    SDLNet_LinkedVersion;
+    SDLNet_Quit;
+    SDLNet_ReadFromStreamSocket;
+    SDLNet_ReceiveDatagram;
+    SDLNet_RefAddress;
+    SDLNet_ResolveHostname;
+    SDLNet_SendDatagram;
+    SDLNet_SimulateAddressResolutionLoss;
+    SDLNet_SimulateDatagramPacketLoss;
+    SDLNet_SimulateStreamPacketLoss;
+    SDLNet_UnrefAddress;
+    SDLNet_WaitUntilConnected;
+    SDLNet_WaitUntilInputAvailable;
+    SDLNet_WaitUntilResolved;
+    SDLNet_WaitUntilStreamSocketDrained;
+    SDLNet_WriteToStreamSocket;
+  local: *;
+};

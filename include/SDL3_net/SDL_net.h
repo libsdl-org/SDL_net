@@ -85,10 +85,10 @@ extern DECLSPEC const SDL_version * SDLCALL SDLNet_LinkedVersion(void);
 /**
  * Initialize the SDL_net library.
  *
- * This must be successfully called once before any (almost) any other SDL_net
+ * This must be successfully called once before (almost) any other SDL_net
  * function can be used.
  *
- * It is save to call this multiple times; the library will only initialize
+ * It is safe to call this multiple times; the library will only initialize
  * once, and won't deinitialize until SDLNet_Quit() has been called a matching
  * number of times. Extra attempts to init report success.
  *
@@ -108,15 +108,12 @@ extern DECLSPEC int SDLCALL SDLNet_Init(void);
  * This must be called when done with the library, probably at the end of
  * your program.
  *
- * It is save to call this multiple times; the library will only deinitialize
+ * It is safe to call this multiple times; the library will only deinitialize
  * once, when this function is called the same number of times as SDLNet_Init
  * was successfully called.
  *
  * Once you have successfully deinitialized the library, it is safe to call
  * SDLNet_Init to reinitialize it for further use.
- *
- * \param devid the instance ID of the device to query.
- * \returns 0 on success, -1 on error; call SDL_GetError() for details.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -228,7 +225,7 @@ extern DECLSPEC int SDLCALL SDLNet_WaitUntilResolved(SDLNet_Address *address, Si
  * Once an address is successfully resolved, it can be used to connect to
  * the host represented by the address.
  *
- * \param host The hostname to resolve.
+ * \param address The SDLNet_Address to query.
  * \returns 1 if successfully resolved, -1 if resolution failed, 0 if still
  *            resolving;  if -1, call SDL_GetError() for details.
  *

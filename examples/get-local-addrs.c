@@ -16,6 +16,9 @@ int main(int argc, char **argv)
     int num_addrs = 0;
     int i;
 
+    (void)argc;
+    (void)argv;
+
     if (SDLNet_Init() < 0) {
         SDL_Log("SDLNet_Init() failed: %s", SDL_GetError());
         return 1;
