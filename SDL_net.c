@@ -53,7 +53,7 @@ typedef enum SDLNet_SocketType
 } SDLNet_SocketType;
 
 
-const SDL_version *SDLNet_Linked_Version(void)
+const SDL_version *SDLNet_LinkedVersion(void)
 {
     static const SDL_version linked_version = {
         SDL_NET_MAJOR_VERSION, SDL_NET_MINOR_VERSION, SDL_NET_PATCHLEVEL
@@ -1156,7 +1156,7 @@ int SDLNet_WaitUntilStreamSocketDrained(SDLNet_StreamSocket *sock, int timeoutms
     return SDLNet_GetStreamSocketPendingWrites(sock);
 }
 
-int SDLNet_ReadStreamSocket(SDLNet_StreamSocket *sock, void *buf, int buflen)
+int SDLNet_ReadFromStreamSocket(SDLNet_StreamSocket *sock, void *buf, int buflen)
 {
     if (PumpStreamSocket(sock) < 0) {  // try to flush any queued data to the socket now, before we go further.
         return -1;
@@ -1323,7 +1323,7 @@ static int PumpDatagramSocket(SDLNet_DatagramSocket *sock)
         }
 
         /* else if (rc > 0) */
-        SDLNet_FreeDatagram(dgram);
+        SDLNet_DestroyDatagram(dgram);
         sock->pending_output_len--;
         SDL_memmove(sock->pending_output, sock->pending_output + 1, sock->pending_output_len * sizeof (SDLNet_Datagram *));
         sock->pending_output[sock->pending_output_len] = NULL;
@@ -1483,7 +1483,7 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
     return 0;
 }
 
-void SDLNet_FreeDatagram(SDLNet_Datagram *dgram)
+void SDLNet_DestroyDatagram(SDLNet_Datagram *dgram)
 {
     if (dgram) {
         SDLNet_UnrefAddress(dgram->addr);
@@ -1516,7 +1516,7 @@ void SDLNet_DestroyDatagramSocket(SDLNet_DatagramSocket *sock)
             SDLNet_UnrefAddress(sock->latest_recv_addrs[i]);
         }
         for (int i = 0; i < sock->pending_output_len; i++) {
-            SDLNet_FreeDatagram(sock->pending_output[i]);
+            SDLNet_DestroyDatagram(sock->pending_output[i]);
         }
         SDLNet_UnrefAddress(sock->addr);
         SDL_free(sock->pending_output);

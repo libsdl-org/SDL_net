@@ -41,7 +41,7 @@ int main(int argc, char **argv)
             } else {
                 char buf[512];
                 int br;
-                while ((br = SDLNet_ReadStreamSocket(sock, buf, sizeof (buf))) >= 0) {
+                while ((br = SDLNet_ReadFromStreamSocket(sock, buf, sizeof (buf))) >= 0) {
                     fwrite(buf, 1, br, stdout);
                 }
 

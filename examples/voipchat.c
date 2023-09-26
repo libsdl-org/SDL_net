@@ -182,7 +182,7 @@ static void mainloop(void)
                 }
             }
 
-            SDLNet_FreeDatagram(dgram);
+            SDLNet_DestroyDatagram(dgram);
         }
 
         while (SDL_PollEvent(&event)) {
