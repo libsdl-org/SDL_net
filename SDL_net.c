@@ -599,6 +599,11 @@ SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
     int count = 0;
     SDLNet_Address **retval = NULL;
 
+    int dummy_addresses;
+    if (!num_addresses) {
+        num_addresses = &dummy_addresses;
+    }
+
     *num_addresses = 0;
 
 #ifdef __WINDOWS__
