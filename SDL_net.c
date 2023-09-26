@@ -523,7 +523,19 @@ int SDLNet_GetAddressStatus(SDLNet_Address *addr)
 
 const char *SDLNet_GetAddressString(SDLNet_Address *addr)
 {
-    return addr ? (const char *) SDL_AtomicGetPtr((void **) &addr->human_readable) : NULL;
+    if (!addr) {
+        SDL_InvalidParamError("address");
+        return NULL;
+    }
+
+    const char *retval = (const char *) SDL_AtomicGetPtr((void **) &addr->human_readable);
+    if (!retval) {
+        const int rc = SDLNet_GetAddressStatus(addr);
+        if (rc != -1) {  // if -1, it'll set the error message.
+            SDL_SetError("Address not yet resolved");  // if this resolved in a race condition, too bad, try again.
+        }
+    }
+    return retval;
 }
 
 int SDLNet_CompareAddresses(const SDLNet_Address *sdlneta, const SDLNet_Address *sdlnetb)
