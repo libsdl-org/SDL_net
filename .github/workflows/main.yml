@@ -59,9 +59,8 @@ jobs:
           cmake -B build -GNinja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=prefix \
-            -DSDL3NET_WERROR=OFF \
+            -DSDL3NET_WERROR=ON \
             -DCMAKE_INSTALL_PREFIX=prefix
-        # FIXME: enable SDL3NET_WERROR
 
       - name: Build (CMake)
         run: |
