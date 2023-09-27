@@ -358,10 +358,7 @@ int main(int argc, char **argv)
     renderer = SDL_CreateRenderer(window, NULL, 0);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
-    max_datagram = 1500;
-    if (max_datagram > sizeof (scratch_area)) {
-        max_datagram = sizeof (scratch_area);
-    }
+    max_datagram = SDL_min(1200, (int) sizeof (scratch_area));
 
     run_voipchat(argc, argv);
 
