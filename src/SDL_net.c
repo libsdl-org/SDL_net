@@ -1422,7 +1422,8 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
 
     AddressStorage from;
     SockLen fromlen = sizeof (from);
-    const int br = recvfrom(sock->handle, sock->recv_buffer, sizeof (sock->recv_buffer), 0, (struct sockaddr *) &from, &fromlen);
+    // WinSock's recvfrom wants a `char *` buffer instead of `void *`. The cast here is harmless on BSD Sockets.
+    const int br = recvfrom(sock->handle, (char *) sock->recv_buffer, sizeof (sock->recv_buffer), 0, (struct sockaddr *) &from, &fromlen);
     if (br == SOCKET_ERROR) {
         const int err = LastSocketError();
         return WouldBlock(err) ? 0 : SetSocketError("Failed to receive datagrams", err);
