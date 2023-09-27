@@ -10,8 +10,8 @@ typedef SOCKET Socket;
 typedef int SockLen;
 typedef SOCKADDR_STORAGE AddressStorage;
 
-static int write(SOCKET s, const char *buf, size_t count) {
-    return send(s, buf, count, 0);
+static int write(SOCKET s, const void *buf, size_t count) {
+    return send(s, (const char *)buf, count, 0);
 }
 
 static int read(SOCKET s, char *buf, size_t count) {
