@@ -85,14 +85,14 @@ static void ClearOldVoices(const Uint64 now)
     }
 }
 
-static const size_t extra = (sizeof (Uint64) * 2);
+static const int extra = (int) (sizeof (Uint64) * 2);
 static void SendClientAudioToServer(void)
 {
     const int br = SDL_GetAudioStreamData(capture_stream, scratch_area + extra, max_datagram - extra);
     if (br > 0) {
         ((Uint64 *) scratch_area)[0] = SDL_SwapLE64(0);  /* just being nice and leaving space in the buffer for the server to replace. */
         ((Uint64 *) scratch_area)[1] = SDL_SwapLE64(++next_idnum);
-        SDL_Log("CLIENT: Sending %d new bytes to server at %s:%d...", (int) (br + extra), SDLNet_GetAddressString(server_addr), (int) server_port);
+        SDL_Log("CLIENT: Sending %d new bytes to server at %s:%d...", br + extra, SDLNet_GetAddressString(server_addr), (int) server_port);
         SDLNet_SendDatagram(sock, server_addr, server_port, scratch_area, br + extra);
     }
 }
@@ -149,7 +149,7 @@ static void mainloop(void)
             } else {  /* we're the client. */
                 if ((dgram->port != server_port) || (SDLNet_CompareAddresses(dgram->addr, server_addr) != 0)) {
                     SDL_Log("CLIENT: Got packet from non-server address %s:%d. Ignoring.", SDLNet_GetAddressString(dgram->addr), (int) dgram->port);
-                } else if (dgram->buflen < (sizeof (Uint64) * 2)) {
+                } else if (dgram->buflen < extra) {
                     SDL_Log("CLIENT: Got bogus packet from the server. Ignoring.");
                 } else {
                     const Uint64 idnum = SDL_SwapLE64(((const Uint64 *) dgram->buf)[0]);
@@ -226,7 +226,7 @@ static void mainloop(void)
             if (!last_send_ticks || ((now - last_send_ticks) > 5000)) {  /* send a keepalive packet if we haven't transmitted for a bit. */
                 ((Uint64 *) scratch_area)[0] = SDL_SwapLE64(0);
                 ((Uint64 *) scratch_area)[1] = SDL_SwapLE64(++next_idnum);
-                SDL_Log("CLIENT: Sending %d keepalive bytes to server at %s:%d...", (int) extra, SDLNet_GetAddressString(server_addr), (int) server_port);
+                SDL_Log("CLIENT: Sending %d keepalive bytes to server at %s:%d...", extra, SDLNet_GetAddressString(server_addr), (int) server_port);
                 SDLNet_SendDatagram(sock, server_addr, server_port, scratch_area, extra);
                 last_send_ticks = now;
             }

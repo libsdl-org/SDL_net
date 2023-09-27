@@ -402,7 +402,7 @@ void SDLNet_Quit(void)
     if (resolver_lock && resolver_condition) {
         SDL_LockMutex(resolver_lock);
         SDL_AtomicSet(&resolver_shutdown, 1);
-        for (int i = 0; i < SDL_arraysize(resolver_threads); i++) {
+        for (int i = 0; i < ((int) SDL_arraysize(resolver_threads)); i++) {
             if (resolver_threads[i]) {
                 SDL_BroadcastCondition(resolver_condition);
                 SDL_UnlockMutex(resolver_lock);
@@ -464,7 +464,7 @@ SDLNet_Address *SDLNet_ResolveHostname(const char *host)
     //SDL_Log("num_threads=%d, num_requests=%d", num_threads, num_requests);
     if ((num_requests >= num_threads) && (num_threads < MAX_RESOLVER_THREADS)) {  // all threads are busy? Maybe spawn a new one.
         // if this didn't actually spin one up, it is what it is...the existing threads will eventually get there.
-        for (int i = 0; i < SDL_arraysize(resolver_threads); i++) {
+        for (int i = 0; i < ((int) SDL_arraysize(resolver_threads)); i++) {
             if (!resolver_threads[i]) {
                 SpinResolverThread(i);
                 break;
@@ -1094,11 +1094,14 @@ int SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int b
     }
 
     // queue this up for sending later.
-    const size_t min_alloc = sock->pending_output_len + buflen;
+    const int min_alloc = sock->pending_output_len + buflen;
     if (min_alloc > sock->pending_output_allocation) {
-        size_t newlen = SDL_max(1, sock->pending_output_allocation);
+        int newlen = SDL_max(1, sock->pending_output_allocation);
         while (newlen < min_alloc) {
             newlen *= 2;
+            if (newlen < 0) {  // uhoh, overflowed! That's a lot of memory!!
+                return SDL_OutOfMemory();
+            }
         }
         void *ptr = SDL_realloc(sock->pending_output_buffer, newlen);
         if (!ptr) {
@@ -1362,11 +1365,14 @@ int SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint1
     }
 
     // queue this up for sending later.
-    const size_t min_alloc = sock->pending_output_len + 1;
+    const int min_alloc = sock->pending_output_len + 1;
     if (min_alloc > sock->pending_output_allocation) {
-        size_t newlen = SDL_max(1, sock->pending_output_allocation);
+        int newlen = SDL_max(1, sock->pending_output_allocation);
         while (newlen < min_alloc) {
             newlen *= 2;
+            if (newlen < 0) {  // uhoh, overflowed! That's a lot of memory!!
+                return SDL_OutOfMemory();
+            }
         }
         void *ptr = SDL_realloc(sock->pending_output, newlen * sizeof (SDLNet_Datagram *));
         if (!ptr) {
@@ -1512,7 +1518,7 @@ void SDLNet_DestroyDatagramSocket(SDLNet_DatagramSocket *sock)
         if (sock->handle != INVALID_SOCKET) {
             CloseSocketHandle(sock->handle);  // !!! FIXME: what does this do with non-blocking sockets? Release the descriptor but the kernel continues sending queued buffers behind the scenes?
         }
-        for (int i = 0; i < SDL_arraysize(sock->latest_recv_addrs); i++) {
+        for (int i = 0; i < ((int) SDL_arraysize(sock->latest_recv_addrs)); i++) {
             SDLNet_UnrefAddress(sock->latest_recv_addrs[i]);
         }
         for (int i = 0; i < sock->pending_output_len; i++) {
@@ -1546,7 +1552,7 @@ int SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutm
     struct pollfd *pfds = stack_pfds;
     struct pollfd *malloced_pfds = NULL;
 
-    if (numsockets > SDL_arraysize(stack_pfds)) {  // allocate if there's a _ton_ of these.
+    if (numsockets > ((int) SDL_arraysize(stack_pfds))) {  // allocate if there's a _ton_ of these.
         malloced_pfds = (struct pollfd *) SDL_malloc(numsockets * sizeof (*pfds));
         if (!malloced_pfds) {
             return SDL_OutOfMemory();
