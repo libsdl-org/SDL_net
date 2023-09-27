@@ -1,8 +1,16 @@
 #include "SDL3_net/SDL_net.h"
 
 #ifdef __WINDOWS__
+// we need APIs that didn't arrive until Windows Vista.
+#ifdef _WIN32_WINNT
+  #if _WIN32_WINNT < 0x0600
+    #undef _WIN32_WINNT
+  #endif
+#endif
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#endif
 #define WIN32_LEAN_AND_MEAN 1
-#define _WIN32_WINNT 0x0600  /* we need APIs that didn't arrive until Windows Vista. */
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
