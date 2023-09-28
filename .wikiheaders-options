@@ -1,7 +1,7 @@
 projectfullname = SDL_net
 projectshortname = SDL_net
 incsubdir = include/SDL3_net
-wikisubdir = SDL_net
+wikisubdir = SDL3_net
 apiprefixregex = SDLNet_
 mainincludefname = SDL3_net/SDL_net.h
 versionfname = include/SDL3_net/SDL_net.h
