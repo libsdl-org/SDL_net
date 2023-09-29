@@ -17,8 +17,9 @@ project(SDL3_net
     VERSION "${MAJOR_VERSION}.${MINOR_VERSION}.${MICRO_VERSION}"
 )
 
-include(PrivateSdlFunctions)
-include(sdlmanpages)
+include("${SDL3_net_SOURCE_DIR}/cmake/GetGitRevisionDescription.cmake")
+include("${SDL3_net_SOURCE_DIR}/cmake/PrivateSdlFunctions.cmake")
+include("${SDL3_net_SOURCE_DIR}/cmake/sdlmanpages.cmake")
 sdl_calculate_derived_version_variables(${MAJOR_VERSION} ${MINOR_VERSION} ${MICRO_VERSION})
 
 message(STATUS "Configuring ${PROJECT_NAME} ${PROJECT_VERSION}")
@@ -229,10 +230,12 @@ if(SDL3NET_INSTALL)
     )
 
     if(SDL3NET_INSTALL_MAN)
+        sdl_get_git_revision_hash(SDL3NET_REVISION)
         SDL_generate_manpages(
             HEADERS_DIR "${PROJECT_SOURCE_DIR}/include/SDL3_net"
             SYMBOL "SDLNet_Init"
             WIKIHEADERS_PL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build-scripts/wikiheaders.pl"
+            REVISION "${SDL3NET_REVISION}"
         )
     endif()
 endif()

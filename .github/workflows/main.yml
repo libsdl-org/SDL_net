@@ -18,8 +18,8 @@ jobs:
           - { name: 'Windows msys2 (mingw64)',  os: windows-latest, shell: 'msys2 {0}', msystem: mingw64, msys-env: mingw-w64-x86_64 }
 #          - { name: 'Windows msys2 (clang32)',  os: windows-latest, shell: 'msys2 {0}', msystem: clang32, msys-env: mingw-w64-clang-i686 }
           - { name: 'Windows msys2 (clang64)',  os: windows-latest, shell: 'msys2 {0}', msystem: clang64, msys-env: mingw-w64-clang-x86_64 }
-#          - { name: 'Windows MSVC (x86)',       os: windows-latest, shell: sh, msvc: true, msvc-arch: x86 }
-          - { name: 'Windows MSVC (x64)',       os: windows-latest, shell: sh, msvc: true, msvc-arch: x64 }
+#          - { name: 'Windows MSVC (x86)',       os: windows-latest, shell: sh, msvc: true, msvc-arch: x86, cmake: '-DPerl_ROOT=C:/Strawberry/perl/bin/' }
+          - { name: 'Windows MSVC (x64)',       os: windows-latest, shell: sh, msvc: true, msvc-arch: x64, cmake: '-DPerl_ROOT=C:/Strawberry/perl/bin/' }
 #          - { name: 'Windows MSVC (arm32)',     os: windows-latest, shell: sh, msvc: true, msvc-arch: amd64_arm, cross: true }
 #          - { name: 'Windows MSVC (arm64)',     os: windows-latest, shell: sh, msvc: true, msvc-arch: amd64_arm64, cross: true }
     defaults:
@@ -40,6 +40,7 @@ jobs:
             ${{ matrix.platform.msys-env }}-cmake
             ${{ matrix.platform.msys-env }}-crt
             ${{ matrix.platform.msys-env }}-ninja
+            ${{ matrix.platform.msys-env }}-perl
       - name: Get SDL3_net sources
         uses: actions/checkout@v3
       - name: Install Ninja
@@ -60,7 +61,8 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=prefix \
             -DSDL3NET_WERROR=ON \
-            -DCMAKE_INSTALL_PREFIX=prefix
+            -DCMAKE_INSTALL_PREFIX=prefix \
+            ${{ matrix.platform.cmake }}
 
       - name: Build (CMake)
         run: |
