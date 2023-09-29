@@ -14,7 +14,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\SDL3_net\SDL_net.h">
+    <ClInclude Include="..\include\SDL3_net/SDL_net.h">
       <Filter>Public Headers</Filter>
     </ClInclude>
   </ItemGroup>
