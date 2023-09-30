@@ -19,15 +19,16 @@ typedef int SockLen;
 typedef SOCKADDR_STORAGE AddressStorage;
 
 static int write(SOCKET s, const void *buf, size_t count) {
-    return send(s, (const char *)buf, count, 0);
+    return send(s, (const char *)buf, (int) count, 0);
 }
 
 static int read(SOCKET s, char *buf, size_t count) {
     WSABUF wsabuf;
     wsabuf.buf = buf;
-    wsabuf.len = count;
+    wsabuf.len = (ULONG) count;
     DWORD count_received;
-    const int res = WSARecv(s, &wsabuf, 1, &count_received, 0, NULL, NULL);
+    DWORD flags = 0;
+    const int res = WSARecv(s, &wsabuf, 1, &count_received, &flags, NULL, NULL);
     if (res != 0) {
         return -1;
     }
@@ -143,7 +144,7 @@ static char *CreateSocketErrorString(int rc)
     if (bw == 0) {
         return SDL_strdup("Unknown error");
     }
-    return SDL_iconv_string("UTF-8", "UTF-16LE", (const char *)msgbuf, (bw+1) * sizeof (WCHAR));
+    return SDL_iconv_string("UTF-8", "UTF-16LE", (const char *)msgbuf, (((size_t) bw)+1) * sizeof (WCHAR));
 #else
     return SDL_strdup(strerror(rc));
 #endif
@@ -508,7 +509,7 @@ int SDLNet_WaitUntilResolved(SDLNet_Address *addr, Sint32 timeout)
                 if (now >= endtime) {
                     break;
                 }
-                SDL_WaitConditionTimeout(resolver_condition, resolver_lock, (endtime - now));
+                SDL_WaitConditionTimeout(resolver_condition, resolver_lock, (Uint64) (endtime - now));
             }
         }
         SDL_UnlockMutex(resolver_lock);
@@ -649,7 +650,7 @@ SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
         }
     }
 
-    retval = (SDLNet_Address **) SDL_calloc(count + 1, sizeof (SDLNet_Address *));
+    retval = (SDLNet_Address **) SDL_calloc(((size_t)count) + 1, sizeof (SDLNet_Address *));
     if (!retval) {
         SDL_OutOfMemory();
         SDL_free(addrs);
@@ -715,7 +716,7 @@ SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
     *num_addresses = count;
 
     // try to shrink allocation.
-    void *ptr = SDL_realloc(retval, (count + 1) * sizeof (SDLNet_Address *));
+    void *ptr = SDL_realloc(retval, (((size_t) count) + 1) * sizeof (SDLNet_Address *));
     if (ptr) {
         retval = (SDLNet_Address **) ptr;
     }
@@ -1061,7 +1062,7 @@ static int PumpStreamSocket(SDLNet_StreamSocket *sock)
             const int err = LastSocketError();
             return WouldBlock(err) ? 0 : SetSocketError("Failed to write to socket", err);
         } else if (bw < sock->pending_output_len) {
-            SDL_memmove(sock->pending_output_buffer, sock->pending_output_buffer + bw, sock->pending_output_len - bw);
+            SDL_memmove(sock->pending_output_buffer, sock->pending_output_buffer + bw, ((size_t) sock->pending_output_len) - bw);
         }
         sock->pending_output_len -= bw;
 
@@ -1305,7 +1306,7 @@ static int SendOneDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Ui
     if (!addrwithport) {
         return -1;
     }
-    const int rc = sendto(sock->handle, buf, buflen, 0, addrwithport->ai_addr, addrwithport->ai_addrlen);
+    const int rc = sendto(sock->handle, buf, (size_t) buflen, 0, addrwithport->ai_addr, addrwithport->ai_addrlen);
     freeaddrinfo(addrwithport);
 
     if (rc == SOCKET_ERROR) {
@@ -1325,6 +1326,7 @@ static int PumpDatagramSocket(SDLNet_DatagramSocket *sock)
     }
 
     while (sock->pending_output_len > 0) {
+        SDL_assert(sock->pending_output != NULL);
         SDLNet_Datagram *dgram = sock->pending_output[0];
         const int rc = SendOneDatagram(sock, dgram->addr, dgram->port, dgram->buf, dgram->buflen);
         if (rc < 0) {  // failure!
@@ -1442,6 +1444,7 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
     // Cache the last X addresses we saw; if we see it again, refcount it and reuse it.
     SDLNet_Address *fromaddr = NULL;
     for (int i = sock->latest_recv_addrs_idx - 1; i >= 0; i--) {
+        SDL_assert(sock->latest_recv_addrs != NULL);
         SDLNet_Address *a = sock->latest_recv_addrs[i];
         SDL_assert(a != NULL);  // can't be NULL, we either set this before or wrapped around to set again, but it can't be NULL.
         if (SDL_strcmp(a->human_readable, hostbuf) == 0) {
