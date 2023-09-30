@@ -19,22 +19,26 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>SDL2_net</ProjectName>
+    <ProjectName>SDL3_net</ProjectName>
     <ProjectGuid>{8AB3504F-5E58-4910-AFE8-7A1E595AC3F4}</ProjectGuid>
     <RootNamespace>SDL_net</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' != '10.0'">$(DefaultPlatformToolset)</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' != '10.0'">$(DefaultPlatformToolset)</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' != '10.0'">$(DefaultPlatformToolset)</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' != '10.0'">$(DefaultPlatformToolset)</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -80,20 +84,20 @@
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)..\..\SDL\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\..\SDL\VisualC\$(PlatformName)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\..\SDL\include;$(ProjectDir)..\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\..\SDL\VisualC\$(PlatformName)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)..\..\SDL\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\..\SDL\VisualC\$(PlatformName)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\..\SDL\include;$(ProjectDir)..\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\..\SDL\VisualC\$(PlatformName)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)..\..\SDL\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\..\SDL\VisualC\$(PlatformName)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\..\SDL\include;$(ProjectDir)..\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\..\SDL\VisualC\$(PlatformName)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)..\..\SDL\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\..\SDL\VisualC\$(PlatformName)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\..\SDL\include;$(ProjectDir)..\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\..\SDL\VisualC\$(PlatformName)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
@@ -101,7 +105,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\Debug/SDL2_net.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Debug/SDL3_net.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -117,7 +121,7 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;iphlpapi.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;iphlpapi.lib;SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -128,7 +132,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\Debug/SDL2_net.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Debug/SDL3_net.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -144,7 +148,7 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;iphlpapi.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;iphlpapi.lib;SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -155,7 +159,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\Release/SDL2_net.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Release/SDL3_net.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -169,7 +173,7 @@
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;iphlpapi.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;iphlpapi.lib;SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
     </Link>
     <Bscmake />
@@ -180,7 +184,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\Release/SDL2_net.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Release/SDL3_net.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -194,30 +198,12 @@
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;iphlpapi.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;iphlpapi.lib;SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\SDLnet.c">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\SDLnetselect.c">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\SDLnetTCP.c">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\SDLnetUDP.c">
+    <ClCompile Include="..\src\SDL_net.c">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -225,11 +211,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\SDLnetsys.h" />
-    <ClInclude Include="..\SDL_net.h" />
+    <ClInclude Include="..\include\SDL3_net/SDL_net.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Version.rc">
+    <ResourceCompile Include="..\src\version.rc">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>

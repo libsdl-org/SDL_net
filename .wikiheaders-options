@@ -1,10 +1,10 @@
 projectfullname = SDL_net
 projectshortname = SDL_net
-incsubdir =
-wikisubdir = SDL_net
+incsubdir = include/SDL3_net
+wikisubdir = SDL3_net
 apiprefixregex = SDLNet_
-mainincludefname = SDL_net.h
-versionfname = SDL_net.h
+mainincludefname = SDL3_net/SDL_net.h
+versionfname = include/SDL3_net/SDL_net.h
 versionmajorregex = \A\#define\s+SDL_NET_MAJOR_VERSION\s+(\d+)\Z
 versionminorregex = \A\#define\s+SDL_NET_MINOR_VERSION\s+(\d+)\Z
 versionpatchregex = \A\#define\s+SDL_NET_PATCHLEVEL\s+(\d+)\Z

@@ -9,29 +9,17 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\SDLnet.c">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\SDLnetselect.c">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\SDLnetTCP.c">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\SDLnetUDP.c">
+    <ClCompile Include="..\src\SDL_net.c">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\SDLnetsys.h">
-      <Filter>Sources</Filter>
-    </ClInclude>
-    <ClInclude Include="..\SDL_net.h">
+    <ClInclude Include="..\include\SDL3_net/SDL_net.h">
       <Filter>Public Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Version.rc">
+    <ResourceCompile Include="..\src\version.rc">
       <Filter>Sources</Filter>
     </ResourceCompile>
   </ItemGroup>
