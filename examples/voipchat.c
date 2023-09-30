@@ -1,6 +1,6 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL.h>
-#include "SDL_net.h"
+#include <SDL3_net/SDL_net.h>
 
 /*
  * This is just for demonstration purposes! A real VoIP solution would
@@ -370,6 +370,3 @@ int main(int argc, char **argv)
     SDL_Quit();
     return 0;
 }
-
-
-

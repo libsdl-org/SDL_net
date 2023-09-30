@@ -31,7 +31,7 @@ if(NOT TARGET SDL3_net::SDL3_net-shared)
     add_library(SDL3_net::SDL3_net-shared SHARED IMPORTED)
     set_target_properties(SDL3_net::SDL3_net-shared
         PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES "${_sdl3net_incdir};${_sdl3net_incdir}/SDL3_net"
+            INTERFACE_INCLUDE_DIRECTORIES "${_sdl3net_incdir}"
             IMPORTED_IMPLIB "${_sdl3net_library}"
             IMPORTED_LOCATION "${_sdl3net_dll}"
             COMPATIBLE_INTERFACE_BOOL "SDL3_SHARED"
