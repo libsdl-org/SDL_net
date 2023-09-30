@@ -105,8 +105,8 @@ extern DECLSPEC int SDLCALL SDLNet_Init(void);
 /**
  * Deinitialize the SDL_net library.
  *
- * This must be called when done with the library, probably at the end of
- * your program.
+ * This must be called when done with the library, probably at the end of your
+ * program.
  *
  * It is safe to call this multiple times; the library will only deinitialize
  * once, when this function is called the same number of times as SDLNet_Init
@@ -139,21 +139,22 @@ typedef struct SDLNet_Address SDLNet_Address;  /**< Opaque struct that deals wit
  * SDLNet_Address objects.
  *
  * Note that resolving an address is an asynchronous operation, since the
- * library will need to ask a server on the internet to get the information
- * it needs, and this can take time (and possibly fail later). This function
- * will not block. It either returns NULL (catastrophic failure) or an
- * unresolved SDLNet_Address. Until the address resolves, it can't be used.
+ * library will need to ask a server on the internet to get the information it
+ * needs, and this can take time (and possibly fail later). This function will
+ * not block. It either returns NULL (catastrophic failure) or an unresolved
+ * SDLNet_Address. Until the address resolves, it can't be used.
  *
  * If you want to block until the resolution is finished, you can call
- * SDLNet_WaitUntilResolved(). Otherwise, you can do a non-blocking check
- * with SDLNet_GetAddressStatus().
+ * SDLNet_WaitUntilResolved(). Otherwise, you can do a non-blocking check with
+ * SDLNet_GetAddressStatus().
  *
  * When you are done with the returned SDLNet_Address, call
  * SDLNet_UnrefAddress() to dispose of it. You need to do this even if
  * resolution later fails asynchronously.
  *
  * \param host The hostname to resolve.
- * \returns A new SDLNet_Address on success, NULL on error; call SDL_GetError() for details.
+ * \returns A new SDLNet_Address on success, NULL on error; call
+ *          SDL_GetError() for details.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -169,25 +170,25 @@ extern DECLSPEC SDLNet_Address * SDLCALL SDLNet_ResolveHostname(const char *host
 /**
  * Block until an address is resolved.
  *
- * The SDLNet_Address objects returned by SDLNet_ResolveHostname take time
- * to do their work, so it is does so _asynchronously_ instead of making
- * your program wait an indefinite amount of time.
+ * The SDLNet_Address objects returned by SDLNet_ResolveHostname take time to
+ * do their work, so it is does so _asynchronously_ instead of making your
+ * program wait an indefinite amount of time.
  *
- * However, if you want your program to sleep until the address resolution
- * is complete, you can call this function.
+ * However, if you want your program to sleep until the address resolution is
+ * complete, you can call this function.
  *
- * This function takes a timeout value, represented in milliseconds, of
- * how long to wait for resolution to complete. Specifying a timeout of -1
+ * This function takes a timeout value, represented in milliseconds, of how
+ * long to wait for resolution to complete. Specifying a timeout of -1
  * instructs the library to wait indefinitely, and a timeout of 0 just checks
- * the current status and returns immediately (and is functionally
- * equivalent to calling SDLNet_GetAddressStatus).
+ * the current status and returns immediately (and is functionally equivalent
+ * to calling SDLNet_GetAddressStatus).
  *
  * Resolution can fail after some time (DNS server took awhile to reply that
- * the hostname isn't recognized, etc), so be sure to check the result of
- * this function instead of assuming it worked!
+ * the hostname isn't recognized, etc), so be sure to check the result of this
+ * function instead of assuming it worked!
  *
- * Once an address is successfully resolved, it can be used to connect to
- * the host represented by the address.
+ * Once an address is successfully resolved, it can be used to connect to the
+ * host represented by the address.
  *
  * If you don't want your program to block, you can call
  * SDLNet_GetAddressStatus from time to time until you get a non-zero result.
@@ -196,8 +197,8 @@ extern DECLSPEC SDLNet_Address * SDLCALL SDLNet_ResolveHostname(const char *host
  * \param timeout Number of milliseconds to wait for resolution to complete.
  *                -1 to wait indefinitely, 0 to check once without waiting.
  * \returns 1 if successfully resolved, -1 if resolution failed, 0 if still
- *            resolving (this function timed out without resolution); if -1,
- *            call SDL_GetError() for details.
+ *          resolving (this function timed out without resolution); if -1,
+ *          call SDL_GetError() for details.
  *
  * \threadsafety It is safe to call this function from any thread, and several
  *               threads can block on the same address simultaneously.
@@ -211,23 +212,23 @@ extern DECLSPEC int SDLCALL SDLNet_WaitUntilResolved(SDLNet_Address *address, Si
 /**
  * Check if an address is resolved, without blocking.
  *
- * The SDLNet_Address objects returned by SDLNet_ResolveHostname take time
- * to do their work, so it is does so _asynchronously_ instead of making
- * your program wait an indefinite amount of time.
+ * The SDLNet_Address objects returned by SDLNet_ResolveHostname take time to
+ * do their work, so it is does so _asynchronously_ instead of making your
+ * program wait an indefinite amount of time.
  *
  * This function allows you to check the progress of that work without
  * blocking.
  *
  * Resolution can fail after some time (DNS server took awhile to reply that
- * the hostname isn't recognized, etc), so be sure to check the result of
- * this function instead of assuming it worked because it's non-zero!
+ * the hostname isn't recognized, etc), so be sure to check the result of this
+ * function instead of assuming it worked because it's non-zero!
  *
- * Once an address is successfully resolved, it can be used to connect to
- * the host represented by the address.
+ * Once an address is successfully resolved, it can be used to connect to the
+ * host represented by the address.
  *
  * \param address The SDLNet_Address to query.
  * \returns 1 if successfully resolved, -1 if resolution failed, 0 if still
- *            resolving;  if -1, call SDL_GetError() for details.
+ *          resolving; if -1, call SDL_GetError() for details.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -240,15 +241,15 @@ extern DECLSPEC int SDLCALL SDLNet_GetAddressStatus(SDLNet_Address *address);
 /**
  * Get a human-readable string from a resolved address.
  *
- * This returns a string that's "human-readable", in that it's
- * probably a string of numbers and symbols, like "159.203.69.7" or
- * "2604:a880:800:a1::71f:3001". It won't be the original hostname
- * (like "icculus.org"), but it's suitable for writing to a log file, etc.
+ * This returns a string that's "human-readable", in that it's probably a
+ * string of numbers and symbols, like "159.203.69.7" or
+ * "2604:a880:800:a1::71f:3001". It won't be the original hostname (like
+ * "icculus.org"), but it's suitable for writing to a log file, etc.
  *
- * Do not free or modify the returned string; it belongs to the
- * SDLNet_Address that was queried, and is valid as long as the object lives.
- * Either make sure the address has a reference as long as you need this or
- * make a copy of the string.
+ * Do not free or modify the returned string; it belongs to the SDLNet_Address
+ * that was queried, and is valid as long as the object lives. Either make
+ * sure the address has a reference as long as you need this or make a copy of
+ * the string.
  *
  * This will return NULL if resolution is still in progress, or if resolution
  * failed. You can use SDLNet_GetAddressStatus() or SDLNet_WaitUntilResolved()
@@ -288,8 +289,8 @@ extern DECLSPEC const char * SDLCALL SDLNet_GetAddressString(SDLNet_Address *add
  * only have to unref things you've created once (like you might free()
  * something), but you are free to add extra refs if it makes sense.
  *
- * This returns the same address passed as a parameter, which makes it easy
- * to ref and assign in one step:
+ * This returns the same address passed as a parameter, which makes it easy to
+ * ref and assign in one step:
  *
  * ```c
  * myAddr = SDLNet_RefAddress(yourAddr);
@@ -343,8 +344,8 @@ extern DECLSPEC void SDLCALL SDLNet_UnrefAddress(SDLNet_Address *address);
  * The higher the percentage, the more resolutions will fail and/or take
  * longer for resolution to complete.
  *
- * Setting this to zero (the default) will disable the simulation. Setting
- * to 100 means _everything_ fails unconditionally. At what percent the system
+ * Setting this to zero (the default) will disable the simulation. Setting to
+ * 100 means _everything_ fails unconditionally. At what percent the system
  * merely borders on unusable is left as an exercise to the app developer.
  *
  * This is intended for debugging purposes, to simulate real-world conditions
@@ -363,8 +364,8 @@ extern DECLSPEC void SDLCALL SDLNet_SimulateAddressResolutionLoss(int percent_lo
 /**
  * Compare two SDLNet_Address objects.
  *
- * This compares two addresses, returning a value that is useful for qsort
- * (or SDL_qsort).
+ * This compares two addresses, returning a value that is useful for qsort (or
+ * SDL_qsort).
  *
  * \param a first address to compare.
  * \param b second address to compare.
@@ -393,8 +394,8 @@ extern DECLSPEC int SDLCALL SDLNet_CompareAddresses(const SDLNet_Address *a, con
  * interfaces."
  *
  * The array of addresses returned from this is guaranteed to be
- * NULL-terminated. You can also pass a pointer to an int, which will
- * return the final count, not counting the NULL at the end of the array.
+ * NULL-terminated. You can also pass a pointer to an int, which will return
+ * the final count, not counting the NULL at the end of the array.
  *
  * Pass the returned array to SDLNet_FreeLocalAddresses when you are done with
  * it. It is safe to keep any addresses you want from this array even after
@@ -402,8 +403,8 @@ extern DECLSPEC int SDLCALL SDLNet_CompareAddresses(const SDLNet_Address *a, con
  *
  * \param num_addresses on exit, will be set to the number of addresses
  *                      returned. Can be NULL.
- * \returns A NULL-terminated array of SDLNet_Address pointers, one for
- *          each bindable address on the system, or NULL on error; call
+ * \returns A NULL-terminated array of SDLNet_Address pointers, one for each
+ *          bindable address on the system, or NULL on error; call
  *          SDL_GetError() for details.
  *
  * \threadsafety It is safe to call this function from any thread.
@@ -442,28 +443,28 @@ typedef struct SDLNet_StreamSocket SDLNet_StreamSocket;  /**< a TCP socket. Reli
  * Each SDLNet_StreamSocket represents a single connection between systems.
  * Usually, a client app will have one connection to a server app on a
  * different computer, and the server app might have many connections from
- * different clients. Each of these connections communicate over a
- * separate stream socket.
+ * different clients. Each of these connections communicate over a separate
+ * stream socket.
  *
- * Connecting is an asynchronous operation; this function does not block,
- * and will return before the connection is complete. One has to then use
- * SDLNet_WaitUntilConnected() or SDLNet_GetConnectionStatus() to see when
- * the operation has completed, and if it was successful.
+ * Connecting is an asynchronous operation; this function does not block, and
+ * will return before the connection is complete. One has to then use
+ * SDLNet_WaitUntilConnected() or SDLNet_GetConnectionStatus() to see when the
+ * operation has completed, and if it was successful.
  *
- * Once connected, you can read and write data to the returned socket.
- * Stream sockets are a mode of _reliable_ transmission, which means data will
- * be received as a stream of bytes in the order you sent it. If there are
+ * Once connected, you can read and write data to the returned socket. Stream
+ * sockets are a mode of _reliable_ transmission, which means data will be
+ * received as a stream of bytes in the order you sent it. If there are
  * problems in transmission, the system will deal with protocol negotiation
  * and retransmission as necessary, transparent to your app, but this means
- * until data is available in the order sent, the remote side will not get
- * any new data. This is the tradeoff vs datagram sockets, where data can
- * arrive in any order, or not arrive at all, without waiting, but the sender
- * will not know.
+ * until data is available in the order sent, the remote side will not get any
+ * new data. This is the tradeoff vs datagram sockets, where data can arrive
+ * in any order, or not arrive at all, without waiting, but the sender will
+ * not know.
  *
- * Stream sockets don't employ any protocol (above the TCP level), so they
- * can connect to servers that aren't using SDL_net, but if you want to speak
- * any protocol beyond an abritrary stream of bytes, such as HTTP, you'll
- * have to implement that yourself on top of the stream socket.
+ * Stream sockets don't employ any protocol (above the TCP level), so they can
+ * connect to servers that aren't using SDL_net, but if you want to speak any
+ * protocol beyond an abritrary stream of bytes, such as HTTP, you'll have to
+ * implement that yourself on top of the stream socket.
  *
  * This function will fail if `address` is not finished resolving.
  *
@@ -493,24 +494,24 @@ extern DECLSPEC SDLNet_StreamSocket * SDLCALL SDLNet_CreateClient(SDLNet_Address
  * Block until a stream socket has connected to a server.
  *
  * The SDLNet_StreamSocket objects returned by SDLNet_CreateClient take time
- * to do their work, so it is does so _asynchronously_ instead of making
- * your program wait an indefinite amount of time.
+ * to do their work, so it is does so _asynchronously_ instead of making your
+ * program wait an indefinite amount of time.
  *
  * However, if you want your program to sleep until the connection is
  * complete, you can call this function.
  *
- * This function takes a timeout value, represented in milliseconds, of
- * how long to wait for resolution to complete. Specifying a timeout of -1
+ * This function takes a timeout value, represented in milliseconds, of how
+ * long to wait for resolution to complete. Specifying a timeout of -1
  * instructs the library to wait indefinitely, and a timeout of 0 just checks
- * the current status and returns immediately (and is functionally
- * equivalent to calling SDLNet_GetConnectionStatus).
+ * the current status and returns immediately (and is functionally equivalent
+ * to calling SDLNet_GetConnectionStatus).
  *
- * Connections can fail after some time (server took awhile to respond at
- * all, and then refused the connection outright), so be sure to check the
- * result of this function instead of assuming it worked!
+ * Connections can fail after some time (server took awhile to respond at all,
+ * and then refused the connection outright), so be sure to check the result
+ * of this function instead of assuming it worked!
  *
- * Once a connection is successfully made, the socket may read data from,
- * or write data to, the connected server.
+ * Once a connection is successfully made, the socket may read data from, or
+ * write data to, the connected server.
  *
  * If you don't want your program to block, you can call
  * SDLNet_GetConnectionStatus() from time to time until you get a non-zero
@@ -520,8 +521,8 @@ extern DECLSPEC SDLNet_StreamSocket * SDLCALL SDLNet_CreateClient(SDLNet_Address
  * \param timeout Number of milliseconds to wait for resolution to complete.
  *                -1 to wait indefinitely, 0 to check once without waiting.
  * \returns 1 if successfully connected, -1 if connection failed, 0 if still
- *            connecting (this function timed out without resolution); if -1,
- *            call SDL_GetError() for details.
+ *          connecting (this function timed out without resolution); if -1,
+ *          call SDL_GetError() for details.
  *
  * \threadsafety You should not operate on the same socket from multiple
  *               threads at the same time without supplying a serialization
@@ -552,18 +553,18 @@ typedef struct SDLNet_Server SDLNet_Server;   /**< a listen socket, internally. 
  * decide immediately if it can create a server or not. If this returns
  * success, you can immediately start accepting connections.
  *
- * You can specify an address to listen for connections on; this address
- * must be local to the system, and probably one returned by
- * SDLNet_GetLocalAddresses(), but almost always you just want to specify
- * NULL here, to listen on any address available to the app.
+ * You can specify an address to listen for connections on; this address must
+ * be local to the system, and probably one returned by
+ * SDLNet_GetLocalAddresses(), but almost always you just want to specify NULL
+ * here, to listen on any address available to the app.
  *
- * After creating a server, you get stream sockets to talk to incoming
- * client connections by calling SDLNet_AcceptClient().
+ * After creating a server, you get stream sockets to talk to incoming client
+ * connections by calling SDLNet_AcceptClient().
  *
- * Stream sockets don't employ any protocol (above the TCP level), so they
- * can accept connections from clients that aren't using SDL_net, but if you
- * want to speak any protocol beyond an abritrary stream of bytes, such as
- * HTTP, you'll have to implement that yourself on top of the stream socket.
+ * Stream sockets don't employ any protocol (above the TCP level), so they can
+ * accept connections from clients that aren't using SDL_net, but if you want
+ * to speak any protocol beyond an abritrary stream of bytes, such as HTTP,
+ * you'll have to implement that yourself on top of the stream socket.
  *
  * Unlike BSD sockets or WinSock, you specify the port as a normal integer;
  * you do not have to byteswap it into "network order," as the library will
@@ -587,27 +588,26 @@ extern DECLSPEC SDLNet_Server * SDLCALL SDLNet_CreateServer(SDLNet_Address *addr
 /**
  * Create a stream socket for the next pending client connection.
  *
- * When a client connects to a server, their connection will be pending
- * until the server _accepts_ the connection. Once accepted, the server
- * will be given a stream socket to communicate with the client, and they
- * can send data to, and receive data from, each other.
+ * When a client connects to a server, their connection will be pending until
+ * the server _accepts_ the connection. Once accepted, the server will be
+ * given a stream socket to communicate with the client, and they can send
+ * data to, and receive data from, each other.
  *
- * Unlike SDLNet_CreateClient, stream sockets returned from this function
- * are already connected and do not have to wait for the connection to
- * complete, as server acceptance is the final step of connecting.
+ * Unlike SDLNet_CreateClient, stream sockets returned from this function are
+ * already connected and do not have to wait for the connection to complete,
+ * as server acceptance is the final step of connecting.
  *
- * This function does not block. If there are no new connections pending,
- * this function will return 0 (for success, but `*client_stream` will
- * be set to NULL. This is not an error and a common condition the app
- * should expect. In fact, this function should be called in a loop until
- * this condition occurs, so all pending connections are accepted in
- * a single batch.
+ * This function does not block. If there are no new connections pending, this
+ * function will return 0 (for success, but `*client_stream` will be set to
+ * NULL. This is not an error and a common condition the app should expect. In
+ * fact, this function should be called in a loop until this condition occurs,
+ * so all pending connections are accepted in a single batch.
  *
- * If you want the server to sleep until there's a new connection, you
- * can use SDLNet_WaitUntilInputAvailable().
+ * If you want the server to sleep until there's a new connection, you can use
+ * SDLNet_WaitUntilInputAvailable().
  *
- * When done with the newly-accepted client, you can disconnect and dispose
- * of the stream socket by calling SDL_DestroyStreamSocket().
+ * When done with the newly-accepted client, you can disconnect and dispose of
+ * the stream socket by calling SDL_DestroyStreamSocket().
  *
  * \param server the server object to check for pending connections
  * \param client_stream Will be set to a new stream socket if a connection was
@@ -652,8 +652,8 @@ extern DECLSPEC void SDLCALL SDLNet_DestroyServer(SDLNet_Server *server);
 /**
  * Get the remote address of a stream socket.
  *
- * This reports the address of the remote side of a stream socket, which
- * might still be pending connnection.
+ * This reports the address of the remote side of a stream socket, which might
+ * still be pending connnection.
  *
  * This adds a reference to the address; the caller _must_ call
  * SDLNet_UnrefAddress() when done with it.
@@ -679,15 +679,15 @@ extern DECLSPEC SDLNet_Address * SDLCALL SDLNet_GetStreamSocketAddress(SDLNet_St
  * blocking.
  *
  * Connection can fail after some time (server took a while to respond, and
- * then rejected the connection), so be sure to check the result of
- * this function instead of assuming it worked because it's non-zero!
+ * then rejected the connection), so be sure to check the result of this
+ * function instead of assuming it worked because it's non-zero!
  *
- * Once a connection is successfully made, the stream socket can be used
- * to send and receive data with the server.
+ * Once a connection is successfully made, the stream socket can be used to
+ * send and receive data with the server.
  *
  * Note that if the connection succeeds, but later the connection is dropped,
- * this will still report the connection as successful, as it only deals
- * with the initial asynchronous work of getting connected; you'll know the
+ * this will still report the connection as successful, as it only deals with
+ * the initial asynchronous work of getting connected; you'll know the
  * connection dropped later when your reads and writes report failures.
  *
  * \param sock the stream socket to query.
@@ -708,30 +708,30 @@ extern DECLSPEC int SDLCALL SDLNet_GetConnectionStatus(SDLNet_StreamSocket *sock
 /**
  * Send bytes over a stream socket to a remote system.
  *
- * Stream sockets are _reliable_, which means data sent over them will
- * arrive in the order it was transmitted, and the system will retransmit
- * data as necessary to ensure its delivery. Which is to say, short of
- * catastrophic failure, data will arrive, possibly with severe delays.
- * Also, "catastrophic failure" isn't an uncommon event.
+ * Stream sockets are _reliable_, which means data sent over them will arrive
+ * in the order it was transmitted, and the system will retransmit data as
+ * necessary to ensure its delivery. Which is to say, short of catastrophic
+ * failure, data will arrive, possibly with severe delays. Also, "catastrophic
+ * failure" isn't an uncommon event.
  *
- * (This is opposed to Datagram sockets, which send chunks of data that
- * might arrive in any order, or not arrive at all, but you never wait
- * for missing chunks to show up.)
+ * (This is opposed to Datagram sockets, which send chunks of data that might
+ * arrive in any order, or not arrive at all, but you never wait for missing
+ * chunks to show up.)
  *
  * Stream sockets are _bidirectional_; you can read and write from the same
  * stream, and the other end of the connection can, too.
  *
- * This call never blocks; if it can't send the data immediately, the
- * library will queue it for later transmission. You can use
- * SDLNet_GetStreamSocketPendingWrites() to see how much is still
- * queued for later transmission, or SDLNet_WaitUntilStreamSocketDrained()
- * to block until all pending data has been sent.
+ * This call never blocks; if it can't send the data immediately, the library
+ * will queue it for later transmission. You can use
+ * SDLNet_GetStreamSocketPendingWrites() to see how much is still queued for
+ * later transmission, or SDLNet_WaitUntilStreamSocketDrained() to block until
+ * all pending data has been sent.
  *
- * If the connection has failed (remote side dropped us, or one of a
- * million other networking failures occurred), this function will
- * report failure by returning -1. Stream sockets only report failure for
- * unrecoverable conditions; once a stream socket fails, you should assume it
- * is no longer usable and should destroy it with SDL_DestroyStreamSocket().
+ * If the connection has failed (remote side dropped us, or one of a million
+ * other networking failures occurred), this function will report failure by
+ * returning -1. Stream sockets only report failure for unrecoverable
+ * conditions; once a stream socket fails, you should assume it is no longer
+ * usable and should destroy it with SDL_DestroyStreamSocket().
  *
  * \param sock the stream socket to send data through
  * \param buf a pointer to the data to send.
@@ -755,18 +755,18 @@ extern DECLSPEC int SDLCALL SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock
 /**
  * Query bytes still pending transmission on a stream socket.
  *
- * If SDLNet_WriteToStreamSocket() couldn't send all its data immediately,
- * it will queue it to be sent later. This function lets the app see how
- * much of that queue is still pending to be sent.
+ * If SDLNet_WriteToStreamSocket() couldn't send all its data immediately, it
+ * will queue it to be sent later. This function lets the app see how much of
+ * that queue is still pending to be sent.
  *
- * The library will try to send more queued data before reporting what's
- * left, but it will not block to do so.
+ * The library will try to send more queued data before reporting what's left,
+ * but it will not block to do so.
  *
- * If the connection has failed (remote side dropped us, or one of a
- * million other networking failures occurred), this function will
- * report failure by returning -1. Stream sockets only report failure for
- * unrecoverable conditions; once a stream socket fails, you should assume it
- * is no longer usable and should destroy it with SDL_DestroyStreamSocket().
+ * If the connection has failed (remote side dropped us, or one of a million
+ * other networking failures occurred), this function will report failure by
+ * returning -1. Stream sockets only report failure for unrecoverable
+ * conditions; once a stream socket fails, you should assume it is no longer
+ * usable and should destroy it with SDL_DestroyStreamSocket().
  *
  * \param sock the stream socket to query
  * \returns number of bytes still pending transmission, -1 on failure; call
@@ -787,29 +787,29 @@ extern DECLSPEC int SDLCALL SDLNet_GetStreamSocketPendingWrites(SDLNet_StreamSoc
 /**
  * Block until all of a stream socket's pending data is sent.
  *
- * If SDLNet_WriteToStreamSocket() couldn't send all its data immediately,
- * it will queue it to be sent later. This function lets the app sleep
- * until all the data is transmitted.
+ * If SDLNet_WriteToStreamSocket() couldn't send all its data immediately, it
+ * will queue it to be sent later. This function lets the app sleep until all
+ * the data is transmitted.
  *
- * This function takes a timeout value, represented in milliseconds, of
- * how long to wait for transmission to complete. Specifying a timeout of -1
+ * This function takes a timeout value, represented in milliseconds, of how
+ * long to wait for transmission to complete. Specifying a timeout of -1
  * instructs the library to wait indefinitely, and a timeout of 0 just checks
- * the current status and returns immediately (and is functionally
- * equivalent to calling SDLNet_GetStreamSocketPendingWrites).
+ * the current status and returns immediately (and is functionally equivalent
+ * to calling SDLNet_GetStreamSocketPendingWrites).
  *
  * If you don't want your program to block, you can call
  * SDLNet_GetStreamSocketPendingWrites from time to time until you get a
  * result <= 0.
  *
- * If the connection has failed (remote side dropped us, or one of a
- * million other networking failures occurred), this function will
- * report failure by returning -1. Stream sockets only report failure for
- * unrecoverable conditions; once a stream socket fails, you should assume it
- * is no longer usable and should destroy it with SDL_DestroyStreamSocket().
+ * If the connection has failed (remote side dropped us, or one of a million
+ * other networking failures occurred), this function will report failure by
+ * returning -1. Stream sockets only report failure for unrecoverable
+ * conditions; once a stream socket fails, you should assume it is no longer
+ * usable and should destroy it with SDL_DestroyStreamSocket().
  *
  * \param sock the stream socket to wait on
- * \param timeout Number of milliseconds to wait for draining to complete.
- *                -1 to wait indefinitely, 0 to check once without waiting.
+ * \param timeout Number of milliseconds to wait for draining to complete. -1
+ *                to wait indefinitely, 0 to check once without waiting.
  * \returns number of bytes still pending transmission, -1 on failure; call
  *          SDL_GetError() for details.
  *
@@ -829,41 +829,41 @@ extern DECLSPEC int SDLCALL SDLNet_WaitUntilStreamSocketDrained(SDLNet_StreamSoc
 /**
  * Receive bytes that a remote system sent to a stream socket.
  *
- * Stream sockets are _reliable_, which means data sent over them will
- * arrive in the order it was transmitted, and the system will retransmit
- * data as necessary to ensure its delivery. Which is to say, short of
- * catastrophic failure, data will arrive, possibly with severe delays.
- * Also, "catastrophic failure" isn't an uncommon event.
+ * Stream sockets are _reliable_, which means data sent over them will arrive
+ * in the order it was transmitted, and the system will retransmit data as
+ * necessary to ensure its delivery. Which is to say, short of catastrophic
+ * failure, data will arrive, possibly with severe delays. Also, "catastrophic
+ * failure" isn't an uncommon event.
  *
- * (This is opposed to Datagram sockets, which send chunks of data that
- * might arrive in any order, or not arrive at all, but you never wait
- * for missing chunks to show up.)
+ * (This is opposed to Datagram sockets, which send chunks of data that might
+ * arrive in any order, or not arrive at all, but you never wait for missing
+ * chunks to show up.)
  *
  * Stream sockets are _bidirectional_; you can read and write from the same
  * stream, and the other end of the connection can, too.
  *
  * This function returns data that has arrived for the stream socket that
- * hasn't been read yet. Data is provided in the order it was sent
- * on the remote side. This function may return less data than requested,
- * depending on what is available at the time, and also the app isn't
- * required to read all available data at once.
+ * hasn't been read yet. Data is provided in the order it was sent on the
+ * remote side. This function may return less data than requested, depending
+ * on what is available at the time, and also the app isn't required to read
+ * all available data at once.
  *
  * This call never blocks; if no new data isn't available at the time of the
  * call, it returns 0 immediately. The caller can try again later.
  *
- * If the connection has failed (remote side dropped us, or one of a
- * million other networking failures occurred), this function will
- * report failure by returning -1. Stream sockets only report failure for
- * unrecoverable conditions; once a stream socket fails, you should assume it
- * is no longer usable and should destroy it with SDL_DestroyStreamSocket().
+ * If the connection has failed (remote side dropped us, or one of a million
+ * other networking failures occurred), this function will report failure by
+ * returning -1. Stream sockets only report failure for unrecoverable
+ * conditions; once a stream socket fails, you should assume it is no longer
+ * usable and should destroy it with SDL_DestroyStreamSocket().
  *
  * \param sock the stream socket to receive data from
  * \param buf a pointer to a buffer where received data will be collected.
- * \param buflen the size of the buffer pointed to by `buf`, in bytes. This
- *               is the maximum that will be read from the stream socket.
+ * \param buflen the size of the buffer pointed to by `buf`, in bytes. This is
+ *               the maximum that will be read from the stream socket.
  * \returns number of bytes read from the stream socket (which can be less
- *          than `buflen` or zero if none available), -1 on failure;
- *          call SDL_GetError() for details.
+ *          than `buflen` or zero if none available), -1 on failure; call
+ *          SDL_GetError() for details.
  *
  * \threadsafety You should not operate on the same socket from multiple
  *               threads at the same time without supplying a serialization
@@ -888,17 +888,17 @@ extern DECLSPEC int SDLCALL SDLNet_ReadFromStreamSocket(SDLNet_StreamSocket *soc
  * percentage of stream socket data transmission will fail.
  *
  * Since stream sockets are reliable, failure in this case pretends that
- * packets are getting lost on the network, making the stream retransmit
- * to deal with it. To simulate this, the library will introduce some amount
- * of delay before it sends or receives data on the socket. The higher the
+ * packets are getting lost on the network, making the stream retransmit to
+ * deal with it. To simulate this, the library will introduce some amount of
+ * delay before it sends or receives data on the socket. The higher the
  * percentage, the more delay is introduced for bytes to make their way to
- * their final destination. The library may also decide to drop connections
- * at random, to simulate disasterous network conditions.
+ * their final destination. The library may also decide to drop connections at
+ * random, to simulate disasterous network conditions.
  *
- * Setting this to zero (the default) will disable the simulation. Setting
- * to 100 means _everything_ fails unconditionally and no further data will
- * get through (and perhaps your sockets eventually fail). At what percent
- * the system merely borders on unusable is left as an exercise to the app
+ * Setting this to zero (the default) will disable the simulation. Setting to
+ * 100 means _everything_ fails unconditionally and no further data will get
+ * through (and perhaps your sockets eventually fail). At what percent the
+ * system merely borders on unusable is left as an exercise to the app
  * developer.
  *
  * This is intended for debugging purposes, to simulate real-world conditions
@@ -919,13 +919,12 @@ extern DECLSPEC void SDLCALL SDLNet_SimulateStreamPacketLoss(SDLNet_StreamSocket
  * Dispose of a previously-created stream socket.
  *
  * This will immediately disconnect the other side of the connection, if
- * necessary. Further attempts to read or write the socket on the remote
- * end will fail.
+ * necessary. Further attempts to read or write the socket on the remote end
+ * will fail.
  *
- * This will _abandon_ any data queued for sending that hasn't made it
- * to the socket. If you need this data to arrive, you should wait for it
- * to transmit before destroying the socket with
- * SDLNet_GetStreamSocketPendingWrites() or
+ * This will _abandon_ any data queued for sending that hasn't made it to the
+ * socket. If you need this data to arrive, you should wait for it to transmit
+ * before destroying the socket with SDLNet_GetStreamSocketPendingWrites() or
  * SDLNet_WaitUntilStreamSocketDrained(). Any data that has arrived from the
  * remote end of the connection that hasn't been read yet is lost.
  *
@@ -961,18 +960,17 @@ typedef struct SDLNet_Datagram
 /**
  * Create and bind a new datagram socket.
  *
- * Datagram sockets follow different rules than stream sockets. They are not
- * a reliable stream of bytes but rather packets, they are not limited to
+ * Datagram sockets follow different rules than stream sockets. They are not a
+ * reliable stream of bytes but rather packets, they are not limited to
  * talking to a single other remote system, they do not maintain a single
  * "connection" that can be dropped, and they more nimble about network
- * failures at the expense of being more complex to use. What makes sense
- * for your app depends entirely on what your app is trying to accomplish.
+ * failures at the expense of being more complex to use. What makes sense for
+ * your app depends entirely on what your app is trying to accomplish.
  *
  * Generally the idea of a datagram socket is that you send data one chunk
  * ("packet") at a time to any address you want, and it arrives whenever it
- * gets there, even if later packets get there first, and maybe it doesn't
- * get there at all, and you don't know when anything of this happens by
- * default.
+ * gets there, even if later packets get there first, and maybe it doesn't get
+ * there at all, and you don't know when anything of this happens by default.
  *
  * This function creates a new datagram socket.
  *
@@ -980,10 +978,10 @@ typedef struct SDLNet_Datagram
  * decide immediately if it can create a socket or not. If this returns
  * success, you can immediately start talking to the network.
  *
- * You can specify an address to listen for connections on; this address
- * must be local to the system, and probably one returned by
- * SDLNet_GetLocalAddresses(), but almost always you just want to specify
- * NULL here, to listen on any address available to the app.
+ * You can specify an address to listen for connections on; this address must
+ * be local to the system, and probably one returned by
+ * SDLNet_GetLocalAddresses(), but almost always you just want to specify NULL
+ * here, to listen on any address available to the app.
  *
  * If you need to bind to a specific port (like a server), you should specify
  * it in the `port` argument; datagram servers should do this, so they can be
@@ -1005,9 +1003,9 @@ typedef struct SDLNet_Datagram
  *
  * \param address the _local_ address to listen for connections on, or NULL.
  * \param the port on the local address to listen for connections on, or zero
- *        for the system to decide.
- * \returns a new SDLNet_DatagramSocket, or NULL on error; call
- *          SDL_GetError() for details.
+ *            for the system to decide.
+ * \returns a new SDLNet_DatagramSocket, or NULL on error; call SDL_GetError()
+ *          for details.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -1027,22 +1025,22 @@ extern DECLSPEC SDLNet_DatagramSocket * SDLCALL SDLNet_CreateDatagramSocket(SDLN
  * stream of data.
  *
  * Datagram packets might arrive in a different order than you sent them, or
- * they may just be lost while travelling across the network. You have to
- * plan for this.
+ * they may just be lost while travelling across the network. You have to plan
+ * for this.
  *
- * You can send to any address and port on the network, but there has to be
- * a datagram socket waiting for the data on the other side for the packet
- * not to be lost.
+ * You can send to any address and port on the network, but there has to be a
+ * datagram socket waiting for the data on the other side for the packet not
+ * to be lost.
  *
  * General wisdom is that you shouldn't send a packet larger than 1500 bytes
  * over the Internet, as bad routers might fragment or lose larger ones, but
  * this limit is not hardcoded into SDL_net and in good conditions you might
  * be able to send significantly more.
  *
- * This call never blocks; if it can't send the data immediately, the
- * library will queue it for later transmission. There is no query to see
- * what is still queued, as datagram transmission is unreliable, so you should
- * never assume anything about queued data.
+ * This call never blocks; if it can't send the data immediately, the library
+ * will queue it for later transmission. There is no query to see what is
+ * still queued, as datagram transmission is unreliable, so you should never
+ * assume anything about queued data.
  *
  * If there's a fatal error, this function will return -1. Datagram sockets
  * generally won't report failures, because there is no state like a
@@ -1073,15 +1071,14 @@ extern DECLSPEC int SDLCALL SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDL
  * Receive a new packet that a remote system sent to a datagram socket.
  *
  * Datagram sockets send packets of data. They either arrive as complete
- * packets or they don't arrive at all, so you'll never receive half a
- * packet.
+ * packets or they don't arrive at all, so you'll never receive half a packet.
  *
  * This call never blocks; if no new data isn't available at the time of the
  * call, it returns 0 immediately. The caller can try again later.
  *
  * On a successful call to this function, it returns zero, even if no new
- * packets are available, so you should check for a successful return and
- * a non-NULL value in `*dgram` to decide if a new packet is available.
+ * packets are available, so you should check for a successful return and a
+ * non-NULL value in `*dgram` to decide if a new packet is available.
  *
  * You must pass received packets to SDLNet_DestroyDatagram when you are done
  * with them. If you want to save the sender's address past this time, it is
@@ -1089,10 +1086,10 @@ extern DECLSPEC int SDLCALL SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDL
  * so long as you call SDLNet_UnrefAddress() on it when you are done with it.
  *
  * Since datagrams can arrive from any address or port on the network without
- * prior warning, this information is available in the SDLNet_Datagram
- * object that is provided by this function, and this is the only way to
- * know who to reply to. Even if you aren't acting as a "server," packets
- * can still arrive at your socket if someone sends one.
+ * prior warning, this information is available in the SDLNet_Datagram object
+ * that is provided by this function, and this is the only way to know who to
+ * reply to. Even if you aren't acting as a "server," packets can still arrive
+ * at your socket if someone sends one.
  *
  * If there's a fatal error, this function will return -1. Datagram sockets
  * generally won't report failures, because there is no state like a
@@ -1123,11 +1120,11 @@ extern DECLSPEC int SDLCALL SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, 
  * Dispose of a datagram packet previously received.
  *
  * You must pass packets received through SDLNet_ReceiveDatagram to this
- * function when you are done with them. This will free resources used
- * by this packet and unref its SDLNet_Address.
+ * function when you are done with them. This will free resources used by this
+ * packet and unref its SDLNet_Address.
  *
- * If you want to save the sender's address from the packet past this time,
- * it is safe to call SDLNet_RefAddress() on the address and hold onto its
+ * If you want to save the sender's address from the packet past this time, it
+ * is safe to call SDLNet_RefAddress() on the address and hold onto its
  * pointer, so long as you call SDLNet_UnrefAddress() on it when you are done
  * with it.
  *
@@ -1157,8 +1154,8 @@ extern DECLSPEC void SDLCALL SDLNet_DestroyDatagram(SDLNet_Datagram *dgram);
  * The library will randomly lose packets (both incoming and outgoing) at an
  * average matching `percent_loss`. Setting this to zero (the default) will
  * disable the simulation. Setting to 100 means _everything_ fails
- * unconditionally and no further data will get through. At what percent
- * the system merely borders on unusable is left as an exercise to the app
+ * unconditionally and no further data will get through. At what percent the
+ * system merely borders on unusable is left as an exercise to the app
  * developer.
  *
  * This is intended for debugging purposes, to simulate real-world conditions
@@ -1181,12 +1178,12 @@ extern DECLSPEC void SDLCALL SDLNet_SimulateDatagramPacketLoss(SDLNet_DatagramSo
  *
  * This will _abandon_ any data queued for sending that hasn't made it to the
  * socket. If you need this data to arrive, you should wait for confirmation
- * from the remote computer in some form that you devise yourself. Queued
- * data is not guaranteed to arrive even if the library made efforts to
- * transmit it here.
+ * from the remote computer in some form that you devise yourself. Queued data
+ * is not guaranteed to arrive even if the library made efforts to transmit it
+ * here.
  *
- * Any data that has arrived from the remote end of the connection that
- * hasn't been read yet is lost.
+ * Any data that has arrived from the remote end of the connection that hasn't
+ * been read yet is lost.
  *
  * \param sock datagram socket to destroy
  *
@@ -1208,8 +1205,8 @@ extern DECLSPEC void SDLCALL SDLNet_DestroyDatagramSocket(SDLNet_DatagramSocket 
 /**
  * Block on multiple sockets until at least one has data available.
  *
- * This is a complex function that most apps won't need, but it could be
- * used to implement a more efficient server or i/o thread in some cases.
+ * This is a complex function that most apps won't need, but it could be used
+ * to implement a more efficient server or i/o thread in some cases.
  *
  * This allows you to give it a list of objects and wait for new input to
  * become available on any of them. The calling thread is put to sleep until
@@ -1220,21 +1217,20 @@ extern DECLSPEC void SDLCALL SDLNet_DestroyDatagramSocket(SDLNet_DatagramSocket 
  *
  * - SDLNet_Server (reports new input when a connection is ready to be
  *   accepted with SDLNet_AcceptClient())
- * - SDLNet_StreamSocket (reports new input when the remote end has sent
- *   more bytes of data to be read with SDLNet_ReadFromStreamSocket).
- * - SDLNet_DatagramSocket (reports new input when a new packet arrives
- *   that can be read with SDLNet_ReceiveDatagram).
+ * - SDLNet_StreamSocket (reports new input when the remote end has sent more
+ *   bytes of data to be read with SDLNet_ReadFromStreamSocket).
+ * - SDLNet_DatagramSocket (reports new input when a new packet arrives that
+ *   can be read with SDLNet_ReceiveDatagram).
  *
- * This function takes a timeout value, represented in milliseconds, of
- * how long to wait for resolution to complete. Specifying a timeout of -1
+ * This function takes a timeout value, represented in milliseconds, of how
+ * long to wait for resolution to complete. Specifying a timeout of -1
  * instructs the library to wait indefinitely, and a timeout of 0 just checks
  * the current status and returns immediately.
  *
  * This returns the number of items that have new input, but it does not tell
  * you which ones; since access to them is non-blocking, you can just try to
- * read from each of them and see which are ready. If nothing is ready and
- * the timeout is reached, this returns zero. On error, this returns -1.
- *
+ * read from each of them and see which are ready. If nothing is ready and the
+ * timeout is reached, this returns zero. On error, this returns -1.
  *
  * \param vsockets an array of pointers to various objects that can be waited
  *                 on, each cast to a void pointer.
