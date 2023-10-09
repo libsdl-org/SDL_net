@@ -743,10 +743,10 @@ static struct addrinfo *MakeAddrInfoWithPort(const SDLNet_Address *addr, const i
     // want to keep things generic and also not set up a port at resolve time.
     struct addrinfo hints;
     SDL_zero(hints);
-    hints.ai_family = ainfo ? ainfo->ai_family : AF_UNSPEC;
+    hints.ai_family = ainfo ? ainfo->ai_family : AF_INET6;
     hints.ai_socktype = socktype;
     //hints.ai_protocol = ainfo ? ainfo->ai_protocol : 0;
-    hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV | (!ainfo ? AI_PASSIVE : 0);
+    hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV | (!ainfo ? AI_PASSIVE | AI_V4MAPPED : 0);
 
     char service[16];
     SDL_snprintf(service, sizeof (service), "%d", (int) port);
