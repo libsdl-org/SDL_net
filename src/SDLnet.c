@@ -270,10 +270,12 @@ int SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount)
     }
 
     if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == ERROR_BUFFER_OVERFLOW) {
-        pAdapterInfo = (IP_ADAPTER_INFO *) SDL_realloc(pAdapterInfo, ulOutBufLen);
-        if (pAdapterInfo == NULL) {
+        PIP_ADAPTER_INFO pAdapterInfoTmp = (PIP_ADAPTER_INFO) SDL_realloc(pAdapterInfo, ulOutBufLen);
+        if (pAdapterInfoTmp == NULL) {
+            SDL_free(pAdapterInfo);
             return 0;
         }
+        pAdapterInfo = pAdapterInfoTmp;
         dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen);
     }
 
