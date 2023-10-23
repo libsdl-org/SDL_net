@@ -936,7 +936,7 @@ SDLNet_Server *SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port)
     }
 
     int zero = 0;
-    setsockopt(server->handle, SOL_IPV6, IPV6_V6ONLY, (const char *) &zero, sizeof (zero));  // if this fails, oh well.
+    setsockopt(server->handle, IPPROTO_IPV6, IPV6_V6ONLY, (const char *) &zero, sizeof (zero));  // if this fails, oh well.
 
     int rc = bind(server->handle, addrwithport->ai_addr, addrwithport->ai_addrlen);
     freeaddrinfo(addrwithport);
@@ -1289,7 +1289,7 @@ SDLNet_DatagramSocket *SDLNet_CreateDatagramSocket(SDLNet_Address *addr, Uint16 
     }
 
     int zero = 0;
-    setsockopt(sock->handle, SOL_IPV6, IPV6_V6ONLY, (const char *) &zero, sizeof (zero));  // if this fails, oh well.
+    setsockopt(sock->handle, IPPROTO_IPV6, IPV6_V6ONLY, (const char *) &zero, sizeof (zero));  // if this fails, oh well.
 
     const int rc = bind(sock->handle, addrwithport->ai_addr, addrwithport->ai_addrlen);
     freeaddrinfo(addrwithport);
