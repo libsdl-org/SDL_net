@@ -117,6 +117,9 @@ if(WIN32)
     target_link_libraries(${sdl3_net_target_name} PRIVATE iphlpapi ws2_32)
     list(APPEND PC_LIBS -liphlpapi -lws2_32)
 endif()
+if(CMAKE_SYSTEM_NAME MATCHES "Haiku.*")
+    target_link_libraries(${sdl3_net_target_name} PRIVATE network)
+endif()
 set_target_properties(${sdl3_net_target_name} PROPERTIES
     OUTPUT_NAME "SDL3_net"
     DEFINE_SYMBOL DLL_EXPORT
