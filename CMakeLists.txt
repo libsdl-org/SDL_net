@@ -49,13 +49,13 @@ include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
-set(BUILD_SHARED_LIBS_DEFAULT ON)
+set(PLATFORM_SUPPORTS_SHARED ON)
 if(VITA OR PSP OR PS2 OR N3DS OR RISCOS)
-    set(BUILD_SHARED_LIBS_DEFAULT OFF)
+    set(PLATFORM_SUPPORTS_SHARED OFF)
 endif()
 
-option(CMAKE_POSITION_INDEPENDENT_CODE "Build static libraries with -fPIC" ON)
-option(BUILD_SHARED_LIBS "Build the library as a shared library" ${BUILD_SHARED_LIBS_DEFAULT})
+option(CMAKE_POSITION_INDEPENDENT_CODE "Build static libraries with -fPIC" ${PLATFORM_SUPPORTS_SHARED})
+cmake_dependent_option(BUILD_SHARED_LIBS "Build the library as a shared library" ON PLATFORM_SUPPORTS_SHARED OFF)
 
 cmake_dependent_option(SDL3NET_INSTALL "Enable SDL3_net install target" ${SDL3NET_ROOTPROJECT} "${sdl3net_install_enableable}" OFF)
 cmake_dependent_option(SDL3NET_INSTALL_MAN "Install man pages for SDL3_net" ${SDL3NET_ROOTPROJECT} "SDL3NET_INSTALL" OFF)
