@@ -23,9 +23,9 @@
 #  if _WIN32_WINNT < 0x0600 // we need APIs that didn't arrive until Windows Vista.
 #    undef _WIN32_WINNT
 #  endif
-#  ifndef _WIN32_WINNT
-#    define _WIN32_WINNT 0x0600
-#  endif
+#endif
+#ifndef _WIN32_WINNT
+#  define _WIN32_WINNT 0x0600
 #endif
 
 #include "SDL3_net/SDL_net.h"
