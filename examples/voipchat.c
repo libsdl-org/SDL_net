@@ -69,7 +69,7 @@ static void ClearOldVoices(const Uint64 now)
         next = i->next;
         if (!now || ((now - i->last_seen) > 60000)) {  /* nothing new in 60+ seconds? (or shutting down?) */
             if (!i->stream || (SDL_GetAudioStreamAvailable(i->stream) == 0)) {  /* they'll get a reprieve if data is still playing out */
-                SDL_Log("Destroying voice #%llu", (unsigned long long) i->idnum);
+                SDL_Log("Destroying voice #%" SDL_PRIu64, i->idnum);
                 SDL_DestroyAudioStream(i->stream);
                 SDLNet_UnrefAddress(i->addr);
                 if (i->prev) {
@@ -123,7 +123,7 @@ static void mainloop(void)
                 Voice *i;
 
                 if (!voice) {
-                    SDL_Log("SERVER: Creating voice idnum=%llu from %s:%d", (unsigned long long) (next_idnum+1), SDLNet_GetAddressString(dgram->addr), (int) dgram->port);
+                    SDL_Log("SERVER: Creating voice idnum=%" SDL_PRIu64 " from %s:%d", next_idnum + 1, SDLNet_GetAddressString(dgram->addr), (int) dgram->port);
                     voice = (Voice *) SDL_calloc(1, sizeof (Voice));
                     voice->addr = SDLNet_RefAddress(dgram->addr);
                     voice->port = dgram->port;
@@ -157,7 +157,7 @@ static void mainloop(void)
                     const Uint64 packetnum = SDL_SwapLE64(((const Uint64 *) dgram->buf)[1]);
                     Voice *voice = FindVoiceByIdNum(idnum);
                     if (!voice) {
-                        SDL_Log("CLIENT: Creating voice idnum=#%llu", (unsigned long long) idnum);
+                        SDL_Log("CLIENT: Creating voice idnum=#%" SDL_PRIu64, idnum);
                         voice = (Voice *) SDL_calloc(1, sizeof (Voice));
                         if (audio_device) {
                             voice->stream = SDL_CreateAudioStream(&audio_spec, &audio_spec);
