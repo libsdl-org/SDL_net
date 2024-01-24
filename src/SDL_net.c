@@ -19,6 +19,7 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
+#ifdef _WIN32
 #ifdef _WIN32_WINNT
 #  if _WIN32_WINNT < 0x0600 // we need APIs that didn't arrive until Windows Vista.
 #    undef _WIN32_WINNT
@@ -27,10 +28,11 @@
 #ifndef _WIN32_WINNT
 #  define _WIN32_WINNT 0x0600
 #endif
+#endif /* _WIN32 */
 
 #include "SDL3_net/SDL_net.h"
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN 1
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -133,7 +135,7 @@ static int RandomNumberBetween(const int lo, const int hi)
 
 static int CloseSocketHandle(Socket handle)
 {
-#ifdef __WINDOWS__
+#ifdef _WIN32
     return closesocket(handle);
 #else
     return close(handle);
@@ -142,7 +144,7 @@ static int CloseSocketHandle(Socket handle)
 
 static int LastSocketError(void)
 {
-#ifdef __WINDOWS__
+#ifdef _WIN32
     return WSAGetLastError();
 #else
     return errno;
@@ -151,7 +153,7 @@ static int LastSocketError(void)
 
 static char *CreateSocketErrorString(int rc)
 {
-#ifdef __WINDOWS__
+#ifdef _WIN32
     WCHAR msgbuf[256];
     const DWORD bw = FormatMessageW(
         FORMAT_MESSAGE_FROM_SYSTEM |
@@ -174,7 +176,7 @@ static char *CreateSocketErrorString(int rc)
 
 static char *CreateGetAddrInfoErrorString(int rc)
 {
-#ifdef __WINDOWS__
+#ifdef _WIN32
     return CreateSocketErrorString(rc);  // same error codes.
 #else
     return SDL_strdup((rc == EAI_SYSTEM) ? strerror(errno) : gai_strerror(rc));
@@ -371,7 +373,7 @@ int SDLNet_Init(void)
 
     char *origerrstr = NULL;
 
-    #ifdef __WINDOWS__
+    #ifdef _WIN32
     WSADATA data;
     if (WSAStartup(MAKEWORD(1, 1), &data) != 0) {
         return SetSocketError("WSAStartup() failed", LastSocketError());
@@ -462,7 +464,7 @@ void SDLNet_Quit(void)
 
     resolver_queue = NULL;
 
-    #ifdef __WINDOWS__
+    #ifdef _WIN32
     WSACleanup();
     #endif
 }
@@ -637,7 +639,7 @@ SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
 
     *num_addresses = 0;
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
     // !!! FIXME: maybe LoadLibrary(iphlpapi) on the first call, since most
     // !!! FIXME: things won't ever use this.
 
@@ -802,7 +804,7 @@ struct SDLNet_StreamSocket
 
 static int MakeSocketNonblocking(Socket handle)
 {
-    #ifdef __WINDOWS__
+    #ifdef _WIN32
     DWORD one = 1;
     return ioctlsocket(handle, FIONBIO, &one);
     #else
@@ -812,7 +814,7 @@ static int MakeSocketNonblocking(Socket handle)
 
 static SDL_bool WouldBlock(const int err)
 {
-    #ifdef __WINDOWS__
+    #ifdef _WIN32
     return (err == WSAEWOULDBLOCK) ? SDL_TRUE : SDL_FALSE;
     #else
     return ((err == EWOULDBLOCK) || (err == EAGAIN) || (err == EINPROGRESS)) ? SDL_TRUE : SDL_FALSE;
