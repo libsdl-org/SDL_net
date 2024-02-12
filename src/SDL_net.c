@@ -86,9 +86,9 @@ typedef enum SDLNet_SocketType
 } SDLNet_SocketType;
 
 
-const SDL_version *SDLNet_LinkedVersion(void)
+const SDL_Version *SDLNet_LinkedVersion(void)
 {
-    static const SDL_version linked_version = {
+    static const SDL_Version linked_version = {
         SDL_NET_MAJOR_VERSION, SDL_NET_MINOR_VERSION, SDL_NET_PATCHLEVEL
     };
     return &linked_version;

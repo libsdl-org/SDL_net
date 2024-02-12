@@ -31,7 +31,6 @@
 #define SDL_NET_H_
 
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_version.h>
 #include <SDL3/SDL_begin_code.h>
 
 /* Set up for C function definitions, even when using C++ */
@@ -77,7 +76,7 @@ extern "C" {
  *
  * \since This function is available since SDL_Net 3.0.0.
  */
-extern DECLSPEC const SDL_version * SDLCALL SDLNet_LinkedVersion(void);
+extern DECLSPEC const SDL_Version * SDLCALL SDLNet_LinkedVersion(void);
 
 
 /* init/quit functions... */
