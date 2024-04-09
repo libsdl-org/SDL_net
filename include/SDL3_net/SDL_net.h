@@ -47,8 +47,8 @@ extern "C" {
 /**
  * Query the verion of the SDL_net library in use at compile time.
  *
- * This macro copies the version listen in the SDL_net headers into a
- * struct of the app's choosing.
+ * This macro copies the version listen in the SDL_net headers into a struct
+ * of the app's choosing.
  *
  * \threadsafety It is safe to use this macro from any thread.
  *
