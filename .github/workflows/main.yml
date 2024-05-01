@@ -44,7 +44,6 @@ jobs:
           brew install \
             autoconf \
             automake \
-            ninja \
             pkg-config \
             sdl2 \
             ${NULL+}
@@ -58,7 +57,6 @@ jobs:
           automake \
           cmake \
           libsdl2-dev \
-          ninja-build \
           pkg-config \
           ${NULL+}
 
@@ -71,8 +69,8 @@ jobs:
         .github/fetch_sdl_vc.ps1
         echo "SDL2_DIR=$Env:GITHUB_WORKSPACE/SDL2-devel-VC" >> $Env:GITHUB_ENV
     - name: Setup Ninja for MSVC
-      if: "matrix.platform.msvc"
-      uses: ashutoshvarma/setup-ninja@master
+      if: ${{ !contains(matrix.platform.shell, 'msys2') }}
+      uses: aseprite/get-ninja@main
       with:
         version: 1.10.2
     - uses: ilammy/msvc-dev-cmd@v1
