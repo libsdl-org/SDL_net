@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Install Ninja
         if: ${{ !contains(matrix.platform.shell, 'msys2') }}
-        uses: turtlesec-no/get-ninja@main
+        uses: aseprite/get-ninja@main
       - name: Set up SDL3
         uses: libsdl-org/setup-sdl@main
         id: sdl
