@@ -58,7 +58,7 @@ option(CMAKE_POSITION_INDEPENDENT_CODE "Build static libraries with -fPIC" ${PLA
 cmake_dependent_option(BUILD_SHARED_LIBS "Build the library as a shared library" ON PLATFORM_SUPPORTS_SHARED OFF)
 
 cmake_dependent_option(SDL3NET_INSTALL "Enable SDL3_net install target" ${SDL3NET_ROOTPROJECT} "${sdl3net_install_enableable}" OFF)
-cmake_dependent_option(SDL3NET_INSTALL_MAN "Install man pages for SDL3_net" ${SDL3NET_ROOTPROJECT} "SDL3NET_INSTALL" OFF)
+cmake_dependent_option(SDL3NET_INSTALL_MAN "Install man pages for SDL3_net" OFF "SDL3NET_INSTALL" OFF)
 option(SDL3NET_WERROR "Treat warnings as errors" OFF)
 
 option(SDL3NET_SAMPLES "Build the SDL3_net sample program(s)" ${SDL3NET_SAMPLES_DEFAULT})

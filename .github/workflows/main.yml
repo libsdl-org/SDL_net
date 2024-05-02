@@ -61,6 +61,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=prefix \
             -DSDL3NET_WERROR=ON \
+            -DSDL3NET_INSTALL_MAN=ON \
             -DCMAKE_INSTALL_PREFIX=prefix \
             ${{ matrix.platform.cmake }}
 
