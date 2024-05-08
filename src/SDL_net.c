@@ -333,7 +333,6 @@ static SDLNet_Address *CreateSDLNetAddrFromSockAddr(struct sockaddr *saddr, Sock
 
     SDLNet_Address *addr = (SDLNet_Address *) SDL_calloc(1, sizeof (SDLNet_Address));
     if (!addr) {
-        SDL_OutOfMemory();
         return NULL;
     }
     SDL_AtomicSet(&addr->status, 1);
@@ -356,7 +355,6 @@ static SDLNet_Address *CreateSDLNetAddrFromSockAddr(struct sockaddr *saddr, Sock
     if (!addr->human_readable) {
         freeaddrinfo(addr->ainfo);
         SDL_free(addr);
-        SDL_OutOfMemory();
         return NULL;
     }
 
@@ -473,14 +471,12 @@ SDLNet_Address *SDLNet_ResolveHostname(const char *host)
 {
     SDLNet_Address *addr = SDL_calloc(1, sizeof (SDLNet_Address));
     if (!addr) {
-        SDL_OutOfMemory();
         return NULL;
     }
 
     addr->hostname = SDL_strdup(host);
     if (!addr->hostname) {
         SDL_free(addr);
-        SDL_OutOfMemory();
         return NULL;
     }
 
@@ -654,7 +650,6 @@ SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
         SDL_free(addrs);
         addrs = (IP_ADAPTER_ADDRESSES *) SDL_malloc(buflen);
         if (!addrs) {
-            SDL_OutOfMemory();
             return NULL;
         }
 
@@ -676,7 +671,6 @@ SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
 
     retval = (SDLNet_Address **) SDL_calloc(((size_t)count) + 1, sizeof (SDLNet_Address *));
     if (!retval) {
-        SDL_OutOfMemory();
         SDL_free(addrs);
         return NULL;
     }
@@ -711,7 +705,6 @@ SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
         if (ifaddr) {
             freeifaddrs(ifaddr);
         }
-        SDL_OutOfMemory();
         return NULL;
     }
 
@@ -833,7 +826,6 @@ SDLNet_StreamSocket *SDLNet_CreateClient(SDLNet_Address *addr, Uint16 port)
 
     SDLNet_StreamSocket *sock = (SDLNet_StreamSocket *) SDL_calloc(1, sizeof (SDLNet_StreamSocket));
     if (!sock) {
-        SDL_OutOfMemory();
         return NULL;
     }
 
@@ -928,7 +920,6 @@ SDLNet_Server *SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port)
 
     SDLNet_Server *server = (SDLNet_Server *) SDL_calloc(1, sizeof (SDLNet_Server));
     if (!server) {
-        SDL_OutOfMemory();
         return NULL;
     }
 
@@ -1029,7 +1020,7 @@ int SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stre
     if (!sock) {
         SDLNet_UnrefAddress(fromaddr);
         CloseSocketHandle(handle);
-        return SDL_OutOfMemory();
+        return -1;
     }
 
     sock->socktype = SOCKETTYPE_STREAM;
@@ -1141,7 +1132,7 @@ int SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int b
         }
         void *ptr = SDL_realloc(sock->pending_output_buffer, newlen);
         if (!ptr) {
-            return SDL_OutOfMemory();
+            return -1;
         }
         sock->pending_output_buffer = (Uint8 *) ptr;
         sock->pending_output_allocation = newlen;
@@ -1281,7 +1272,6 @@ SDLNet_DatagramSocket *SDLNet_CreateDatagramSocket(SDLNet_Address *addr, Uint16 
 
     SDLNet_DatagramSocket *sock = (SDLNet_DatagramSocket *) SDL_calloc(1, sizeof (SDLNet_DatagramSocket));
     if (!sock) {
-        SDL_OutOfMemory();
         return NULL;
     }
 
@@ -1416,7 +1406,7 @@ int SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint1
         }
         void *ptr = SDL_realloc(sock->pending_output, newlen * sizeof (SDLNet_Datagram *));
         if (!ptr) {
-            return SDL_OutOfMemory();
+            return -1;
         }
         sock->pending_output = (SDLNet_Datagram **) ptr;
         sock->pending_output_allocation = newlen;
@@ -1424,7 +1414,7 @@ int SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint1
 
     SDLNet_Datagram *dgram = (SDLNet_Datagram *) SDL_malloc(sizeof (SDLNet_Datagram) + buflen);
     if (!dgram) {
-        return SDL_OutOfMemory();
+        return -1;
     }
 
     dgram->buf = (Uint8 *) (dgram+1);
@@ -1510,7 +1500,7 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
         if (create_fromaddr) {
             SDLNet_UnrefAddress(fromaddr);
         }
-        return SDL_OutOfMemory();
+        return -1;
     }
 
     dg->buf = (Uint8 *) (dg+1);
@@ -1597,7 +1587,7 @@ int SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutm
     if (numsockets > ((int) SDL_arraysize(stack_pfds))) {  // allocate if there's a _ton_ of these.
         malloced_pfds = (struct pollfd *) SDL_malloc(numsockets * sizeof (*pfds));
         if (!malloced_pfds) {
-            return SDL_OutOfMemory();
+            return -1;
         }
         pfds = malloced_pfds;
     }
