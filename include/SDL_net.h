@@ -69,21 +69,22 @@ extern "C" {
 }
 
 #if SDL_NET_MAJOR_VERSION < 3 && SDL_MAJOR_VERSION < 3
+
 /**
- *  This is the version number macro for the current SDL_net version.
+ * This is the version number macro for the current SDL_net version.
  *
- *  In versions higher than 2.9.0, the minor version overflows into
- *  the thousands digit: for example, 2.23.0 is encoded as 4300.
- *  This macro will not be available in SDL 3.x or SDL_net 3.x.
+ * In versions higher than 2.9.0, the minor version overflows into the
+ * thousands digit: for example, 2.23.0 is encoded as 4300. This macro will
+ * not be available in SDL 3.x or SDL_net 3.x.
  *
- *  Deprecated, use SDL_NET_VERSION_ATLEAST or SDL_NET_VERSION instead.
+ * Deprecated, use SDL_NET_VERSION_ATLEAST or SDL_NET_VERSION instead.
  */
 #define SDL_NET_COMPILEDVERSION \
     SDL_VERSIONNUM(SDL_NET_MAJOR_VERSION, SDL_NET_MINOR_VERSION, SDL_NET_PATCHLEVEL)
 #endif /* SDL_NET_MAJOR_VERSION < 3 && SDL_MAJOR_VERSION < 3 */
 
 /**
- *  This macro will evaluate to true if compiled with SDL_net at least X.Y.Z.
+ * This macro will evaluate to true if compiled with SDL_net at least X.Y.Z.
  */
 #define SDL_NET_VERSION_ATLEAST(X, Y, Z) \
     ((SDL_NET_MAJOR_VERSION >= X) && \
@@ -810,13 +811,13 @@ extern DECLSPEC int SDLCALL SDLNet_AddSocket(SDLNet_SocketSet set, SDLNet_Generi
 /**
  * Add a TCP socket to a socket set, to be checked for available data.
  *
- * This is a small TCP-specific wrapper over SDLNet_AddSocket; please refer
- * to that function's documentation.
+ * This is a small TCP-specific wrapper over SDLNet_AddSocket; please refer to
+ * that function's documentation.
  *
  * \param set the socket set to add a new socket to.
  * \param sock the socket to add to the set.
- * \returns the total number of sockets contained in the set (including this new one),
- *          or -1 if the set is already full.
+ * \returns the total number of sockets contained in the set (including this
+ *          new one), or -1 if the set is already full.
  *
  * \since This function is available since SDL_net 2.0.0.
  *
@@ -830,13 +831,13 @@ SDL_FORCE_INLINE int SDLNet_TCP_AddSocket(SDLNet_SocketSet set, TCPsocket sock)
 /**
  * Add a UDP socket to a socket set, to be checked for available data.
  *
- * This is a small UDP-specific wrapper over SDLNet_AddSocket; please refer
- * to that function's documentation.
+ * This is a small UDP-specific wrapper over SDLNet_AddSocket; please refer to
+ * that function's documentation.
  *
  * \param set the socket set to add a new socket to.
  * \param sock the socket to add to the set.
- * \returns the total number of sockets contained in the set (including this new one),
- *          or -1 if the set is already full.
+ * \returns the total number of sockets contained in the set (including this
+ *          new one), or -1 if the set is already full.
  *
  * \since This function is available since SDL_net 2.0.0.
  *
@@ -880,13 +881,13 @@ extern DECLSPEC int SDLCALL SDLNet_DelSocket(SDLNet_SocketSet set, SDLNet_Generi
 /**
  * Remove a TCP socket from a socket set.
  *
- * This is a small TCP-specific wrapper over SDLNet_DelSocket; please refer
- * to that function's documentation.
+ * This is a small TCP-specific wrapper over SDLNet_DelSocket; please refer to
+ * that function's documentation.
  *
  * \param set the socket set to remove a socket from.
  * \param sock the socket to remove from the set.
- * \returns the total number of sockets contained in the set (after
- *          `sock`'s removal), or -1 if `sock` was not in the set.
+ * \returns the total number of sockets contained in the set (after `sock`'s
+ *          removal), or -1 if `sock` was not in the set.
  *
  * \since This function is available since SDL_net 2.0.0.
  *
@@ -900,13 +901,13 @@ SDL_FORCE_INLINE int SDLNet_TCP_DelSocket(SDLNet_SocketSet set, TCPsocket sock)
 /**
  * Remove a UDP socket from a socket set.
  *
- * This is a small UDP-specific wrapper over SDLNet_DelSocket; please refer
- * to that function's documentation.
+ * This is a small UDP-specific wrapper over SDLNet_DelSocket; please refer to
+ * that function's documentation.
  *
  * \param set the socket set to remove a socket from.
  * \param sock the socket to remove from the set.
- * \returns the total number of sockets contained in the set (after
- *          `sock`'s removal), or -1 if `sock` was not in the set.
+ * \returns the total number of sockets contained in the set (after `sock`'s
+ *          removal), or -1 if `sock` was not in the set.
  *
  * \since This function is available since SDL_net 2.0.0.
  *
@@ -937,12 +938,12 @@ SDL_FORCE_INLINE int SDLNet_UDP_DelSocket(SDLNet_SocketSet set, UDPsocket sock)
 extern DECLSPEC int SDLCALL SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout);
 
 /* !!! FIXME: wikiheaders.pl ignores macros, atm */
+
 /**
  * See if a specific socket has data available after checking it in a set.
  *
- * After calling SDLNet_CheckSockets(), you can use this function on a
- * socket that was in the socket set, to find out if data is available
- * for reading.
+ * After calling SDLNet_CheckSockets(), you can use this function on a socket
+ * that was in the socket set, to find out if data is available for reading.
  *
  * \param sock the socket to check.
  * \returns non-zero if socket has new data available, zero otherwise.
