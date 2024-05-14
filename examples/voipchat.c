@@ -356,7 +356,7 @@ int main(int argc, char **argv)
     }
 
     window = SDL_CreateWindow("SDL_Net3 voipchat example", 640, 480, 0);
-    renderer = SDL_CreateRenderer(window, NULL, 0);
+    renderer = SDL_CreateRenderer(window, NULL);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
     max_datagram = SDL_min(1200, (int) sizeof (scratch_area));
