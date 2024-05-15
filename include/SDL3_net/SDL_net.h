@@ -38,45 +38,35 @@
 extern "C" {
 #endif
 
-/* Version checks... */
-
+/**
+ * Printable format: "%d.%d.%d", MAJOR, MINOR, MICRO
+ */
 #define SDL_NET_MAJOR_VERSION   3
 #define SDL_NET_MINOR_VERSION   0
-#define SDL_NET_PATCHLEVEL      0
+#define SDL_NET_MICRO_VERSION   0
 
 /**
- * Query the verion of the SDL_net library in use at compile time.
- *
- * This macro copies the version listen in the SDL_net headers into a struct
- * of the app's choosing.
- *
- * \threadsafety It is safe to use this macro from any thread.
- *
- * \since This macro is available since SDL_Net 3.0.0.
+ * This is the version number macro for the current SDL_net version.
  */
-#define SDL_NET_VERSION(X)                          \
-{                                                   \
-    (X)->major = SDL_NET_MAJOR_VERSION;             \
-    (X)->minor = SDL_NET_MINOR_VERSION;             \
-    (X)->patch = SDL_NET_PATCHLEVEL;                \
-}
+#define SDL_NET_VERSION \
+    SDL_VERSIONNUM(SDL_NET_MAJOR_VERSION, SDL_NET_MINOR_VERSION, SDL_NET_MICRO_VERSION)
 
 /**
- * Query the verion of the SDL_net library in use at runtime.
- *
- * The returned value points to static, internal, read-only memory. Do not
- * modify or free it. The pointer remains valid as long as the library is
- * loaded by the system.
- *
- * This function can be safely called before SDLNet_Init().
- *
- * \returns An object with the runtime library version. Never returns NULL.
- *
- * \threadsafety It is safe to call this function from any thread.
- *
- * \since This function is available since SDL_Net 3.0.0.
+ * This macro will evaluate to true if compiled with SDL_net at least X.Y.Z.
  */
-extern DECLSPEC const SDL_Version * SDLCALL SDLNet_LinkedVersion(void);
+#define SDL_NET_VERSION_ATLEAST(X, Y, Z) \
+    ((SDL_NET_MAJOR_VERSION >= X) && \
+     (SDL_NET_MAJOR_VERSION > X || SDL_NET_MINOR_VERSION >= Y) && \
+     (SDL_NET_MAJOR_VERSION > X || SDL_NET_MINOR_VERSION > Y || SDL_NET_MICRO_VERSION >= Z))
+
+/**
+ * This function gets the version of the dynamically linked SDL_net library.
+ *
+ * \returns SDL_net version
+ *
+ * \since This function is available since SDL_net 3.0.0.
+ */
+extern DECLSPEC int SDLCALL SDLNet_Version(void);
 
 
 /* init/quit functions... */
