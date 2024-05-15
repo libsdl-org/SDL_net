@@ -17,7 +17,6 @@ SDL3_net_0.0.0 {
     SDLNet_GetStreamSocketAddress;
     SDLNet_GetStreamSocketPendingWrites;
     SDLNet_Init;
-    SDLNet_LinkedVersion;
     SDLNet_Quit;
     SDLNet_ReadFromStreamSocket;
     SDLNet_ReceiveDatagram;
@@ -28,6 +27,7 @@ SDL3_net_0.0.0 {
     SDLNet_SimulateDatagramPacketLoss;
     SDLNet_SimulateStreamPacketLoss;
     SDLNet_UnrefAddress;
+    SDLNet_Version;
     SDLNet_WaitUntilConnected;
     SDLNet_WaitUntilInputAvailable;
     SDLNet_WaitUntilResolved;

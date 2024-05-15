@@ -86,7 +86,7 @@ typedef enum SDLNet_SocketType
 } SDLNet_SocketType;
 
 
-int SDLNet_LinkedVersion(void)
+int SDLNet_Version(void)
 {
     return SDL_NET_VERSION;
 }
