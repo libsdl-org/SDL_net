@@ -66,7 +66,7 @@ extern "C" {
  *
  * \since This function is available since SDL_net 3.0.0.
  */
-extern DECLSPEC int SDLCALL SDLNet_Version(void);
+extern SDL_DECLSPEC int SDLCALL SDLNet_Version(void);
 
 
 /* init/quit functions... */
@@ -89,7 +89,7 @@ extern DECLSPEC int SDLCALL SDLNet_Version(void);
  *
  * \sa SDLNet_Quit
  */
-extern DECLSPEC int SDLCALL SDLNet_Init(void);
+extern SDL_DECLSPEC int SDLCALL SDLNet_Init(void);
 
 /**
  * Deinitialize the SDL_net library.
@@ -110,7 +110,7 @@ extern DECLSPEC int SDLCALL SDLNet_Init(void);
  *
  * \sa SDLNet_Quit
  */
-extern DECLSPEC void SDLCALL SDLNet_Quit(void);
+extern SDL_DECLSPEC void SDLCALL SDLNet_Quit(void);
 
 
 /* hostname resolution API... */
@@ -154,7 +154,7 @@ typedef struct SDLNet_Address SDLNet_Address;  /**< Opaque struct that deals wit
  * \sa SDLNet_RefAddress
  * \sa SDLNet_UnrefAddress
  */
-extern DECLSPEC SDLNet_Address * SDLCALL SDLNet_ResolveHostname(const char *host);
+extern SDL_DECLSPEC SDLNet_Address * SDLCALL SDLNet_ResolveHostname(const char *host);
 
 /**
  * Block until an address is resolved.
@@ -196,7 +196,7 @@ extern DECLSPEC SDLNet_Address * SDLCALL SDLNet_ResolveHostname(const char *host
  *
  * \sa SDLNet_GetAddressStatus
  */
-extern DECLSPEC int SDLCALL SDLNet_WaitUntilResolved(SDLNet_Address *address, Sint32 timeout);
+extern SDL_DECLSPEC int SDLCALL SDLNet_WaitUntilResolved(SDLNet_Address *address, Sint32 timeout);
 
 /**
  * Check if an address is resolved, without blocking.
@@ -225,7 +225,7 @@ extern DECLSPEC int SDLCALL SDLNet_WaitUntilResolved(SDLNet_Address *address, Si
  *
  * \sa SDLNet_WaitUntilResolved
  */
-extern DECLSPEC int SDLCALL SDLNet_GetAddressStatus(SDLNet_Address *address);
+extern SDL_DECLSPEC int SDLCALL SDLNet_GetAddressStatus(SDLNet_Address *address);
 
 /**
  * Get a human-readable string from a resolved address.
@@ -254,7 +254,7 @@ extern DECLSPEC int SDLCALL SDLNet_GetAddressStatus(SDLNet_Address *address);
  * \sa SDLNet_GetAddressStatus
  * \sa SDLNet_WaitUntilResolved
  */
-extern DECLSPEC const char * SDLCALL SDLNet_GetAddressString(SDLNet_Address *address);
+extern SDL_DECLSPEC const char * SDLCALL SDLNet_GetAddressString(SDLNet_Address *address);
 
 /**
  * Add a reference to an SDLNet_Address.
@@ -292,7 +292,7 @@ extern DECLSPEC const char * SDLCALL SDLNet_GetAddressString(SDLNet_Address *add
  *
  * \since This function is available since SDL_Net 3.0.0.
  */
-extern DECLSPEC SDLNet_Address *SDLCALL SDLNet_RefAddress(SDLNet_Address *address);
+extern SDL_DECLSPEC SDLNet_Address *SDLCALL SDLNet_RefAddress(SDLNet_Address *address);
 
 /**
  * Drop a reference to an SDLNet_Address.
@@ -317,7 +317,7 @@ extern DECLSPEC SDLNet_Address *SDLCALL SDLNet_RefAddress(SDLNet_Address *addres
  *
  * \since This function is available since SDL_Net 3.0.0.
  */
-extern DECLSPEC void SDLCALL SDLNet_UnrefAddress(SDLNet_Address *address);
+extern SDL_DECLSPEC void SDLCALL SDLNet_UnrefAddress(SDLNet_Address *address);
 
 /**
  * Enable simulated address resolution failures.
@@ -348,7 +348,7 @@ extern DECLSPEC void SDLCALL SDLNet_UnrefAddress(SDLNet_Address *address);
  *
  * \since This function is available since SDL_Net 3.0.0.
  */
-extern DECLSPEC void SDLCALL SDLNet_SimulateAddressResolutionLoss(int percent_loss);
+extern SDL_DECLSPEC void SDLCALL SDLNet_SimulateAddressResolutionLoss(int percent_loss);
 
 /**
  * Compare two SDLNet_Address objects.
@@ -364,7 +364,7 @@ extern DECLSPEC void SDLCALL SDLNet_SimulateAddressResolutionLoss(int percent_lo
  *
  * \since This function is available since SDL_Net 3.0.0.
  */
-extern DECLSPEC int SDLCALL SDLNet_CompareAddresses(const SDLNet_Address *a, const SDLNet_Address *b);
+extern SDL_DECLSPEC int SDLCALL SDLNet_CompareAddresses(const SDLNet_Address *a, const SDLNet_Address *b);
 
 /**
  * Obtain a list of local addresses on the system.
@@ -400,7 +400,7 @@ extern DECLSPEC int SDLCALL SDLNet_CompareAddresses(const SDLNet_Address *a, con
  *
  * \since This function is available since SDL_Net 3.0.0.
  */
-extern DECLSPEC SDLNet_Address **SDLCALL SDLNet_GetLocalAddresses(int *num_addresses);
+extern SDL_DECLSPEC SDLNet_Address **SDLCALL SDLNet_GetLocalAddresses(int *num_addresses);
 
 /**
  * Free the results from SDLNet_GetLocalAddresses.
@@ -419,7 +419,7 @@ extern DECLSPEC SDLNet_Address **SDLCALL SDLNet_GetLocalAddresses(int *num_addre
  *
  * \since This function is available since SDL_Net 3.0.0.
  */
-extern DECLSPEC void SDLCALL SDLNet_FreeLocalAddresses(SDLNet_Address **addresses);
+extern SDL_DECLSPEC void SDLCALL SDLNet_FreeLocalAddresses(SDLNet_Address **addresses);
 
 
 /* Streaming (TCP) API... */
@@ -477,7 +477,7 @@ typedef struct SDLNet_StreamSocket SDLNet_StreamSocket;  /**< a TCP socket. Reli
  * \sa SDLNet_GetConnectionStatus
  * \sa SDLNet_DestroyStreamSocket
  */
-extern DECLSPEC SDLNet_StreamSocket * SDLCALL SDLNet_CreateClient(SDLNet_Address *address, Uint16 port);
+extern SDL_DECLSPEC SDLNet_StreamSocket * SDLCALL SDLNet_CreateClient(SDLNet_Address *address, Uint16 port);
 
 /**
  * Block until a stream socket has connected to a server.
@@ -522,7 +522,7 @@ extern DECLSPEC SDLNet_StreamSocket * SDLCALL SDLNet_CreateClient(SDLNet_Address
  *
  * \sa SDLNet_GetConnectionStatus
  */
-extern DECLSPEC int SDLCALL SDLNet_WaitUntilConnected(SDLNet_StreamSocket *sock, Sint32 timeout);
+extern SDL_DECLSPEC int SDLCALL SDLNet_WaitUntilConnected(SDLNet_StreamSocket *sock, Sint32 timeout);
 
 typedef struct SDLNet_Server SDLNet_Server;   /**< a listen socket, internally. Binds to a port, accepts connections. */
 
@@ -572,7 +572,7 @@ typedef struct SDLNet_Server SDLNet_Server;   /**< a listen socket, internally. 
  * \sa SDLNet_AcceptClient
  * \sa SDLNet_DestroyServer
  */
-extern DECLSPEC SDLNet_Server * SDLCALL SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port);
+extern SDL_DECLSPEC SDLNet_Server * SDLCALL SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port);
 
 /**
  * Create a stream socket for the next pending client connection.
@@ -614,7 +614,7 @@ extern DECLSPEC SDLNet_Server * SDLCALL SDLNet_CreateServer(SDLNet_Address *addr
  * \sa SDLNet_WaitUntilInputAvailable
  * \sa SDLNet_DestroyStreamSocket
  */
-extern DECLSPEC int SDLCALL SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stream);
+extern SDL_DECLSPEC int SDLCALL SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stream);
 
 /**
  * Dispose of a previously-created server.
@@ -636,7 +636,7 @@ extern DECLSPEC int SDLCALL SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_St
  *
  * \sa SDLNet_CreateServer
  */
-extern DECLSPEC void SDLCALL SDLNet_DestroyServer(SDLNet_Server *server);
+extern SDL_DECLSPEC void SDLCALL SDLNet_DestroyServer(SDLNet_Server *server);
 
 /**
  * Get the remote address of a stream socket.
@@ -655,7 +655,7 @@ extern DECLSPEC void SDLCALL SDLNet_DestroyServer(SDLNet_Server *server);
  *
  * \since This function is available since SDL_Net 3.0.0.
  */
-extern DECLSPEC SDLNet_Address * SDLCALL SDLNet_GetStreamSocketAddress(SDLNet_StreamSocket *sock);
+extern SDL_DECLSPEC SDLNet_Address * SDLCALL SDLNet_GetStreamSocketAddress(SDLNet_StreamSocket *sock);
 
 /**
  * Check if a stream socket is connected, without blocking.
@@ -692,7 +692,7 @@ extern DECLSPEC SDLNet_Address * SDLCALL SDLNet_GetStreamSocketAddress(SDLNet_St
  *
  * \sa SDLNet_WaitUntilConnected
  */
-extern DECLSPEC int SDLCALL SDLNet_GetConnectionStatus(SDLNet_StreamSocket *sock);
+extern SDL_DECLSPEC int SDLCALL SDLNet_GetConnectionStatus(SDLNet_StreamSocket *sock);
 
 /**
  * Send bytes over a stream socket to a remote system.
@@ -739,7 +739,7 @@ extern DECLSPEC int SDLCALL SDLNet_GetConnectionStatus(SDLNet_StreamSocket *sock
  * \sa SDLNet_WaitUntilStreamSocketDrained
  * \sa SDLNet_ReadFromStreamSocket
  */
-extern DECLSPEC int SDLCALL SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int buflen);
+extern SDL_DECLSPEC int SDLCALL SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int buflen);
 
 /**
  * Query bytes still pending transmission on a stream socket.
@@ -771,7 +771,7 @@ extern DECLSPEC int SDLCALL SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock
  * \sa SDLNet_WriteToStreamSocket
  * \sa SDLNet_WaitUntilStreamSocketDrained
  */
-extern DECLSPEC int SDLCALL SDLNet_GetStreamSocketPendingWrites(SDLNet_StreamSocket *sock);
+extern SDL_DECLSPEC int SDLCALL SDLNet_GetStreamSocketPendingWrites(SDLNet_StreamSocket *sock);
 
 /**
  * Block until all of a stream socket's pending data is sent.
@@ -812,7 +812,7 @@ extern DECLSPEC int SDLCALL SDLNet_GetStreamSocketPendingWrites(SDLNet_StreamSoc
  * \sa SDLNet_WriteToStreamSocket
  * \sa SDLNet_GetStreamSocketPendingWrites
  */
-extern DECLSPEC int SDLCALL SDLNet_WaitUntilStreamSocketDrained(SDLNet_StreamSocket *sock, Sint32 timeout);
+extern SDL_DECLSPEC int SDLCALL SDLNet_WaitUntilStreamSocketDrained(SDLNet_StreamSocket *sock, Sint32 timeout);
 
 
 /**
@@ -863,7 +863,7 @@ extern DECLSPEC int SDLCALL SDLNet_WaitUntilStreamSocketDrained(SDLNet_StreamSoc
  *
  * \sa SDLNet_WriteToStreamSocket
  */
-extern DECLSPEC int SDLCALL SDLNet_ReadFromStreamSocket(SDLNet_StreamSocket *sock, void *buf, int buflen);
+extern SDL_DECLSPEC int SDLCALL SDLNet_ReadFromStreamSocket(SDLNet_StreamSocket *sock, void *buf, int buflen);
 
 /**
  * Enable simulated stream socket failures.
@@ -902,7 +902,7 @@ extern DECLSPEC int SDLCALL SDLNet_ReadFromStreamSocket(SDLNet_StreamSocket *soc
  *
  * \since This function is available since SDL_Net 3.0.0.
  */
-extern DECLSPEC void SDLCALL SDLNet_SimulateStreamPacketLoss(SDLNet_StreamSocket *sock, int percent_loss);
+extern SDL_DECLSPEC void SDLCALL SDLNet_SimulateStreamPacketLoss(SDLNet_StreamSocket *sock, int percent_loss);
 
 /**
  * Dispose of a previously-created stream socket.
@@ -931,7 +931,7 @@ extern DECLSPEC void SDLCALL SDLNet_SimulateStreamPacketLoss(SDLNet_StreamSocket
  * \sa SDLNet_GetStreamSocketPendingWrites
  * \sa SDLNet_WaitUntilStreamSocketDrained
  */
-extern DECLSPEC void SDLCALL SDLNet_DestroyStreamSocket(SDLNet_StreamSocket *sock);  /* Destroy your sockets when finished with them. Does not block, handles shutdown internally. */
+extern SDL_DECLSPEC void SDLCALL SDLNet_DestroyStreamSocket(SDLNet_StreamSocket *sock);  /* Destroy your sockets when finished with them. Does not block, handles shutdown internally. */
 
 
 /* Datagram (UDP) API... */
@@ -1003,7 +1003,7 @@ typedef struct SDLNet_Datagram
  * \sa SDLNet_GetLocalAddresses
  * \sa SDLNet_DestroyDatagramSocket
  */
-extern DECLSPEC SDLNet_DatagramSocket * SDLCALL SDLNet_CreateDatagramSocket(SDLNet_Address *addr, Uint16 port);
+extern SDL_DECLSPEC SDLNet_DatagramSocket * SDLCALL SDLNet_CreateDatagramSocket(SDLNet_Address *addr, Uint16 port);
 
 /**
  * Send a new packet over a datagram socket to a remote system.
@@ -1055,7 +1055,7 @@ extern DECLSPEC SDLNet_DatagramSocket * SDLCALL SDLNet_CreateDatagramSocket(SDLN
  *
  * \sa SDLNet_ReceiveDatagram
  */
-extern DECLSPEC int SDLCALL SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *address, Uint16 port, const void *buf, int buflen);
+extern SDL_DECLSPEC int SDLCALL SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *address, Uint16 port, const void *buf, int buflen);
 
 
 /**
@@ -1104,7 +1104,7 @@ extern DECLSPEC int SDLCALL SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDL
  * \sa SDLNet_SendDatagram
  * \sa SDLNet_DestroyDatagram
  */
-extern DECLSPEC int SDLCALL SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram);
+extern SDL_DECLSPEC int SDLCALL SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram);
 
 /**
  * Dispose of a datagram packet previously received.
@@ -1127,7 +1127,7 @@ extern DECLSPEC int SDLCALL SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, 
  *
  * \since This function is available since SDL_Net 3.0.0.
  */
-extern DECLSPEC void SDLCALL SDLNet_DestroyDatagram(SDLNet_Datagram *dgram);
+extern SDL_DECLSPEC void SDLCALL SDLNet_DestroyDatagram(SDLNet_Datagram *dgram);
 
 
 /**
@@ -1160,7 +1160,7 @@ extern DECLSPEC void SDLCALL SDLNet_DestroyDatagram(SDLNet_Datagram *dgram);
  *
  * \since This function is available since SDL_Net 3.0.0.
  */
-extern DECLSPEC void SDLCALL SDLNet_SimulateDatagramPacketLoss(SDLNet_DatagramSocket *sock, int percent_loss);
+extern SDL_DECLSPEC void SDLCALL SDLNet_SimulateDatagramPacketLoss(SDLNet_DatagramSocket *sock, int percent_loss);
 
 
 /**
@@ -1188,7 +1188,7 @@ extern DECLSPEC void SDLCALL SDLNet_SimulateDatagramPacketLoss(SDLNet_DatagramSo
  * \sa SDLNet_SendDatagram
  * \sa SDLNet_ReceiveDatagram
  */
-extern DECLSPEC void SDLCALL SDLNet_DestroyDatagramSocket(SDLNet_DatagramSocket *sock);
+extern SDL_DECLSPEC void SDLCALL SDLNet_DestroyDatagramSocket(SDLNet_DatagramSocket *sock);
 
 /* multi-socket polling ... */
 
@@ -1240,7 +1240,7 @@ extern DECLSPEC void SDLCALL SDLNet_DestroyDatagramSocket(SDLNet_DatagramSocket 
  * \sa SDLNet_SendDatagram
  * \sa SDLNet_ReceiveDatagram
  */
-extern DECLSPEC int SDLCALL SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, Sint32 timeout);
+extern SDL_DECLSPEC int SDLCALL SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, Sint32 timeout);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
