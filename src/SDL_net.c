@@ -234,7 +234,7 @@ static int ResolveAddress(SDLNet_Address *addr)
 
 static int SDLCALL ResolverThread(void *data)
 {
-    const int threadnum = (int) ((size_t) data);
+    const int threadnum = (int) ((intptr_t) data);
     //SDL_Log("ResolverThread #%d starting up!", threadnum);
 
     SDL_LockMutex(resolver_lock);
@@ -298,7 +298,13 @@ static SDL_Thread *SpinResolverThread(const int num)
     SDL_snprintf(name, sizeof (name), "SDLNetRslv%d", num);
     SDL_assert(resolver_threads[num] == NULL);
     SDL_AtomicAdd(&resolver_num_threads, 1);
-    resolver_threads[num] = SDL_CreateThreadWithStackSize(ResolverThread, name, 64 * 1024, (void *) ((size_t) num));
+    const SDL_PropertiesID props = SDL_CreateProperties();
+    SDL_SetProperty(props, SDL_PROP_THREAD_CREATE_ENTRY_FUNCTION_POINTER, (void *) ResolverThread);
+    SDL_SetStringProperty(props, SDL_PROP_THREAD_CREATE_NAME_STRING, name);
+    SDL_SetProperty(props, SDL_PROP_THREAD_CREATE_USERDATA_POINTER, (void *) ((intptr_t) num));
+    SDL_SetNumberProperty(props, SDL_PROP_THREAD_CREATE_STACKSIZE_NUMBER, 64 * 1024);
+    resolver_threads[num] = SDL_CreateThreadWithProperties(props);
+    SDL_DestroyProperties(props);
     if (!resolver_threads[num]) {
         SDL_AtomicAdd(&resolver_num_threads, -1);
     }
