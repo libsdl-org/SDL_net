@@ -990,7 +990,6 @@ typedef struct SDLNet_Datagram
  * you do not have to byteswap it into "network order," as the library will
  * handle that for you.
  *
- * \param addr the _local_ address to listen for connections on, or NULL.
  * \param port the port on the local address to listen for connections on, or
  *             zero for the system to decide.
  * \returns a new SDLNet_DatagramSocket, or NULL on error; call SDL_GetError()
