@@ -91,8 +91,8 @@ static void SendClientAudioToServer(void)
 {
     const int br = SDL_GetAudioStreamData(capture_stream, scratch_area + extra, max_datagram - extra);
     if (br > 0) {
-        ((Uint64 *) scratch_area)[0] = SDL_SwapLE64(0);  /* just being nice and leaving space in the buffer for the server to replace. */
-        ((Uint64 *) scratch_area)[1] = SDL_SwapLE64(++next_idnum);
+        ((Uint64 *) scratch_area)[0] = SDL_Swap64LE(0);  /* just being nice and leaving space in the buffer for the server to replace. */
+        ((Uint64 *) scratch_area)[1] = SDL_Swap64LE(++next_idnum);
         SDL_Log("CLIENT: Sending %d new bytes to server at %s:%d...", br + extra, SDLNet_GetAddressString(server_addr), (int) server_port);
         SDLNet_SendDatagram(sock, server_addr, server_port, scratch_area, br + extra);
     }
@@ -139,7 +139,7 @@ static void mainloop(void)
 
                 /* send this new voice data to all recent speakers. */
                 if (dgram->buflen > extra) {  /* ignore it if too small, might just be a keepalive packet. */
-                    *((Uint64 *) dgram->buf) = SDL_SwapLE64(voice->idnum);  /* the client leaves space to fill this in for convenience. */
+                    *((Uint64 *) dgram->buf) = SDL_Swap64LE(voice->idnum);  /* the client leaves space to fill this in for convenience. */
                     for (i = voices; i != NULL; i = i->next) {
                         if ((voice->port != i->port) || (SDLNet_CompareAddresses(voice->addr, i->addr) != 0)) {  /* don't send client's own voice back to them. */
                             SDL_Log("SERVER: sending %d-byte datagram to %s:%d", (int) dgram->buflen, SDLNet_GetAddressString(i->addr), (int) i->port);
@@ -153,8 +153,8 @@ static void mainloop(void)
                 } else if (dgram->buflen < extra) {
                     SDL_Log("CLIENT: Got bogus packet from the server. Ignoring.");
                 } else {
-                    const Uint64 idnum = SDL_SwapLE64(((const Uint64 *) dgram->buf)[0]);
-                    const Uint64 packetnum = SDL_SwapLE64(((const Uint64 *) dgram->buf)[1]);
+                    const Uint64 idnum = SDL_Swap64LE(((const Uint64 *) dgram->buf)[0]);
+                    const Uint64 packetnum = SDL_Swap64LE(((const Uint64 *) dgram->buf)[1]);
                     Voice *voice = FindVoiceByIdNum(idnum);
                     if (!voice) {
                         SDL_Log("CLIENT: Creating voice idnum=#%" SDL_PRIu64, idnum);
@@ -225,8 +225,8 @@ static void mainloop(void)
             }
 
             if (!last_send_ticks || ((now - last_send_ticks) > 5000)) {  /* send a keepalive packet if we haven't transmitted for a bit. */
-                ((Uint64 *) scratch_area)[0] = SDL_SwapLE64(0);
-                ((Uint64 *) scratch_area)[1] = SDL_SwapLE64(++next_idnum);
+                ((Uint64 *) scratch_area)[0] = SDL_Swap64LE(0);
+                ((Uint64 *) scratch_area)[1] = SDL_Swap64LE(++next_idnum);
                 SDL_Log("CLIENT: Sending %d keepalive bytes to server at %s:%d...", extra, SDLNet_GetAddressString(server_addr), (int) server_port);
                 SDLNet_SendDatagram(sock, server_addr, server_port, scratch_area, extra);
                 last_send_ticks = now;
