@@ -170,7 +170,7 @@ typedef struct {
  * will be INADDR_NONE, and the function will return -1.
  *
  * \param address to be filled in with the resolved address and port.
- * \param host the hostname to lookup (like "libsdl.org")
+ * \param host the hostname to lookup (like "libsdl.org").
  * \param port the port intended to be connected to, to fill into address.
  * \returns zero on success, -1 on error.
  *
@@ -196,8 +196,8 @@ extern DECLSPEC const char * SDLCALL SDLNet_ResolveIP(const IPaddress *ip);
  * Get the addresses of network interfaces on this system.
  *
  * \param addresses where to store the returned information.
- * \param maxcount the number of results that can be stored at `addresses`
- * \returns the number of addresses saved in `addresses`
+ * \param maxcount the number of results that can be stored at `addresses`.
+ * \returns the number of addresses saved in `addresses`.
  *
  * \since This function is available since SDL_net 2.0.0.
  */
@@ -596,7 +596,7 @@ extern DECLSPEC void SDLCALL SDLNet_UDP_Unbind(UDPsocket sock, int channel);
  *
  * \param sock the UDP socket to unbind addresses from a channel on.
  * \param channel the channel of the socket to unbind.
- * \returns the address bound to the socket's channel, or
+ * \returns the address bound to the socket's channel, or.
  *
  * \since This function is available since SDL_net 2.0.0.
  */
