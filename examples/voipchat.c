@@ -297,12 +297,12 @@ static void run_voipchat(int argc, char **argv)
 
         SDL_Log("CLIENT: Server is at %s:%d.", SDLNet_GetAddressString(server_addr), (int) server_port);
 
-        audio_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &audio_spec);
+        audio_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &audio_spec);
         if (!audio_device) {
             SDL_Log("CLIENT: Failed to open output audio device (%s), going on without sound playback!", SDL_GetError());
         }
 
-        capture_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_CAPTURE, &audio_spec);
+        capture_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_RECORDING, &audio_spec);
         if (!capture_device) {
             SDL_Log("CLIENT: Failed to open capture audio device (%s), going on without sound recording!", SDL_GetError());
         } else {
