@@ -25,14 +25,14 @@ sdl_calculate_derived_version_variables(${MAJOR_VERSION} ${MINOR_VERSION} ${MICR
 message(STATUS "Configuring ${PROJECT_NAME} ${PROJECT_VERSION}")
 
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
-    set(SDL3NET_ROOTPROJECT ON)
+    set(SDLNET_ROOTPROJECT ON)
 else()
-    set(SDL3NET_ROOTPROJECT OFF)
+    set(SDLNET_ROOTPROJECT OFF)
 endif()
 
-set(SDL3NET_SAMPLES_DEFAULT ${SDL3NET_ROOTPROJECT})
+set(SDLNET_SAMPLES_DEFAULT ${SDLNET_ROOTPROJECT})
 if(ANDROID)
-    set(SDL3NET_SAMPLES_DEFAULT OFF)
+    set(SDLNET_SAMPLES_DEFAULT OFF)
 endif()
 
 set(sdl3net_install_enableable ON)
@@ -57,19 +57,19 @@ endif()
 option(CMAKE_POSITION_INDEPENDENT_CODE "Build static libraries with -fPIC" ${PLATFORM_SUPPORTS_SHARED})
 cmake_dependent_option(BUILD_SHARED_LIBS "Build the library as a shared library" ON PLATFORM_SUPPORTS_SHARED OFF)
 
-cmake_dependent_option(SDL3NET_INSTALL "Enable SDL3_net install target" ${SDL3NET_ROOTPROJECT} "${sdl3net_install_enableable}" OFF)
-cmake_dependent_option(SDL3NET_INSTALL_MAN "Install man pages for SDL3_net" OFF "SDL3NET_INSTALL" OFF)
-option(SDL3NET_WERROR "Treat warnings as errors" OFF)
+cmake_dependent_option(SDLNET_INSTALL "Enable SDL3_net install target" ${SDLNET_ROOTPROJECT} "${sdl3net_install_enableable}" OFF)
+cmake_dependent_option(SDLNET_INSTALL_MAN "Install man pages for SDL3_net" OFF "SDLNET_INSTALL" OFF)
+option(SDLNET_WERROR "Treat warnings as errors" OFF)
 
-option(SDL3NET_SAMPLES "Build the SDL3_net sample program(s)" ${SDL3NET_SAMPLES_DEFAULT})
-cmake_dependent_option(SDL3NET_SAMPLES_INSTALL "Install the SDL3_net sample program(s)" OFF "SDL3NET_SAMPLES;SDL3NET_INSTALL" OFF)
+option(SDLNET_SAMPLES "Build the SDL3_net sample program(s)" ${SDLNET_SAMPLES_DEFAULT})
+cmake_dependent_option(SDLNET_SAMPLES_INSTALL "Install the SDL3_net sample program(s)" OFF "SDLNET_SAMPLES;SDLNET_INSTALL" OFF)
 
 # Save BUILD_SHARED_LIBS variable
-set(SDL3NET_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+set(SDLNET_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
 set(sdl_required_components Headers)
 
-if(SDL3NET_BUILD_SHARED_LIBS)
+if(SDLNET_BUILD_SHARED_LIBS)
     set(sdl3_net_target_name SDL3_net-shared)
     set(sdl3_target_name SDL3::SDL3-shared)
 
@@ -104,12 +104,12 @@ target_compile_definitions(${sdl3_net_target_name} PRIVATE
     SDL_BUILD_MICRO_VERSION=${MICRO_VERSION}
 )
 target_link_libraries(${sdl3_net_target_name} PUBLIC SDL3::Headers)
-if(SDL3NET_BUILD_SHARED_LIBS)
+if(SDLNET_BUILD_SHARED_LIBS)
     target_link_libraries(${sdl3_net_target_name} PRIVATE SDL3::SDL3-shared)
 endif()
-sdl_add_warning_options(${sdl3_net_target_name} WARNING_AS_ERROR ${SDL3NET_WERROR})
+sdl_add_warning_options(${sdl3_net_target_name} WARNING_AS_ERROR ${SDLNET_WERROR})
 if(WIN32)
-    if(SDL3NET_BUILD_SHARED_LIBS)
+    if(SDLNET_BUILD_SHARED_LIBS)
         target_sources(${sdl3_net_target_name} PRIVATE
             src/version.rc
         )
@@ -143,7 +143,7 @@ if(NOT ANDROID)
         sdl_no_deprecated_errors(${sdl3_net_target_name})
     endif()
 endif()
-if(SDL3NET_BUILD_SHARED_LIBS)
+if(SDLNET_BUILD_SHARED_LIBS)
     if(WIN32)
         set_target_properties(${sdl3_net_target_name} PROPERTIES
             PREFIX ""
@@ -158,16 +158,16 @@ else()
 endif()
 
 # Use `Compatible Interface Properties` to ensure a shared SDL3_net is built with a shared SDL3
-if(SDL3NET_BUILD_SHARED_LIBS)
+if(SDLNET_BUILD_SHARED_LIBS)
     set_property(TARGET ${sdl3_net_target_name} PROPERTY INTERFACE_SDL3_SHARED TRUE)
     set_property(TARGET ${sdl3_net_target_name} APPEND PROPERTY COMPATIBLE_INTERFACE_BOOL SDL3_SHARED)
 endif()
 
-if(SDL3NET_BUILD_SHARED_LIBS)
+if(SDLNET_BUILD_SHARED_LIBS)
     sdl_target_link_options_no_undefined(${sdl3_net_target_name})
 endif()
 
-if(SDL3NET_INSTALL)
+if(SDLNET_INSTALL)
     install(
         TARGETS ${sdl3_net_target_name}
         EXPORT SDL3NetExports
@@ -181,23 +181,23 @@ if(SDL3NET_INSTALL)
     )
 
     if(WIN32 AND NOT MINGW)
-        set(SDL3NET_INSTALL_CMAKEDIR_ROOT_DEFAULT "cmake")
+        set(SDLNET_INSTALL_CMAKEDIR_ROOT_DEFAULT "cmake")
     else()
-        set(SDL3NET_INSTALL_CMAKEDIR_ROOT_DEFAULT "${CMAKE_INSTALL_LIBDIR}/cmake")
+        set(SDLNET_INSTALL_CMAKEDIR_ROOT_DEFAULT "${CMAKE_INSTALL_LIBDIR}/cmake")
     endif()
-    set(SDL3NET_INSTALL_CMAKEDIR_ROOT "${SDL3NET_INSTALL_CMAKEDIR_ROOT_DEFAULT}" CACHE STRING "Root folder where to install SDL3_netConfig.cmake related files (SDL3_net subfolder for MSVC projects)")
+    set(SDLNET_INSTALL_CMAKEDIR_ROOT "${SDLNET_INSTALL_CMAKEDIR_ROOT_DEFAULT}" CACHE STRING "Root folder where to install SDL3_netConfig.cmake related files (SDL3_net subfolder for MSVC projects)")
     set(SDLNET_PKGCONFIG_INSTALLDIR "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 
     if(WIN32 AND NOT MINGW)
-        set(SDL3NET_INSTALL_CMAKEDIR "${SDL3NET_INSTALL_CMAKEDIR_ROOT}")
+        set(SDLNET_INSTALL_CMAKEDIR "${SDLNET_INSTALL_CMAKEDIR_ROOT}")
         set(LICENSES_PREFIX "licenses/SDL3_net")
     else()
-        set(SDL3NET_INSTALL_CMAKEDIR "${SDL3NET_INSTALL_CMAKEDIR_ROOT}/SDL3_net")
+        set(SDLNET_INSTALL_CMAKEDIR "${SDLNET_INSTALL_CMAKEDIR_ROOT}/SDL3_net")
         set(LICENSES_PREFIX "${CMAKE_INSTALL_DATAROOTDIR}/licenses/SDL3_net")
     endif()
 
     configure_package_config_file(cmake/SDL3_netConfig.cmake.in SDL3_netConfig.cmake
-        INSTALL_DESTINATION "${SDL3NET_INSTALL_CMAKEDIR}"
+        INSTALL_DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
     )
     write_basic_package_version_file("${PROJECT_BINARY_DIR}/SDL3_netConfigVersion.cmake"
         COMPATIBILITY AnyNewerVersion
@@ -206,13 +206,13 @@ if(SDL3NET_INSTALL)
         FILES
             "${CMAKE_CURRENT_BINARY_DIR}/SDL3_netConfig.cmake"
             "${CMAKE_CURRENT_BINARY_DIR}/SDL3_netConfigVersion.cmake"
-        DESTINATION "${SDL3NET_INSTALL_CMAKEDIR}"
+        DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
         COMPONENT devel
     )
     install(EXPORT SDL3NetExports
         FILE ${sdl3_net_target_name}-targets.cmake
         NAMESPACE SDL3_net::
-        DESTINATION "${SDL3NET_INSTALL_CMAKEDIR}"
+        DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
         COMPONENT devel
     )
 
@@ -233,18 +233,18 @@ if(SDL3NET_INSTALL)
         COMPONENT library
     )
 
-    if(SDL3NET_INSTALL_MAN)
-        sdl_get_git_revision_hash(SDL3NET_REVISION)
+    if(SDLNET_INSTALL_MAN)
+        sdl_get_git_revision_hash(SDLNET_REVISION)
         SDL_generate_manpages(
             HEADERS_DIR "${PROJECT_SOURCE_DIR}/include/SDL3_net"
             SYMBOL "SDLNet_Init"
             WIKIHEADERS_PL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build-scripts/wikiheaders.pl"
-            REVISION "${SDL3NET_REVISION}"
+            REVISION "${SDLNET_REVISION}"
         )
     endif()
 endif()
 
-if(SDL3NET_SAMPLES)
+if(SDLNET_SAMPLES)
     add_executable(voipchat examples/voipchat.c)
     add_executable(simple-http-get examples/simple-http-get.c)
     add_executable(resolve-hostnames examples/resolve-hostnames.c)
@@ -255,8 +255,8 @@ if(SDL3NET_SAMPLES)
         target_link_libraries(${example} PRIVATE SDL3_net::SDL3_net SDL3::SDL3)
         set_property(TARGET ${example} PROPERTY C_STANDARD 99)
         set_property(TARGET ${example} PROPERTY C_EXTENSIONS FALSE)
-        sdl_add_warning_options(${example} WARNING_AS_ERROR ${SDL3NET_WERROR})
-        if(SDL3NET_SAMPLES_INSTALL)
+        sdl_add_warning_options(${example} WARNING_AS_ERROR ${SDLNET_WERROR})
+        if(SDLNET_SAMPLES_INSTALL)
             install(TARGETS ${example}
                 RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
             )

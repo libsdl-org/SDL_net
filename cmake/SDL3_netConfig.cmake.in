@@ -8,7 +8,7 @@ set_package_properties(SDL3_net PROPERTIES
 
 set(SDL3_net_FOUND ON)
 
-set(SDL3NET_SDL3_REQUIRED_VERSION  @SDL_REQUIRED_VERSION@)
+set(SDLNET_SDL3_REQUIRED_VERSION  @SDL_REQUIRED_VERSION@)
 
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/SDL3_net-shared-targets.cmake")
     include("${CMAKE_CURRENT_LIST_DIR}/SDL3_net-shared-targets.cmake")
