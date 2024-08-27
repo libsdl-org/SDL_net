@@ -195,7 +195,7 @@ static void mainloop(void)
 
                 case SDL_EVENT_MOUSE_BUTTON_DOWN:
                     if (is_client && capture_stream && (event.button.button == SDL_BUTTON_LEFT)) {
-                        if (SDL_BindAudioStream(capture_device, capture_stream) == 0) {
+                        if (SDL_BindAudioStream(capture_device, capture_stream)) {
                             SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);  /* green when recording */
                         }
                     }
@@ -344,7 +344,7 @@ static void run_voipchat(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         SDL_Log("SDL_Init failed: %s\n", SDL_GetError());
         return 1;
     }
