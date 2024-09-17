@@ -239,12 +239,12 @@ static int SDLCALL ResolverThread(void *data)
 
     SDL_LockMutex(resolver_lock);
 
-    while (!SDL_AtomicGet(&resolver_shutdown)) {
-        SDLNet_Address *addr = SDL_AtomicGetPointer((void **) &resolver_queue);
+    while (!SDL_GetAtomicInt(&resolver_shutdown)) {
+        SDLNet_Address *addr = SDL_GetAtomicPointer((void **) &resolver_queue);
         if (!addr) {
-            if (SDL_AtomicGet(&resolver_num_threads) > MIN_RESOLVER_THREADS) {  // nothing pending and too many threads waiting in reserve? Quit.
+            if (SDL_GetAtomicInt(&resolver_num_threads) > MIN_RESOLVER_THREADS) {  // nothing pending and too many threads waiting in reserve? Quit.
                 SDL_DetachThread(resolver_threads[threadnum]);  // detach ourselves so no one has to wait on us.
-                SDL_AtomicSetPointer((void **) &resolver_threads[threadnum], NULL);
+                SDL_SetAtomicPointer((void **) &resolver_threads[threadnum], NULL);
                 break;  // we quit. They'll spawn new threads if necessary.
             }
 
@@ -253,12 +253,12 @@ static int SDLCALL ResolverThread(void *data)
             continue;  // check for shutdown and new work again!
         }
 
-        SDL_AtomicSetPointer((void **) &resolver_queue, addr->resolver_next);   // take this task off the list, then release the lock so others can work.
+        SDL_SetAtomicPointer((void **) &resolver_queue, addr->resolver_next);   // take this task off the list, then release the lock so others can work.
         SDL_UnlockMutex(resolver_lock);
 
         //SDL_Log("ResolverThread #%d got new task ('%s')", threadnum, addr->hostname);
 
-        const int simulated_loss = SDL_AtomicGet(&resolver_percent_loss);
+        const int simulated_loss = SDL_GetAtomicInt(&resolver_percent_loss);
 
         if (simulated_loss && (RandomNumberBetween(0, 100) > simulated_loss)) {
             // won the percent_loss lottery? Delay resolving this address between 250 and 7000 milliseconds
@@ -273,19 +273,19 @@ static int SDLCALL ResolverThread(void *data)
             addr->errstr = SDL_strdup("simulated failure");
         }
 
-        SDL_AtomicSet(&addr->status, outcome);
+        SDL_SetAtomicInt(&addr->status, outcome);
         //SDL_Log("ResolverThread #%d finished current task (%s, '%s' => '%s')", threadnum, (outcome < 0) ? "failure" : "success", addr->hostname, (outcome < 0) ? addr->errstr : addr->human_readable);
 
         SDLNet_UnrefAddress(addr);  // we're done with it, but others might still own it.
 
-        SDL_AtomicAdd(&resolver_num_requests, -1);
+        SDL_AddAtomicInt(&resolver_num_requests, -1);
 
         // okay, we're done with this task, grab the lock so we can see what's next.
         SDL_LockMutex(resolver_lock);
         SDL_BroadcastCondition(resolver_condition);  // wake up anything waiting on results, and also give all resolver threads a chance to see if they are still needed.
     }
 
-    SDL_AtomicAdd(&resolver_num_threads, -1);
+    SDL_AddAtomicInt(&resolver_num_threads, -1);
     SDL_UnlockMutex(resolver_lock);  // we're quitting, let go of the lock.
 
     //SDL_Log("ResolverThread #%d ending!", threadnum);
@@ -297,7 +297,7 @@ static SDL_Thread *SpinResolverThread(const int num)
     char name[16];
     SDL_snprintf(name, sizeof (name), "SDLNetRslv%d", num);
     SDL_assert(resolver_threads[num] == NULL);
-    SDL_AtomicAdd(&resolver_num_threads, 1);
+    SDL_AddAtomicInt(&resolver_num_threads, 1);
     const SDL_PropertiesID props = SDL_CreateProperties();
     SDL_SetPointerProperty(props, SDL_PROP_THREAD_CREATE_ENTRY_FUNCTION_POINTER, (void *) ResolverThread);
     SDL_SetStringProperty(props, SDL_PROP_THREAD_CREATE_NAME_STRING, name);
@@ -306,7 +306,7 @@ static SDL_Thread *SpinResolverThread(const int num)
     resolver_threads[num] = SDL_CreateThreadWithProperties(props);
     SDL_DestroyProperties(props);
     if (!resolver_threads[num]) {
-        SDL_AtomicAdd(&resolver_num_threads, -1);
+        SDL_AddAtomicInt(&resolver_num_threads, -1);
     }
     return resolver_threads[num];
 }
@@ -338,7 +338,7 @@ static SDLNet_Address *CreateSDLNetAddrFromSockAddr(struct sockaddr *saddr, Sock
     if (!addr) {
         return NULL;
     }
-    SDL_AtomicSet(&addr->status, 1);
+    SDL_SetAtomicInt(&addr->status, 1);
 
     struct addrinfo hints;
     SDL_zero(hints);
@@ -368,7 +368,7 @@ static SDL_AtomicInt initialize_count;
 
 int SDLNet_Init(void)
 {
-    if (SDL_AtomicAdd(&initialize_count, 1) > 0) {
+    if (SDL_AddAtomicInt(&initialize_count, 1) > 0) {
         return 0;  // already initialized, call it a success.
     }
 
@@ -384,10 +384,10 @@ int SDLNet_Init(void)
     #endif
 
     SDL_zeroa(resolver_threads);
-    SDL_AtomicSet(&resolver_shutdown, 0);
-    SDL_AtomicSet(&resolver_num_threads, 0);
-    SDL_AtomicSet(&resolver_num_requests, 0);
-    SDL_AtomicSet(&resolver_percent_loss, 0);
+    SDL_SetAtomicInt(&resolver_shutdown, 0);
+    SDL_SetAtomicInt(&resolver_num_threads, 0);
+    SDL_SetAtomicInt(&resolver_num_requests, 0);
+    SDL_SetAtomicInt(&resolver_percent_loss, 0);
     resolver_queue = NULL;
 
     resolver_lock = SDL_CreateMutex();
@@ -425,9 +425,9 @@ failed:
 
 void SDLNet_Quit(void)
 {
-    const int prevcount = SDL_AtomicAdd(&initialize_count, -1);
+    const int prevcount = SDL_AddAtomicInt(&initialize_count, -1);
     if (prevcount <= 0) {
-        SDL_AtomicAdd(&initialize_count, 1);  // bump back up.
+        SDL_AddAtomicInt(&initialize_count, 1);  // bump back up.
         return;  // we weren't initialized!
     } else if (prevcount > 1) {
         return;  // need to quit more, to match previous init calls.
@@ -435,7 +435,7 @@ void SDLNet_Quit(void)
 
     if (resolver_lock && resolver_condition) {
         SDL_LockMutex(resolver_lock);
-        SDL_AtomicSet(&resolver_shutdown, 1);
+        SDL_SetAtomicInt(&resolver_shutdown, 1);
         for (int i = 0; i < ((int) SDL_arraysize(resolver_threads)); i++) {
             if (resolver_threads[i]) {
                 SDL_BroadcastCondition(resolver_condition);
@@ -448,10 +448,10 @@ void SDLNet_Quit(void)
         SDL_UnlockMutex(resolver_lock);
     }
 
-    SDL_AtomicSet(&resolver_shutdown, 0);
-    SDL_AtomicSet(&resolver_num_threads, 0);
-    SDL_AtomicSet(&resolver_num_requests, 0);
-    SDL_AtomicSet(&resolver_percent_loss, 0);
+    SDL_SetAtomicInt(&resolver_shutdown, 0);
+    SDL_SetAtomicInt(&resolver_num_threads, 0);
+    SDL_SetAtomicInt(&resolver_num_requests, 0);
+    SDL_SetAtomicInt(&resolver_percent_loss, 0);
 
     if (resolver_condition) {
         SDL_DestroyCondition(resolver_condition);
@@ -483,16 +483,16 @@ SDLNet_Address *SDLNet_ResolveHostname(const char *host)
         return NULL;
     }
 
-    SDL_AtomicSet(&addr->refcount, 2);  // one for creation, one for the resolver thread to unref when done.
+    SDL_SetAtomicInt(&addr->refcount, 2);  // one for creation, one for the resolver thread to unref when done.
 
     SDL_LockMutex(resolver_lock);
 
     // !!! FIXME: this should append to the list, not prepend; as is, new requests will make existing pending requests take longer to start processing.
-    SDL_AtomicSetPointer((void **) &addr->resolver_next, SDL_AtomicGetPointer((void **) &resolver_queue));
-    SDL_AtomicSetPointer((void **) &resolver_queue, addr);
+    SDL_SetAtomicPointer((void **) &addr->resolver_next, SDL_GetAtomicPointer((void **) &resolver_queue));
+    SDL_SetAtomicPointer((void **) &resolver_queue, addr);
 
-    const int num_threads = SDL_AtomicGet(&resolver_num_threads);
-    const int num_requests = SDL_AtomicAdd(&resolver_num_requests, 1) + 1;
+    const int num_threads = SDL_GetAtomicInt(&resolver_num_threads);
+    const int num_requests = SDL_AddAtomicInt(&resolver_num_requests, 1) + 1;
     //SDL_Log("num_threads=%d, num_requests=%d", num_threads, num_requests);
     if ((num_requests >= num_threads) && (num_threads < MAX_RESOLVER_THREADS)) {  // all threads are busy? Maybe spawn a new one.
         // if this didn't actually spin one up, it is what it is...the existing threads will eventually get there.
@@ -521,13 +521,13 @@ int SDLNet_WaitUntilResolved(SDLNet_Address *addr, Sint32 timeout)
     if (timeout) {
         SDL_LockMutex(resolver_lock);
         if (timeout < 0) {
-            while (SDL_AtomicGet(&addr->status) == 0) {
+            while (SDL_GetAtomicInt(&addr->status) == 0) {
                 SDL_WaitCondition(resolver_condition, resolver_lock);
             }
         } else {
             const Uint64 endtime = (SDL_GetTicks() + timeout);
             SDL_LockMutex(resolver_lock);
-            while (SDL_AtomicGet(&addr->status) == 0) {
+            while (SDL_GetAtomicInt(&addr->status) == 0) {
                 const Uint64 now = SDL_GetTicks();
                 if (now >= endtime) {
                     break;
@@ -546,9 +546,9 @@ int SDLNet_GetAddressStatus(SDLNet_Address *addr)
     if (!addr) {
         return SDL_InvalidParamError("address");
     }
-    const int retval = SDL_AtomicGet(&addr->status);
+    const int retval = SDL_GetAtomicInt(&addr->status);
     if (retval == -1) {
-        SDL_SetError("%s", (const char *) SDL_AtomicGetPointer((void **) &addr->errstr));
+        SDL_SetError("%s", (const char *) SDL_GetAtomicPointer((void **) &addr->errstr));
     }
     return retval;
 }
@@ -560,7 +560,7 @@ const char *SDLNet_GetAddressString(SDLNet_Address *addr)
         return NULL;
     }
 
-    const char *retval = (const char *) SDL_AtomicGetPointer((void **) &addr->human_readable);
+    const char *retval = (const char *) SDL_GetAtomicPointer((void **) &addr->human_readable);
     if (!retval) {
         const int rc = SDLNet_GetAddressStatus(addr);
         if (rc != -1) {  // if -1, it'll set the error message.
@@ -623,7 +623,7 @@ void SDLNet_SimulateAddressResolutionLoss(int percent_loss)
 {
     percent_loss = SDL_min(100, percent_loss);
     percent_loss = SDL_max(0, percent_loss);
-    SDL_AtomicSet(&resolver_percent_loss, percent_loss);
+    SDL_SetAtomicInt(&resolver_percent_loss, percent_loss);
 }
 
 SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
@@ -822,7 +822,7 @@ SDLNet_StreamSocket *SDLNet_CreateClient(SDLNet_Address *addr, Uint16 port)
     if (addr == NULL) {
         SDL_InvalidParamError("address");
         return NULL;
-    } else if (SDL_AtomicGet(&addr->status) != 1) {
+    } else if (SDL_GetAtomicInt(&addr->status) != 1) {
         SDL_SetError("Address is not resolved");
         return NULL;
     }
@@ -916,7 +916,7 @@ struct SDLNet_Server
 
 SDLNet_Server *SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port)
 {
-    if (addr && SDL_AtomicGet(&addr->status) != 1) {
+    if (addr && SDL_GetAtomicInt(&addr->status) != 1) {
         SDL_SetError("Address is not resolved");  // strictly speaking, this should be a local interface, but a resolved address can fail later.
         return NULL;
     }
@@ -1268,7 +1268,7 @@ struct SDLNet_DatagramSocket
 
 SDLNet_DatagramSocket *SDLNet_CreateDatagramSocket(SDLNet_Address *addr, Uint16 port)
 {
-    if (addr && SDL_AtomicGet(&addr->status) != 1) {
+    if (addr && SDL_GetAtomicInt(&addr->status) != 1) {
         SDL_SetError("Address is not resolved");  // strictly speaking, this should be a local interface, but a resolved address can fail later.
         return NULL;
     }
