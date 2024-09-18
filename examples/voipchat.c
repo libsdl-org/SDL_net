@@ -100,8 +100,8 @@ static void SendClientAudioToServer(void)
 
 static void mainloop(void)
 {
-    const SDL_bool is_client = (server_addr != NULL) ? SDL_TRUE : SDL_FALSE;
-    SDL_bool done = SDL_FALSE;
+    const bool is_client = (server_addr != NULL) ? true : false;
+    bool done = false;
     Uint64 last_send_ticks = 0;
 
     if (is_client) {
@@ -109,7 +109,7 @@ static void mainloop(void)
     }
 
     while (!done) {
-        SDL_bool activity = SDL_FALSE;
+        bool activity = false;
         const Uint64 now = SDL_GetTicks();
         SDL_Event event;
         SDLNet_Datagram *dgram = NULL;
@@ -117,7 +117,7 @@ static void mainloop(void)
 
         while (((rc = SDLNet_ReceiveDatagram(sock, &dgram)) == 0) && (dgram != NULL)) {
             SDL_Log("%s: got %d-byte datagram from %s:%d", is_client ? "CLIENT" : "SERVER", (int) dgram->buflen, SDLNet_GetAddressString(dgram->addr), (int) dgram->port);
-            activity = SDL_TRUE;
+            activity = true;
             if (!is_client) {  /* we're the server? */
                 Voice *voice = FindVoiceByAddr(dgram->addr, dgram->port);
                 Voice *i;
@@ -187,7 +187,7 @@ static void mainloop(void)
         }
 
         while (SDL_PollEvent(&event)) {
-            activity = SDL_TRUE;
+            activity = true;
             switch (event.type) {
                 case SDL_EVENT_QUIT:
                     done = 1;
@@ -220,7 +220,7 @@ static void mainloop(void)
                 while (SDL_GetAudioStreamAvailable(capture_stream) > max_datagram) {
                     SendClientAudioToServer();
                     last_send_ticks = now;
-                    activity = SDL_TRUE;
+                    activity = true;
                 }
             }
 
@@ -247,14 +247,14 @@ static void mainloop(void)
 static void run_voipchat(int argc, char **argv)
 {
     const char *hostname = NULL;
-    SDL_bool is_server = SDL_FALSE;
+    bool is_server = false;
     int simulate_failure = 0;
     int i;
 
     for (i = 1; i < argc; i++) {
         const char *arg = argv[i];
         if (SDL_strcmp(arg, "--server") == 0) {
-            is_server = SDL_TRUE;
+            is_server = true;
         } else if ((SDL_strcmp(arg, "--port") == 0) && (i < (argc-1))) {
             server_port = (Uint16) SDL_atoi(argv[++i]);
         } else if ((SDL_strcmp(arg, "--simulate-failure") == 0) && (i < (argc-1))) {

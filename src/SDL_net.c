@@ -808,12 +808,12 @@ static int MakeSocketNonblocking(Socket handle)
     #endif
 }
 
-static SDL_bool WouldBlock(const int err)
+static bool WouldBlock(const int err)
 {
     #ifdef _WIN32
-    return (err == WSAEWOULDBLOCK) ? SDL_TRUE : SDL_FALSE;
+    return (err == WSAEWOULDBLOCK) ? true : false;
     #else
-    return ((err == EWOULDBLOCK) || (err == EAGAIN) || (err == EINPROGRESS)) ? SDL_TRUE : SDL_FALSE;
+    return ((err == EWOULDBLOCK) || (err == EAGAIN) || (err == EINPROGRESS)) ? true : false;
     #endif
 }
 
@@ -1490,7 +1490,7 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
         }
     }
 
-    const SDL_bool create_fromaddr = (!fromaddr) ? SDL_TRUE : SDL_FALSE;
+    const bool create_fromaddr = (!fromaddr) ? true : false;
     if (create_fromaddr) {
         fromaddr = CreateSDLNetAddrFromSockAddr((struct sockaddr *) &from, fromlen);
         if (!fromaddr) {
@@ -1598,7 +1598,7 @@ int SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutm
     int retval = 0;
     const Uint64 endtime = (timeoutms > 0) ? (SDL_GetTicks() + timeoutms) : 0;
 
-    while (SDL_TRUE) {
+    while (true) {
         SDL_memset(pfds, '\0', sizeof (*pfds) * numsockets);
 
         for (int i = 0; i < numsockets; i++) {
@@ -1643,9 +1643,9 @@ int SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutm
         for (int i = 0; i < numsockets; i++) {
             SDLNet_GenericSocket *sock = sockets[i];
             const struct pollfd *pfd = &pfds[i];
-            const SDL_bool failed = ((pfd->revents & (POLLERR|POLLHUP|POLLNVAL)) != 0) ? SDL_TRUE : SDL_FALSE;
-            const SDL_bool writable = (pfd->revents & POLLOUT) ? SDL_TRUE : SDL_FALSE;
-            const SDL_bool readable = (pfd->revents & POLLIN) ? SDL_TRUE : SDL_FALSE;
+            const bool failed = ((pfd->revents & (POLLERR|POLLHUP|POLLNVAL)) != 0) ? true : false;
+            const bool writable = (pfd->revents & POLLOUT) ? true : false;
+            const bool readable = (pfd->revents & POLLIN) ? true : false;
 
             if (readable || failed) {
                 retval++;
