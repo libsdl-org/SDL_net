@@ -526,7 +526,6 @@ int SDLNet_WaitUntilResolved(SDLNet_Address *addr, Sint32 timeout)
             }
         } else {
             const Uint64 endtime = (SDL_GetTicks() + timeout);
-            SDL_LockMutex(resolver_lock);
             while (SDL_GetAtomicInt(&addr->status) == 0) {
                 const Uint64 now = SDL_GetTicks();
                 if (now >= endtime) {
