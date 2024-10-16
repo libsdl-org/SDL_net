@@ -952,7 +952,7 @@ typedef struct SDLNet_Datagram
  * Datagram sockets follow different rules than stream sockets. They are not a
  * reliable stream of bytes but rather packets, they are not limited to
  * talking to a single other remote system, they do not maintain a single
- * "connection" that can be dropped, and they more nimble about network
+ * "connection" that can be dropped, and they are more nimble about network
  * failures at the expense of being more complex to use. What makes sense for
  * your app depends entirely on what your app is trying to accomplish.
  *
