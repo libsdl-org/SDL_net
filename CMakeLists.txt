@@ -227,6 +227,14 @@ if(SDLNET_INSTALL)
     # Always install sdl3-net.pc file: libraries might be different between config modes
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/sdl3-net.pc"
         DESTINATION "${SDLNET_PKGCONFIG_INSTALLDIR}" COMPONENT devel)
+    if(BUILD_SHARED_LIBS)
+        set(pdbdir "${CMAKE_INSTALL_BINDIR}")
+    else()
+        set(pdbdir "${CMAKE_INSTALL_LIBDIR}")
+    endif()
+    if(MSVC)
+        SDL_install_pdb("${sdl3_net_target_name}" "${pdbdir}")
+    endif()
 
     install(FILES "LICENSE.txt"
         DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/licenses/${PROJECT_NAME}"
