@@ -602,8 +602,8 @@ extern SDL_DECLSPEC SDLNet_Server * SDLCALL SDLNet_CreateServer(SDLNet_Address *
  * \param server the server object to check for pending connections.
  * \param client_stream Will be set to a new stream socket if a connection was
  *                      pending, NULL otherwise.
- * \returns true on success (even if no new connections were pending), false on
- *          error; call SDL_GetError() for details.
+ * \returns true on success (even if no new connections were pending), false
+ *          on error; call SDL_GetError() for details.
  *
  * \threadsafety You should not operate on the same server from multiple
  *               threads at the same time without supplying a serialization
@@ -726,8 +726,8 @@ extern SDL_DECLSPEC int SDLCALL SDLNet_GetConnectionStatus(SDLNet_StreamSocket *
  * \param sock the stream socket to send data through.
  * \param buf a pointer to the data to send.
  * \param buflen the size of the data to send, in bytes.
- * \returns true if data sent or queued for transmission, false on failure; call
- *          SDL_GetError() for details.
+ * \returns true if data sent or queued for transmission, false on failure;
+ *          call SDL_GetError() for details.
  *
  * \threadsafety You should not operate on the same socket from multiple
  *               threads at the same time without supplying a serialization
@@ -1043,8 +1043,8 @@ extern SDL_DECLSPEC SDLNet_DatagramSocket * SDLCALL SDLNet_CreateDatagramSocket(
  * \param port the address port.
  * \param buf a pointer to the data to send as a single packet.
  * \param buflen the size of the data to send, in bytes.
- * \returns true if data sent or queued for transmission, false on failure; call
- *          SDL_GetError() for details.
+ * \returns true if data sent or queued for transmission, false on failure;
+ *          call SDL_GetError() for details.
  *
  * \threadsafety You should not operate on the same socket from multiple
  *               threads at the same time without supplying a serialization
@@ -1091,8 +1091,8 @@ extern SDL_DECLSPEC bool SDLCALL SDLNet_SendDatagram(SDLNet_DatagramSocket *sock
  *
  * \param sock the datagram socket to send data through.
  * \param dgram a pointer to the datagram packet pointer.
- * \returns true if data sent or queued for transmission, false on failure; call
- *          SDL_GetError() for details.
+ * \returns true if data sent or queued for transmission, false on failure;
+ *          call SDL_GetError() for details.
  *
  * \threadsafety You should not operate on the same socket from multiple
  *               threads at the same time without supplying a serialization
