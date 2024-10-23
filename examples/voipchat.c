@@ -95,7 +95,9 @@ static void SendClientAudioToServer(void)
         scratch_area[0] = SDL_Swap64LE(0);  /* just being nice and leaving space in the buffer for the server to replace. */
         scratch_area[1] = SDL_Swap64LE(next_idnum);
         SDL_Log("CLIENT: Sending %d new bytes to server at %s:%d...", br + extra, SDLNet_GetAddressString(server_addr), (int) server_port);
-        SDLNet_SendDatagram(sock, server_addr, server_port, scratch_area, br + extra);
+        if (!SDLNet_SendDatagram(sock, server_addr, server_port, scratch_area, br + extra)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDLNet_SendDatagram failed: %s", SDL_GetError());
+        }
     }
 }
 
