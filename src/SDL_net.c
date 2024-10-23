@@ -188,6 +188,12 @@ static int SetSocketError(const char *msg, int err)
     return -1;
 }
 
+static bool SetSocketErrorBool(const char *msg, int err)
+{
+    SetSocketError(msg, err);
+    return false;
+}
+
 static int SetLastSocketError(const char *msg)
 {
     return SetSocketError(msg, LastSocketError());
@@ -199,6 +205,12 @@ static int SetGetAddrInfoError(const char *msg, int err)
     SDL_SetError("%s: %s", msg, errmsg);
     SDL_free(errmsg);
     return -1;
+}
+
+static bool SetGetAddrInfoErrorBool(const char *msg, int err)
+{
+    SetGetAddrInfoError(msg, err);
+    return false;
 }
 
 // this blocks!
@@ -366,10 +378,10 @@ static SDLNet_Address *CreateSDLNetAddrFromSockAddr(struct sockaddr *saddr, Sock
 
 static SDL_AtomicInt initialize_count;
 
-int SDLNet_Init(void)
+bool SDLNet_Init(void)
 {
     if (SDL_AddAtomicInt(&initialize_count, 1) > 0) {
-        return 0;  // already initialized, call it a success.
+        return true;  // already initialized, call it a success.
     }
 
     char *origerrstr = NULL;
@@ -377,7 +389,7 @@ int SDLNet_Init(void)
     #ifdef _WIN32
     WSADATA data;
     if (WSAStartup(MAKEWORD(1, 1), &data) != 0) {
-        return SetSocketError("WSAStartup() failed", LastSocketError());
+        return SetSocketErrorBool("WSAStartup() failed", LastSocketError());
     }
     #else
     signal(SIGPIPE, SIG_IGN);
@@ -408,7 +420,7 @@ int SDLNet_Init(void)
 
     random_seed = (int) ((unsigned int) (SDL_GetPerformanceCounter() & 0xFFFFFFFF));
 
-    return 0;  // good to go.
+    return true;  // good to go.
 
 failed:
     origerrstr = SDL_strdup(SDL_GetError());
@@ -420,7 +432,7 @@ failed:
         SDL_free(origerrstr);
     }
 
-    return -1;
+    return false;
 }
 
 void SDLNet_Quit(void)
@@ -980,7 +992,7 @@ SDLNet_Server *SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port)
     return server;
 }
 
-int SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stream)
+bool SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stream)
 {
     if (!client_stream) {
         return SDL_InvalidParamError("client_stream");
@@ -997,7 +1009,7 @@ int SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stre
     const Socket handle = accept(server->handle, (struct sockaddr *) &from, &fromlen);
     if (handle == INVALID_SOCKET) {
         const int err = LastSocketError();
-        return WouldBlock(err) ? 0 : SetSocketError("Failed to accept new connection", err);
+        return WouldBlock(err) ? true : SetSocketErrorBool("Failed to accept new connection", err);
     }
 
     if (MakeSocketNonblocking(handle) < 0) {
@@ -1009,20 +1021,20 @@ int SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stre
     const int gairc = getnameinfo((struct sockaddr *) &from, fromlen, NULL, 0, portbuf, sizeof (portbuf), NI_NUMERICSERV);
     if (gairc != 0) {
         CloseSocketHandle(handle);
-        return SetGetAddrInfoError("Failed to determine port number", gairc);
+        return SetGetAddrInfoErrorBool("Failed to determine port number", gairc);
     }
 
     SDLNet_Address *fromaddr = CreateSDLNetAddrFromSockAddr((struct sockaddr *) &from, fromlen);
     if (!fromaddr) {
         CloseSocketHandle(handle);
-        return -1;  // error string was already set.
+        return false;  // error string was already set.
     }
 
     SDLNet_StreamSocket *sock = (SDLNet_StreamSocket *) SDL_calloc(1, sizeof (SDLNet_StreamSocket));
     if (!sock) {
         SDLNet_UnrefAddress(fromaddr);
         CloseSocketHandle(handle);
-        return -1;
+        return false;
     }
 
     sock->socktype = SOCKETTYPE_STREAM;
@@ -1032,7 +1044,7 @@ int SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stre
     sock->status = 1;  // connected
 
     *client_stream = sock;
-    return 0;
+    return true;
 }
 
 void SDLNet_DestroyServer(SDLNet_Server *server)
@@ -1092,16 +1104,16 @@ static int PumpStreamSocket(SDLNet_StreamSocket *sock)
     return 0;
 }
 
-int SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int buflen)
+bool SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int buflen)
 {
     if (PumpStreamSocket(sock) < 0) {  // try to flush any queued data to the socket now, before we handle more.
-        return -1;
+        return false;
     } else if (buf == NULL) {
         return SDL_InvalidParamError("buf");
     } else if (buflen < 0) {
         return SDL_InvalidParamError("buflen");
     } else if (buflen == 0) {
-        return 0;  // nothing to do.
+        return true;  // nothing to do.
     }
 
     if (sock->pending_output_len == 0) {  // nothing queued? See if we can just send this without queueing.
@@ -1111,10 +1123,10 @@ int SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int b
             if (bw < 0) {
                 const int err = LastSocketError();
                 if (!WouldBlock(err)) {
-                    return SetSocketError("Failed to write to socket", err);
+                    return SetSocketErrorBool("Failed to write to socket", err);
                 }
             } else if (bw == buflen) {  // sent the whole thing? We're good to go here.
-                return 0;
+                return true;
             } else /*if (bw < buflen)*/ {  // partial write? We'll queue the rest.
                 buf = ((const Uint8 *) buf) + bw;
                 buflen -= (int) bw;
@@ -1143,7 +1155,7 @@ int SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int b
     SDL_memcpy(sock->pending_output_buffer + sock->pending_output_len, buf, buflen);
     sock->pending_output_len += buflen;
 
-    return 0;
+    return true;
 }
 
 int SDLNet_GetStreamSocketPendingWrites(SDLNet_StreamSocket *sock)
@@ -1368,10 +1380,10 @@ static int PumpDatagramSocket(SDLNet_DatagramSocket *sock)
 }
 
 
-int SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint16 port, const void *buf, int buflen)
+bool SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint16 port, const void *buf, int buflen)
 {
     if (PumpDatagramSocket(sock) < 0) {  // try to flush any queued data to the socket now, before we handle more.
-        return -1;
+        return false;
     } else if (addr == NULL) {
         return SDL_InvalidParamError("address");
     } else if (buf == NULL) {
@@ -1381,17 +1393,17 @@ int SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint1
     } else if (buflen > (64*1024)) {
         return SDL_SetError("buffer is too large to send in a single datagram packet");
     } else if (buflen == 0) {
-        return 0;  // nothing to do.  (!!! FIXME: but strictly speaking, a UDP packet with no payload is legal.)
+        return true;  // nothing to do.  (!!! FIXME: but strictly speaking, a UDP packet with no payload is legal.)
     } else if (sock->percent_loss && (RandomNumberBetween(0, 100) > sock->percent_loss)) {
-        return 0;  // you won the percent_loss lottery. Drop this packet as if you sent it and it never arrived.
+        return true;  // you won the percent_loss lottery. Drop this packet as if you sent it and it never arrived.
     }
 
     if (sock->pending_output_len == 0) {  // nothing queued? See if we can just send this without queueing.
         const int rc = SendOneDatagram(sock, addr, port, buf, buflen);
         if (rc < 0) {
-            return -1;  // error string was already set in SendOneDatagram.
+            return false;  // error string was already set in SendOneDatagram.
         } else if (rc == 1) {
-            return 0;   // successfully sent.
+            return true;   // successfully sent.
         }
         // if rc==0, it wasn't sent, because we would have blocked. Queue it for later, below.
     }
@@ -1408,7 +1420,7 @@ int SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint1
         }
         void *ptr = SDL_realloc(sock->pending_output, newlen * sizeof (SDLNet_Datagram *));
         if (!ptr) {
-            return -1;
+            return false;
         }
         sock->pending_output = (SDLNet_Datagram **) ptr;
         sock->pending_output_allocation = newlen;
@@ -1416,7 +1428,7 @@ int SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint1
 
     SDLNet_Datagram *dgram = (SDLNet_Datagram *) SDL_malloc(sizeof (SDLNet_Datagram) + buflen);
     if (!dgram) {
-        return -1;
+        return false;
     }
 
     dgram->buf = (Uint8 *) (dgram+1);
@@ -1428,11 +1440,11 @@ int SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint1
 
     sock->pending_output[sock->pending_output_len++] = dgram;
 
-    return 0;
+    return true;
 }
 
 
-int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
+bool SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
 {
     if (!dgram) {
         return SDL_InvalidParamError("dgram");
@@ -1441,7 +1453,7 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
     *dgram = NULL;
 
     if (PumpDatagramSocket(sock) < 0) {  // try to flush any queued data to the socket now, before we go further.
-        return -1;
+        return false;
     }
 
     AddressStorage from;
@@ -1450,17 +1462,17 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
     const int br = recvfrom(sock->handle, (char *) sock->recv_buffer, sizeof (sock->recv_buffer), 0, (struct sockaddr *) &from, &fromlen);
     if (br == SOCKET_ERROR) {
         const int err = LastSocketError();
-        return WouldBlock(err) ? 0 : SetSocketError("Failed to receive datagrams", err);
+        return WouldBlock(err) ? true : SetSocketErrorBool("Failed to receive datagrams", err);
     } else if (sock->percent_loss && (RandomNumberBetween(0, 100) > sock->percent_loss)) {
         // you won the percent_loss lottery. Drop this packet as if it never arrived.
-        return 0;
+        return true;
     }
 
     char hostbuf[128];
     char portbuf[16];
     const int rc = getnameinfo((struct sockaddr *) &from, fromlen, hostbuf, sizeof (hostbuf), portbuf, sizeof (portbuf), NI_NUMERICHOST | NI_NUMERICSERV);
     if (rc != 0) {
-        return SetGetAddrInfoError("Failed to determine incoming packet's address", rc);
+        return SetGetAddrInfoErrorBool("Failed to determine incoming packet's address", rc);
     }
 
     // Cache the last X addresses we saw; if we see it again, refcount it and reuse it.
@@ -1493,7 +1505,7 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
     if (create_fromaddr) {
         fromaddr = CreateSDLNetAddrFromSockAddr((struct sockaddr *) &from, fromlen);
         if (!fromaddr) {
-            return -1;  // already set the error string.
+            return false;  // already set the error string.
         }
     }
 
@@ -1502,7 +1514,7 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
         if (create_fromaddr) {
             SDLNet_UnrefAddress(fromaddr);
         }
-        return -1;
+        return false;
     }
 
     dg->buf = (Uint8 *) (dg+1);
@@ -1520,7 +1532,7 @@ int SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
         sock->latest_recv_addrs_idx %= SDL_arraysize(sock->latest_recv_addrs);
     }
 
-    return 0;
+    return true;
 }
 
 void SDLNet_DestroyDatagram(SDLNet_Datagram *dgram)

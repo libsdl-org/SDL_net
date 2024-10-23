@@ -13,7 +13,7 @@
 
 int main(int argc, char **argv)
 {
-    if (SDLNet_Init() < 0) {
+    if (!SDLNet_Init()) {
         SDL_Log("SDLNet_Init() failed: %s", SDL_GetError());
         return 1;
     }
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
                 SDL_Log("Failed to create stream socket to %s: %s\n", argv[i], SDL_GetError());
             } else if (SDLNet_WaitUntilConnected(sock, -1) < 0) {
                 SDL_Log("Failed to connect to %s: %s", argv[i], SDL_GetError());
-            } else if (SDLNet_WriteToStreamSocket(sock, req, SDL_strlen(req)) < 0) {
+            } else if (!SDLNet_WriteToStreamSocket(sock, req, SDL_strlen(req))) {
                 SDL_Log("Failed to write to %s: %s", argv[i], SDL_GetError());
             } else if (SDLNet_WaitUntilStreamSocketDrained(sock, -1) < 0) {
                 SDL_Log("Failed to finish write to %s: %s", argv[i], SDL_GetError());

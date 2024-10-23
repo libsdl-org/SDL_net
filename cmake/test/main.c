@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (SDLNet_Init() < 0) {
+    if (!SDLNet_Init()) {
         SDL_Log("SDL_Net_Init() failed: %s", SDL_GetError());
     }
 

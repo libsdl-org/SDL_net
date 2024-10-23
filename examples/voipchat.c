@@ -115,7 +115,7 @@ static void mainloop(void)
         SDLNet_Datagram *dgram = NULL;
         int rc;
 
-        while (((rc = SDLNet_ReceiveDatagram(sock, &dgram)) == 0) && (dgram != NULL)) {
+        while (((rc = SDLNet_ReceiveDatagram(sock, &dgram)) == true) && (dgram != NULL)) {
             SDL_Log("%s: got %d-byte datagram from %s:%d", is_client ? "CLIENT" : "SERVER", (int) dgram->buflen, SDLNet_GetAddressString(dgram->addr), (int) dgram->port);
             activity = true;
             if (!is_client) {  /* we're the server? */
@@ -349,7 +349,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (SDLNet_Init() < 0) {
+    if (!SDLNet_Init()) {
         SDL_Log("SDLNet_Init failed: %s\n", SDL_GetError());
         SDL_Quit();
         return 1;

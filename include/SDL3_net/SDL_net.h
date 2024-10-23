@@ -59,6 +59,7 @@ extern "C" {
      (SDL_NET_MAJOR_VERSION > X || SDL_NET_MINOR_VERSION >= Y) && \
      (SDL_NET_MAJOR_VERSION > X || SDL_NET_MINOR_VERSION > Y || SDL_NET_MICRO_VERSION >= Z))
 
+
 /**
  * This function gets the version of the dynamically linked SDL_net library.
  *
@@ -81,7 +82,7 @@ extern SDL_DECLSPEC int SDLCALL SDLNet_Version(void);
  * once, and won't deinitialize until SDLNet_Quit() has been called a matching
  * number of times. Extra attempts to init report success.
  *
- * \returns 0 on success, -1 on error; call SDL_GetError() for details.
+ * \returns true on success, false on error; call SDL_GetError() for details.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -89,7 +90,7 @@ extern SDL_DECLSPEC int SDLCALL SDLNet_Version(void);
  *
  * \sa SDLNet_Quit
  */
-extern SDL_DECLSPEC int SDLCALL SDLNet_Init(void);
+extern SDL_DECLSPEC bool SDLCALL SDLNet_Init(void);
 
 /**
  * Deinitialize the SDL_net library.
@@ -587,7 +588,7 @@ extern SDL_DECLSPEC SDLNet_Server * SDLCALL SDLNet_CreateServer(SDLNet_Address *
  * as server acceptance is the final step of connecting.
  *
  * This function does not block. If there are no new connections pending, this
- * function will return 0 (for success, but `*client_stream` will be set to
+ * function will return true (for success, but `*client_stream` will be set to
  * NULL. This is not an error and a common condition the app should expect. In
  * fact, this function should be called in a loop until this condition occurs,
  * so all pending connections are accepted in a single batch.
@@ -601,7 +602,7 @@ extern SDL_DECLSPEC SDLNet_Server * SDLCALL SDLNet_CreateServer(SDLNet_Address *
  * \param server the server object to check for pending connections.
  * \param client_stream Will be set to a new stream socket if a connection was
  *                      pending, NULL otherwise.
- * \returns 0 on success (even if no new connections were pending), -1 on
+ * \returns true on success (even if no new connections were pending), false on
  *          error; call SDL_GetError() for details.
  *
  * \threadsafety You should not operate on the same server from multiple
@@ -614,7 +615,7 @@ extern SDL_DECLSPEC SDLNet_Server * SDLCALL SDLNet_CreateServer(SDLNet_Address *
  * \sa SDLNet_WaitUntilInputAvailable
  * \sa SDLNet_DestroyStreamSocket
  */
-extern SDL_DECLSPEC int SDLCALL SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stream);
+extern SDL_DECLSPEC bool SDLCALL SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stream);
 
 /**
  * Dispose of a previously-created server.
@@ -718,14 +719,14 @@ extern SDL_DECLSPEC int SDLCALL SDLNet_GetConnectionStatus(SDLNet_StreamSocket *
  *
  * If the connection has failed (remote side dropped us, or one of a million
  * other networking failures occurred), this function will report failure by
- * returning -1. Stream sockets only report failure for unrecoverable
+ * returning false. Stream sockets only report failure for unrecoverable
  * conditions; once a stream socket fails, you should assume it is no longer
  * usable and should destroy it with SDL_DestroyStreamSocket().
  *
  * \param sock the stream socket to send data through.
  * \param buf a pointer to the data to send.
  * \param buflen the size of the data to send, in bytes.
- * \returns 0 if data sent or queued for transmission, -1 on failure; call
+ * \returns true if data sent or queued for transmission, false on failure; call
  *          SDL_GetError() for details.
  *
  * \threadsafety You should not operate on the same socket from multiple
@@ -739,7 +740,7 @@ extern SDL_DECLSPEC int SDLCALL SDLNet_GetConnectionStatus(SDLNet_StreamSocket *
  * \sa SDLNet_WaitUntilStreamSocketDrained
  * \sa SDLNet_ReadFromStreamSocket
  */
-extern SDL_DECLSPEC int SDLCALL SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int buflen);
+extern SDL_DECLSPEC bool SDLCALL SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int buflen);
 
 /**
  * Query bytes still pending transmission on a stream socket.
@@ -1030,7 +1031,7 @@ extern SDL_DECLSPEC SDLNet_DatagramSocket * SDLCALL SDLNet_CreateDatagramSocket(
  * still queued, as datagram transmission is unreliable, so you should never
  * assume anything about queued data.
  *
- * If there's a fatal error, this function will return -1. Datagram sockets
+ * If there's a fatal error, this function will return false. Datagram sockets
  * generally won't report failures, because there is no state like a
  * "connection" to fail at this level, but may report failure for
  * unrecoverable system-level conditions; once a datagram socket fails, you
@@ -1042,7 +1043,7 @@ extern SDL_DECLSPEC SDLNet_DatagramSocket * SDLCALL SDLNet_CreateDatagramSocket(
  * \param port the address port.
  * \param buf a pointer to the data to send as a single packet.
  * \param buflen the size of the data to send, in bytes.
- * \returns 0 if data sent or queued for transmission, -1 on failure; call
+ * \returns true if data sent or queued for transmission, false on failure; call
  *          SDL_GetError() for details.
  *
  * \threadsafety You should not operate on the same socket from multiple
@@ -1054,7 +1055,7 @@ extern SDL_DECLSPEC SDLNet_DatagramSocket * SDLCALL SDLNet_CreateDatagramSocket(
  *
  * \sa SDLNet_ReceiveDatagram
  */
-extern SDL_DECLSPEC int SDLCALL SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *address, Uint16 port, const void *buf, int buflen);
+extern SDL_DECLSPEC bool SDLCALL SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *address, Uint16 port, const void *buf, int buflen);
 
 
 /**
@@ -1081,7 +1082,7 @@ extern SDL_DECLSPEC int SDLCALL SDLNet_SendDatagram(SDLNet_DatagramSocket *sock,
  * reply to. Even if you aren't acting as a "server," packets can still arrive
  * at your socket if someone sends one.
  *
- * If there's a fatal error, this function will return -1. Datagram sockets
+ * If there's a fatal error, this function will return false. Datagram sockets
  * generally won't report failures, because there is no state like a
  * "connection" to fail at this level, but may report failure for
  * unrecoverable system-level conditions; once a datagram socket fails, you
@@ -1090,7 +1091,7 @@ extern SDL_DECLSPEC int SDLCALL SDLNet_SendDatagram(SDLNet_DatagramSocket *sock,
  *
  * \param sock the datagram socket to send data through.
  * \param dgram a pointer to the datagram packet pointer.
- * \returns 0 if data sent or queued for transmission, -1 on failure; call
+ * \returns true if data sent or queued for transmission, false on failure; call
  *          SDL_GetError() for details.
  *
  * \threadsafety You should not operate on the same socket from multiple
@@ -1103,7 +1104,7 @@ extern SDL_DECLSPEC int SDLCALL SDLNet_SendDatagram(SDLNet_DatagramSocket *sock,
  * \sa SDLNet_SendDatagram
  * \sa SDLNet_DestroyDatagram
  */
-extern SDL_DECLSPEC int SDLCALL SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram);
+extern SDL_DECLSPEC bool SDLCALL SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram);
 
 /**
  * Dispose of a datagram packet previously received.
@@ -1227,6 +1228,7 @@ extern SDL_DECLSPEC void SDLCALL SDLNet_DestroyDatagramSocket(SDLNet_DatagramSoc
  * \param timeout Number of milliseconds to wait for new input to become
  *                available. -1 to wait indefinitely, 0 to check once without
  *                waiting.
+ * \returns the number of items that have new input, or -1 on error.
  *
  * \threadsafety You should not operate on the same socket from multiple
  *               threads at the same time without supplying a serialization
