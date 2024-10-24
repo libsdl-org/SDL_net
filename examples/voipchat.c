@@ -37,7 +37,7 @@ static SDL_AudioDeviceID audio_device = 0;
 static SDL_AudioDeviceID capture_device = 0;
 static SDL_AudioStream *capture_stream = NULL;
 static const SDL_AudioSpec audio_spec = { SDL_AUDIO_S16LE, 1, 8000 };
-static Uint8 scratch_area[4096];
+static Uint64 scratch_area[512];
 
 static Voice *FindVoiceByAddr(const SDLNet_Address *addr, const Uint16 port)
 {
@@ -89,10 +89,11 @@ static void ClearOldVoices(const Uint64 now)
 static const int extra = (int) (sizeof (Uint64) * 2);
 static void SendClientAudioToServer(void)
 {
-    const int br = SDL_GetAudioStreamData(capture_stream, scratch_area + extra, max_datagram - extra);
+    const int br = SDL_GetAudioStreamData(capture_stream, scratch_area + (extra / sizeof(Uint64)), max_datagram - extra);
     if (br > 0) {
-        ((Uint64 *) scratch_area)[0] = SDL_Swap64LE(0);  /* just being nice and leaving space in the buffer for the server to replace. */
-        ((Uint64 *) scratch_area)[1] = SDL_Swap64LE(++next_idnum);
+        next_idnum++;
+        scratch_area[0] = SDL_Swap64LE(0);  /* just being nice and leaving space in the buffer for the server to replace. */
+        scratch_area[1] = SDL_Swap64LE(next_idnum);
         SDL_Log("CLIENT: Sending %d new bytes to server at %s:%d...", br + extra, SDLNet_GetAddressString(server_addr), (int) server_port);
         SDLNet_SendDatagram(sock, server_addr, server_port, scratch_area, br + extra);
     }
@@ -225,8 +226,9 @@ static void mainloop(void)
             }
 
             if (!last_send_ticks || ((now - last_send_ticks) > 5000)) {  /* send a keepalive packet if we haven't transmitted for a bit. */
-                ((Uint64 *) scratch_area)[0] = SDL_Swap64LE(0);
-                ((Uint64 *) scratch_area)[1] = SDL_Swap64LE(++next_idnum);
+                next_idnum++;
+                scratch_area[0] = SDL_Swap64LE(0);
+                scratch_area[1] = SDL_Swap64LE(next_idnum);
                 SDL_Log("CLIENT: Sending %d keepalive bytes to server at %s:%d...", extra, SDLNet_GetAddressString(server_addr), (int) server_port);
                 SDLNet_SendDatagram(sock, server_addr, server_port, scratch_area, extra);
                 last_send_ticks = now;
