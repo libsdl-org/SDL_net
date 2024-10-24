@@ -1218,7 +1218,8 @@ int SDLNet_ReadFromStreamSocket(SDLNet_StreamSocket *sock, void *buf, int buflen
 
     const int br = (int) read(sock->handle, buf, buflen);
     if (br == 0) {
-        return SDL_SetError("End of stream");
+        SDL_SetError("End of stream");
+        return -1;
     } else if (br < 0) {
         const int err = LastSocketError();
         return WouldBlock(err) ? 0 : SetSocketError("Failed to read from socket", err);
