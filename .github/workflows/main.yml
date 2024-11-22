@@ -44,7 +44,6 @@ jobs:
           brew install \
             autoconf \
             automake \
-            pkg-config \
             sdl2 \
             ${NULL+}
 
