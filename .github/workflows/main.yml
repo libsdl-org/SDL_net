@@ -59,7 +59,7 @@ jobs:
           pkg-config \
           ${NULL+}
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Setup MSVC dependencies
       if: "matrix.platform.msvc"
@@ -70,8 +70,6 @@ jobs:
     - name: Setup Ninja for MSVC
       if: ${{ !contains(matrix.platform.shell, 'msys2') }}
       uses: aseprite/get-ninja@main
-      with:
-        version: 1.10.2
     - uses: ilammy/msvc-dev-cmd@v1
       if: "matrix.platform.msvc"
       with:
