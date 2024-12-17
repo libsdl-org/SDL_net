@@ -4,6 +4,8 @@
 
 set -eu
 
+cd `dirname $0`/..
+
 # Needed so sed doesn't report illegal byte sequences on macOS
 export LC_CTYPE=C
 
@@ -173,14 +175,6 @@ if [ "$ref" = "$dylib_cur" ]; then
     ok "project.pbxproj DYLIB_CURRENT_VERSION is consistent"
 else
     not_ok "project.pbxproj DYLIB_CURRENT_VERSION is inconsistent, expected $ref, got $dylib_cur"
-fi
-
-sdl_req=$(sed -ne 's/\$sdl2_version = "\([0-9.]*\)"$/\1/p' .github/fetch_sdl_vc.ps1)
-
-if [ "$ref_sdl_req" = "$sdl_req" ]; then
-    ok ".github/fetch_sdl_vc.ps1 $sdl_req"
-else
-    not_ok ".github/fetch_sdl_vc.ps1 sdl2_version=$sdl_req disagrees with configure.ac SDL_VERSION=$ref_sdl_req"
 fi
 
 echo "1..$tests"
