@@ -76,6 +76,7 @@ cmake_dependent_option(BUILD_SHARED_LIBS "Build the library as a shared library"
 
 cmake_dependent_option(SDLNET_INSTALL "Enable SDL3_net install target" ${SDLNET_ROOTPROJECT} "${sdl3net_install_enableable}" OFF)
 cmake_dependent_option(SDLNET_INSTALL_MAN "Install man pages for SDL3_net" OFF "SDLNET_INSTALL" OFF)
+cmake_dependent_option(SDLNET_RELOCATABLE "Create relocatable SDL_net package" "${MSVC}" SDLNET_INSTALL OFF)
 option(SDLNET_WERROR "Treat warnings as errors" OFF)
 
 option(SDLNET_SAMPLES "Build the SDL3_net sample program(s)" ${SDLNET_SAMPLES_DEFAULT})
@@ -233,9 +234,13 @@ if(SDLNET_INSTALL)
         COMPONENT devel
     )
 
-    file(RELATIVE_PATH SDL_PATH_PREFIX_RELATIVE_TO_PKGCONFIG "${CMAKE_INSTALL_PREFIX}/${SDLNET_PKGCONFIG_INSTALLDIR}" "${CMAKE_INSTALL_PREFIX}")
-    string(REGEX REPLACE "[/]+$" "" SDL_PATH_PREFIX_RELATIVE_TO_PKGCONFIG "${SDL_PATH_PREFIX_RELATIVE_TO_PKGCONFIG}")
-    set(SDL_PKGCONFIG_PREFIX "\${pcfiledir}/${SDL_PATH_PREFIX_RELATIVE_TO_PKGCONFIG}")
+    if(SDLNET_RELOCATABLE)
+        file(RELATIVE_PATH SDL_PATH_PREFIX_RELATIVE_TO_PKGCONFIG "${CMAKE_INSTALL_PREFIX}/${SDLNET_PKGCONFIG_INSTALLDIR}" "${CMAKE_INSTALL_PREFIX}")
+        string(REGEX REPLACE "[/]+$" "" SDL_PATH_PREFIX_RELATIVE_TO_PKGCONFIG "${SDL_PATH_PREFIX_RELATIVE_TO_PKGCONFIG}")
+        set(SDL_PKGCONFIG_PREFIX "\${pcfiledir}/${SDL_PATH_PREFIX_RELATIVE_TO_PKGCONFIG}")
+    else()
+        set(SDL_PKGCONFIG_PREFIX "${CMAKE_PREFIX_PATH}")
+    endif()
 
     string(JOIN " " PC_REQUIRES ${PC_REQUIRES})
     string(JOIN " " PC_LIBS ${PC_LIBS})
