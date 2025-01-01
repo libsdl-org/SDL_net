@@ -178,19 +178,17 @@ else
     not_ok "project.pbxproj DYLIB_CURRENT_VERSION is inconsistent, expected $ref, got $dylib_cur"
 fi
 
-######
-if false; then
+if [ -f .github/fetch_sdl_vc.ps1 ]; then
+    sdl_req=$(sed -ne 's/\$sdl2_version = "\([0-9.]*\)"$/\1/p' .github/fetch_sdl_vc.ps1)
 
-sdl_req=$(sed -ne 's/\$sdl2_version = "\([0-9.]*\)"$/\1/p' .github/fetch_sdl_vc.ps1)
-
-if [ "$ref_sdl_req" = "$sdl_req" ]; then
-    ok ".github/fetch_sdl_vc.ps1 $sdl_req"
-else
-    not_ok ".github/fetch_sdl_vc.ps1 sdl2_version=$sdl_req disagrees with configure.ac SDL_VERSION=$ref_sdl_req"
+    if [ "$ref_sdl_req" = "$sdl_req" ]; then
+        ok ".github/fetch_sdl_vc.ps1 $sdl_req"
+    else
+        not_ok ".github/fetch_sdl_vc.ps1 sdl2_version=$sdl_req disagrees with configure.ac SDL_VERSION=$ref_sdl_req"
+    fi
 fi
 
-fi # false
-######
+fi
 
 echo "1..$tests"
 exit "$failed"
