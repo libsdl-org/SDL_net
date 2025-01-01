@@ -188,7 +188,5 @@ if [ -f .github/fetch_sdl_vc.ps1 ]; then
     fi
 fi
 
-fi
-
 echo "1..$tests"
 exit "$failed"
