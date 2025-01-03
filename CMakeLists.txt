@@ -131,6 +131,9 @@ if(WIN32)
         target_sources(${sdl3_net_target_name} PRIVATE
             src/version.rc
         )
+        if(MINGW)
+            target_link_options(${sdl3_net_target_name} PRIVATE -static-libgcc)
+        endif()
     endif()
     target_link_libraries(${sdl3_net_target_name} PRIVATE iphlpapi ws2_32)
     list(APPEND PC_LIBS -liphlpapi -lws2_32)
