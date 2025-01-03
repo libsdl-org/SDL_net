@@ -109,6 +109,9 @@ if(WIN32)
     if(SDL2NET_BUILD_SHARED_LIBS)
         target_sources(SDL2_net PRIVATE src/version.rc)
     endif()
+    if(MINGW)
+      target_link_options(SDL2_net PRIVATE -static-libgcc)
+    endif()
 endif()
 set_target_properties(SDL2_net PROPERTIES
     DEFINE_SYMBOL DLL_EXPORT
