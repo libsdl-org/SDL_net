@@ -6,7 +6,7 @@ https://github.com/libsdl-org/SDL_net/releases
 
 This is an example portable network library for use with SDL.
 It is available under the zlib license, found in the file LICENSE.txt.
-The API can be found in the file SDL_net.h and online at https://wiki.libsdl.org/SDL_net
+The API can be found in the file SDL_net.h and online at https://wiki.libsdl.org/SDL2_net
 This library supports UNIX, Windows, MacOS Classic, MacOS X,
 BeOS and QNX.
 
