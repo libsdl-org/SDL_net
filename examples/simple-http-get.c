@@ -32,12 +32,14 @@ int main(int argc, char **argv)
                 SDL_Log("Out of memory!");
             } else if (!sock) {
                 SDL_Log("Failed to create stream socket to %s: %s\n", argv[i], SDL_GetError());
+            } else if (!SDLNet_SetSocketBlocking((SDLNet_GenericSocket*)sock, true)) {
+                SDL_Log("Enabling blocking mode failed!");
+            } else if (!SDLNet_SetBlockingSocketTimeout((SDLNet_GenericSocket*) sock, 2000, true)) {
+                SDL_Log("Setting receive timeout failed!");
             } else if (SDLNet_WaitUntilConnected(sock, -1) < 0) {
                 SDL_Log("Failed to connect to %s: %s", argv[i], SDL_GetError());
             } else if (!SDLNet_WriteToStreamSocket(sock, req, SDL_strlen(req))) {
                 SDL_Log("Failed to write to %s: %s", argv[i], SDL_GetError());
-            } else if (SDLNet_WaitUntilStreamSocketDrained(sock, -1) < 0) {
-                SDL_Log("Failed to finish write to %s: %s", argv[i], SDL_GetError());
             } else {
                 char buf[512];
                 int br;
