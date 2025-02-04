@@ -425,6 +425,64 @@ extern SDL_DECLSPEC SDLNet_Address **SDLCALL SDLNet_GetLocalAddresses(int *num_a
 extern SDL_DECLSPEC void SDLCALL SDLNet_FreeLocalAddresses(SDLNet_Address **addresses);
 
 
+/* Generic socket API... */
+
+typedef union SDLNet_GenericSocket SDLNet_GenericSocket;  /**< a generic socket. */
+
+typedef struct SDLNet_CommonSocket SDLNet_CommonSocket;  /**< the base socket. */
+
+/**
+ * Set a socket to blocking or non-blocking mode. At initialization, blocking
+ * is disabled.
+ *
+ * Setting a socket to blocking mode means that when you call a function that
+ * reads or writes data, it will not return until it has done its work. On the
+ * other hand, a non-blocking socket will return immediately.
+ * 
+ * Most games use non-blocking mode. If the data you are sending or receiving
+ * is critical priority, and you trust the network, it might be okay
+ * to use blocking mode. Also, if the networking is being done in a separate
+ * dedicated thread, blocking mode might be okay. It's worth noting that
+ * blocking mode is preferred to a naive busy-wait loop because it will save
+ * CPU time and delegate the job of waiting diligently to the system.
+ *
+ * \param sock The socket to set blocking mode on.
+ * \param blocking true to enable blocking mode, false to disable it.
+ * \returns true on success, false on error; call SDL_GetError() for details.
+ *
+ * \since This function is available since SDL_Net 3.0.0.
+ * 
+ * \sa SDLNet_GetSocketBlocking
+ * \sa SDLNet_SetBlockingSocketReceiveTimeout
+ * \sa SDLNet_SetBlockingSocketTimeout
+ */
+extern SDL_DECLSPEC bool SDLCALL SDLNet_SetSocketBlocking(SDLNet_GenericSocket *sock, bool blocking);
+
+/**
+ * Get the blocking mode of a socket.
+ *
+ * \param sock The socket to query.
+ * \returns true if the socket is in blocking mode, false if it is not.
+ *
+ * \since This function is available since SDL_Net 3.0.0.
+ *
+ * \sa SDLNet_SetSocketBlocking
+ */
+extern SDL_DECLSPEC bool SDLCALL SDLNet_GetSocketBlocking(SDLNet_GenericSocket *sock);
+
+/**
+ * Set the send or receive timeout for a blocking socket.
+ *
+ * \param sock The socket to set the send timeout on.
+ * \param timeout_ms The timeout in milliseconds.
+ * \param is_recv true to set the receive timeout, false to set the send timeout.
+ * \returns true on success, false on error; call SDL_GetError() for details.
+ * 
+ * \sa SDLNet_SetSocketBlocking
+ */
+extern SDL_DECLSPEC bool SDLCALL SDLNet_SetBlockingSocketTimeout(SDLNet_GenericSocket *sock, int timeout_ms, bool is_recv);
+
+
 /* Streaming (TCP) API... */
 
 typedef struct SDLNet_StreamSocket SDLNet_StreamSocket;  /**< a TCP socket. Reliable transmission, with the usual pros/cons. */
