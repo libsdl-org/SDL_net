@@ -1286,7 +1286,7 @@ extern SDL_DECLSPEC void SDLCALL SDLNet_DestroyDatagramSocket(SDLNet_DatagramSoc
  * timeout is reached, this returns zero. On error, this returns -1.
  *
  * \param vsockets an array of pointers to various objects that can be waited
- *                 on, each cast to a void pointer.
+ *                 on, each cast to union members.
  * \param numsockets the number of pointers in the `vsockets` array.
  * \param timeout Number of milliseconds to wait for new input to become
  *                available. -1 to wait indefinitely, 0 to check once without
@@ -1304,7 +1304,7 @@ extern SDL_DECLSPEC void SDLCALL SDLNet_DestroyDatagramSocket(SDLNet_DatagramSoc
  * \sa SDLNet_SendDatagram
  * \sa SDLNet_ReceiveDatagram
  */
-extern SDL_DECLSPEC int SDLCALL SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, Sint32 timeout);
+extern SDL_DECLSPEC int SDLCALL SDLNet_WaitUntilInputAvailable(SDLNet_GenericSocket **vsockets, int numsockets, Sint32 timeout);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
