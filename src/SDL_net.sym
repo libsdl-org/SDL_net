@@ -14,6 +14,7 @@ SDL3_net_0.0.0 {
     SDLNet_GetAddressString;
     SDLNet_GetConnectionStatus;
     SDLNet_GetLocalAddresses;
+    SDLNet_GetSocketBlocking;
     SDLNet_GetStreamSocketAddress;
     SDLNet_GetStreamSocketPendingWrites;
     SDLNet_Init;
@@ -23,6 +24,8 @@ SDL3_net_0.0.0 {
     SDLNet_RefAddress;
     SDLNet_ResolveHostname;
     SDLNet_SendDatagram;
+    SDLNet_SetBlockingSocketTimeout;
+    SDLNet_SetSocketBlocking;
     SDLNet_SimulateAddressResolutionLoss;
     SDLNet_SimulateDatagramPacketLoss;
     SDLNet_SimulateStreamPacketLoss;
