@@ -453,7 +453,6 @@ typedef struct SDLNet_CommonSocket SDLNet_CommonSocket;  /**< the base socket. *
  * \since This function is available since SDL_Net 3.0.0.
  * 
  * \sa SDLNet_GetSocketBlocking
- * \sa SDLNet_SetBlockingSocketReceiveTimeout
  * \sa SDLNet_SetBlockingSocketTimeout
  */
 extern SDL_DECLSPEC bool SDLCALL SDLNet_SetSocketBlocking(SDLNet_GenericSocket *sock, bool blocking);
