@@ -795,12 +795,22 @@ static struct addrinfo *MakeAddrInfoWithPort(const SDLNet_Address *addr, const i
 }
 
 
+struct SDLNet_CommonSocket
+{
+    SDLNet_SocketType socktype;
+    SDLNet_Address* addr;
+    Uint16 port;
+    Socket handle;
+    bool blocking;
+};
+
 struct SDLNet_StreamSocket
 {
     SDLNet_SocketType socktype;
     SDLNet_Address *addr;
     Uint16 port;
     Socket handle;
+    bool blocking;
     int status;
     Uint8 *pending_output_buffer;
     int pending_output_len;
@@ -809,13 +819,22 @@ struct SDLNet_StreamSocket
     Uint64 simulated_failure_until;
 };
 
-static int MakeSocketNonblocking(Socket handle)
+static int SetSocketBlocking(Socket handle, bool blocking)
 {
     #ifdef _WIN32
-    DWORD one = 1;
-    return ioctlsocket(handle, FIONBIO, &one);
+    u_long mode = blocking ? 0 : 1;
+    return ioctlsocket(handle, FIONBIO, &mode);
     #else
-    return fcntl(handle, F_SETFL, fcntl(handle, F_GETFL, 0) | O_NONBLOCK);
+    int flags = fcntl(handle, F_GETFL, 0);
+    if (flags == -1) {
+        return -1;
+    }
+    if (blocking) {
+        flags &= ~O_NONBLOCK;
+    } else {
+        flags |= O_NONBLOCK;
+    }
+    return fcntl(handle, F_SETFL, flags);
     #endif
 }
 
@@ -863,7 +882,7 @@ SDLNet_StreamSocket *SDLNet_CreateClient(SDLNet_Address *addr, Uint16 port)
         return NULL;
     }
 
-    if (MakeSocketNonblocking(sock->handle) < 0) {
+    if (SetSocketBlocking(sock->handle, false) < 0) {
         CloseSocketHandle(sock->handle);
         freeaddrinfo(addrwithport);
         SDL_free(sock);
@@ -899,7 +918,7 @@ static int CheckClientConnection(SDLNet_StreamSocket *sock, int timeoutms)
             if (SDL_GetTicks() >= sock->simulated_failure_ticks) {
                 sock->status = SDL_SetError("simulated failure");
         } else */
-        if (SDLNet_WaitUntilInputAvailable((void **) &sock, 1, timeoutms) == -1) {
+        if (SDLNet_WaitUntilInputAvailable((SDLNet_GenericSocket **) &sock, 1, timeoutms) == -1) {
             sock->status = -1;  // just abandon the whole enterprise.
         }
     }
@@ -923,6 +942,7 @@ struct SDLNet_Server
     SDLNet_Address *addr;  // bound to this address (NULL for any).
     Uint16 port;
     Socket handle;
+    bool blocking;
 };
 
 SDLNet_Server *SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port)
@@ -955,7 +975,7 @@ SDLNet_Server *SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port)
         return NULL;
     }
 
-    if (MakeSocketNonblocking(server->handle) < 0) {
+    if (SetSocketBlocking(server->handle, false) < 0) {
         CloseSocketHandle(server->handle);
         freeaddrinfo(addrwithport);
         SDL_free(server);
@@ -1012,7 +1032,7 @@ bool SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_str
         return WouldBlock(err) ? true : SetSocketErrorBool("Failed to accept new connection", err);
     }
 
-    if (MakeSocketNonblocking(handle) < 0) {
+    if (SetSocketBlocking(server->handle, false) < 0) {
         CloseSocketHandle(handle);
         return SDL_SetError("Failed to make incoming socket non-blocking");
     }
@@ -1172,6 +1192,11 @@ int SDLNet_WaitUntilStreamSocketDrained(SDLNet_StreamSocket *sock, int timeoutms
         return SDL_InvalidParamError("sock");
     }
 
+    if (sock->blocking) {
+        return SDL_SetError("Cannot wait on blocking socket");
+    }
+
+
     if (timeoutms != 0) {
         const Uint64 endtime = (timeoutms > 0) ? (SDL_GetTicks() + timeoutms) : 0;
         while (SDLNet_GetStreamSocketPendingWrites(sock) > 0) {
@@ -1268,6 +1293,7 @@ struct SDLNet_DatagramSocket
     SDLNet_Address *addr;  // bound to this address (NULL for any).
     Uint16 port;
     Socket handle;
+    bool blocking;
     int percent_loss;
     Uint8 recv_buffer[64*1024];
     SDLNet_Datagram **pending_output;
@@ -1308,7 +1334,7 @@ SDLNet_DatagramSocket *SDLNet_CreateDatagramSocket(SDLNet_Address *addr, Uint16 
         return NULL;
     }
 
-    if (MakeSocketNonblocking(sock->handle) < 0) {
+    if (SetSocketBlocking(sock->handle, false) < 0) {
         CloseSocketHandle(sock->handle);
         freeaddrinfo(addrwithport);
         SDL_free(sock);
@@ -1580,15 +1606,73 @@ void SDLNet_DestroyDatagramSocket(SDLNet_DatagramSocket *sock)
 typedef union SDLNet_GenericSocket
 {
     SDLNet_SocketType socktype;
+    SDLNet_CommonSocket common;
     SDLNet_StreamSocket stream;
     SDLNet_DatagramSocket dgram;
     SDLNet_Server server;
 } SDLNet_GenericSocket;
 
-
-int SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
+bool SDLNet_SetSocketBlocking(SDLNet_GenericSocket *sock, bool blocking)
 {
-    SDLNet_GenericSocket **sockets = (SDLNet_GenericSocket **) vsockets;
+    if (!sock) {
+        return SDL_InvalidParamError("sock");
+    }
+
+    if (sock->common.blocking == blocking) {
+        return true;  // nothing to do.
+    }
+
+    if (SetSocketBlocking(sock->common.handle, blocking) < 0) {
+        return false;
+    }
+
+    sock->common.blocking = blocking;
+    return true;
+}
+
+bool SDLNet_GetSocketBlocking(SDLNet_GenericSocket *sock)
+{
+    if (!sock) {
+        return SDL_InvalidParamError("sock");
+    }
+
+    return sock->common.blocking;
+}
+
+bool SDLNet_SetBlockingSocketTimeout(SDLNet_GenericSocket *sock, int timeout_ms, bool is_recv)
+{
+    if (!sock) {
+        return SDL_InvalidParamError("sock");
+    }
+    if (!sock->common.blocking) {
+        return SDL_SetError("Cannot set receive timeout on non-blocking socket");
+    }
+
+    #ifdef _WIN32
+    DWORD timeout = timeout_ms;
+
+    const char* timeout_pointer = (const char*)&timeout;
+    #else
+    #define SDL_US_PER_MS SDL_US_PER_SECOND / SDL_MS_PER_SECOND
+
+    struct timeval timeout;
+    timeout.tv_sec = timeout_ms / SDL_MS_PER_SECOND;
+    timeout.tv_usec = (timeout_ms % SDL_US_PER_MS) * SDL_US_PER_MS;
+
+    const void* timeout_pointer = (const void*)&timeout;
+    #undef SDL_US_PER_MS  // I don't understand how this could break something, but you never know
+    #endif
+
+    if (setsockopt(sock->common.handle, SOL_SOCKET, is_recv ? SO_RCVTIMEO : SO_SNDTIMEO, timeout_pointer, sizeof(timeout)) < 0) {
+        SDL_SetError("Error setting send/receive timeout");
+        return false;
+    }
+
+    return true;
+}
+
+int SDLNet_WaitUntilInputAvailable(SDLNet_GenericSocket **sockets, int numsockets, int timeoutms)
+{
     if (!sockets) {
         return SDL_InvalidParamError("sockets");
     } else if (numsockets == 0) {
