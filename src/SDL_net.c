@@ -1603,7 +1603,7 @@ void SDLNet_DestroyDatagramSocket(SDLNet_DatagramSocket *sock)
     }
 }
 
-typedef union SDLNet_GenericSocket
+union SDLNet_GenericSocket
 {
     SDLNet_SocketType socktype;
     SDLNet_CommonSocket common;
