@@ -1610,7 +1610,7 @@ union SDLNet_GenericSocket
     SDLNet_StreamSocket stream;
     SDLNet_DatagramSocket dgram;
     SDLNet_Server server;
-} SDLNet_GenericSocket;
+};
 
 bool SDLNet_SetSocketBlocking(SDLNet_GenericSocket *sock, bool blocking)
 {
