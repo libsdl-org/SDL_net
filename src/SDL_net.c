@@ -160,7 +160,7 @@ static char *CreateSocketErrorString(int rc)
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
         msgbuf,
         SDL_arraysize(msgbuf),
-        NULL 
+        NULL
     );
     if (bw == 0) {
         return SDL_strdup("Unknown error");
@@ -279,7 +279,7 @@ static int SDLCALL ResolverThread(void *data)
 
         int outcome;
         if (!simulated_loss || (RandomNumberBetween(0, 100) > simulated_loss)) {
-            outcome = ResolveAddress(addr);            
+            outcome = ResolveAddress(addr);
         } else {
             outcome = -1;
             addr->errstr = SDL_strdup("simulated failure");
@@ -778,6 +778,16 @@ static struct addrinfo *MakeAddrInfoWithPort(const SDLNet_Address *addr, const i
     hints.ai_socktype = socktype;
     //hints.ai_protocol = ainfo ? ainfo->ai_protocol : 0;
     hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV | (!ainfo ? AI_PASSIVE : 0);
+
+    const char *hint = SDL_GetHint(SDL_NET_HINT_IP_DEFAULT_VERSION);
+    if (!addr && hint) {
+        if (SDL_strcasecmp(hint, "ipv4") == 0) {
+            hints.ai_family = AF_INET;
+        } else if (SDL_strcasecmp(hint, "ipv6") == 0) {
+            hints.ai_family = AF_INET6;
+            hints.ai_flags |= AI_V4MAPPED;
+        }
+    }
 
     char service[16];
     SDL_snprintf(service, sizeof (service), "%d", (int) port);
