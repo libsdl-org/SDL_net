@@ -564,8 +564,8 @@ typedef struct SDLNet_Server SDLNet_Server;   /**< a listen socket, internally. 
  *
  * \param addr the _local_ address to listen for connections on, or NULL.
  * \param port the port on the local address to listen for connections on.
- * \returns a new SDLNet_StreamSocket, pending connection, or NULL on error;
- *          call SDL_GetError() for details.
+ * \returns a new SDLNet_Server, or NULL on error; call SDL_GetError() for
+ *          details.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
