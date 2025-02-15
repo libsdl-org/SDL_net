@@ -165,7 +165,7 @@ static char *CreateSocketErrorString(int rc)
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
         msgbuf,
         SDL_arraysize(msgbuf),
-        NULL 
+        NULL
     );
     if (bw == 0) {
         return SDL_strdup("Unknown error");
@@ -225,8 +225,23 @@ static NET_Status ResolveAddress(NET_Address *addr)
     struct addrinfo *ainfo = NULL;
     int rc;
 
+    struct addrinfo hints, *phints = &hints;
+    SDL_zero(hints);
+
+    const char *hint = SDL_GetHint(SDL_NET_HINT_IP_DEFAULT_VERSION);
+    if (hint) {
+        if (SDL_strcasecmp(hint, "ipv4") == 0) {
+            hints.ai_family = AF_INET;
+        } else if (SDL_strcasecmp(hint, "ipv6") == 0) {
+            hints.ai_family = AF_INET6;
+            hints.ai_flags  = AI_V4MAPPED;
+        }
+    } else {
+        phints = NULL;
+    }
+
     //SDL_Log("getaddrinfo '%s'", addr->hostname);
-    rc = getaddrinfo(addr->hostname, NULL, NULL, &ainfo);
+    rc = getaddrinfo(addr->hostname, NULL, phints, &ainfo);
     //SDL_Log("rc=%d", rc);
     if (rc != 0) {
         addr->errstr = CreateGetAddrInfoErrorString(rc);
@@ -779,6 +794,16 @@ static struct addrinfo *MakeAddrInfoWithPort(const NET_Address *addr, const int 
     hints.ai_socktype = socktype;
     //hints.ai_protocol = ainfo ? ainfo->ai_protocol : 0;
     hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV | (!ainfo ? AI_PASSIVE : 0);
+
+    const char *hint = SDL_GetHint(SDL_NET_HINT_IP_DEFAULT_VERSION);
+    if (!addr && hint) {
+        if (SDL_strcasecmp(hint, "ipv4") == 0) {
+            hints.ai_family = AF_INET;
+        } else if (SDL_strcasecmp(hint, "ipv6") == 0) {
+            hints.ai_family = AF_INET6;
+            hints.ai_flags |= AI_V4MAPPED;
+        }
+    }
 
     char service[16];
     SDL_snprintf(service, sizeof (service), "%d", (int) port);
