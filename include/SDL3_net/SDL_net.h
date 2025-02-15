@@ -65,6 +65,7 @@ extern "C" {
  * A variable setting the default IP value to "IPv4" or "IPv6"
  *
  * This hint should be set before creating a socket bound to a NULL address
+ * and before resolving a hostname.
  *
  * \since This hint is available since SDL_net 3.0.0
  */
