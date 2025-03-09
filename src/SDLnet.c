@@ -51,13 +51,6 @@ SDL_COMPILE_TIME_ASSERT(SDL_NET_PATCHLEVEL_min, SDL_NET_PATCHLEVEL >= 0);
 SDL_COMPILE_TIME_ASSERT(SDL_NET_PATCHLEVEL_max, SDL_NET_PATCHLEVEL <= 99);
 #endif
 
-const SDLNet_version *SDLNet_Linked_Version(void)
-{
-    static SDLNet_version linked_version;
-    SDL_NET_VERSION(&linked_version);
-    return(&linked_version);
-}
-
 /* Since the UNIX/Win32/BeOS code is so different from MacOS,
    we'll just have two completely different sections here.
 */
@@ -303,12 +296,12 @@ int SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount)
 #undef SDLNet_Read32
 
 /* Write a 16/32 bit value to network packet buffer */
-extern DECLSPEC void SDLCALL SDLNet_Write16(Uint16 value, void *area);
-extern DECLSPEC void SDLCALL SDLNet_Write32(Uint32 value, void *area);
+extern SDL_DECLSPEC void SDLCALL SDLNet_Write16(Uint16 value, void *area);
+extern SDL_DECLSPEC void SDLCALL SDLNet_Write32(Uint32 value, void *area);
 
 /* Read a 16/32 bit value from network packet buffer */
-extern DECLSPEC Uint16 SDLCALL SDLNet_Read16(const void *area);
-extern DECLSPEC Uint32 SDLCALL SDLNet_Read32(const void *area);
+extern SDL_DECLSPEC Uint16 SDLCALL SDLNet_Read16(const void *area);
+extern SDL_DECLSPEC Uint32 SDLCALL SDLNet_Read32(const void *area);
 
 void  SDLNet_Write16(Uint16 value, void *areap)
 {
