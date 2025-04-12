@@ -289,23 +289,30 @@ if(SDLNET_INSTALL)
 endif()
 
 if(SDLNET_SAMPLES)
-    add_executable(voipchat examples/voipchat.c)
-    add_executable(simple-http-get examples/simple-http-get.c)
-    add_executable(resolve-hostnames examples/resolve-hostnames.c)
-    add_executable(get-local-addrs examples/get-local-addrs.c)
+    function(add_sdl_net_example_executable TARGET)
+        if(ANDROID)
+            add_library(${TARGET} SHARED ${ARGN})
+        else()
+            add_executable(${TARGET} ${ARGN})
+        endif()
+        sdl_add_warning_options(${TARGET} WARNING_AS_ERROR ${SDLTTF_WERROR})
+        sdl_target_link_options_no_undefined(${TARGET})
+        target_link_libraries(${TARGET} PRIVATE SDL3_net::${sdl3_net_target_name})
+        target_link_libraries(${TARGET} PRIVATE ${sdl3_target_name})
+        set_property(TARGET ${TARGET} PROPERTY C_STANDARD 99)
+        set_property(TARGET ${TARGET} PROPERTY C_EXTENSIONS FALSE)
 
-    set(examples voipchat simple-http-get resolve-hostnames get-local-addrs)
-    foreach(example IN LISTS examples)
-        target_link_libraries(${example} PRIVATE SDL3_net::SDL3_net SDL3::SDL3)
-        set_property(TARGET ${example} PROPERTY C_STANDARD 99)
-        set_property(TARGET ${example} PROPERTY C_EXTENSIONS FALSE)
-        sdl_add_warning_options(${example} WARNING_AS_ERROR ${SDLNET_WERROR})
         if(SDLNET_SAMPLES_INSTALL)
-            install(TARGETS ${example}
-                RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+            install(TARGETS ${TARGET}
+                RUNTIME DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/installed-tests/SDL3_net"
             )
         endif()
-    endforeach()
+    endfunction()
+    add_sdl_net_example_executable(voipchat examples/voipchat.c)
+    add_sdl_net_example_executable(simple-http-get examples/simple-http-get.c)
+    add_sdl_net_example_executable(resolve-hostnames examples/resolve-hostnames.c)
+    add_sdl_net_example_executable(get-local-addrs examples/get-local-addrs.c)
+
     # Build at least one example in C90
     set_property(TARGET get-local-addrs PROPERTY C_STANDARD 90)
 endif()
