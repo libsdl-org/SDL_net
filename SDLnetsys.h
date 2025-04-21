@@ -68,13 +68,11 @@
 
 #ifdef __OS2__
 typedef int socklen_t;
+#elif defined(__USE_W32_SOCKETS) && !defined(IP_MSFILTER_SIZE)
+typedef int socklen_t;
 #elif 0
 /* FIXME: What platforms need this? */
 typedef Uint32 socklen_t;
-#endif
-
-#if defined(__USE_W32_SOCKETS) && !defined(IP_MSFILTER_SIZE)
-typedef int socklen_t;
 #endif
 
 /* System-dependent definitions */
