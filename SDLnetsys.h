@@ -74,7 +74,7 @@ typedef Uint32 socklen_t;
 #endif
 
 #if defined(__USE_W32_SOCKETS) && !defined(socklen_t)
-typedef SOCKET socklen_t;
+typedef int socklen_t;
 #endif
 
 /* System-dependent definitions */
