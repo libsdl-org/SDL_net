@@ -1357,7 +1357,8 @@ static int SendOneDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Ui
 static int PumpDatagramSocket(SDLNet_DatagramSocket *sock)
 {
     if (!sock) {
-        return SDL_InvalidParamError("sock");
+        SDL_InvalidParamError("sock");
+        return -1;
     }
 
     while (sock->pending_output_len > 0) {
