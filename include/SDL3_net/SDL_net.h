@@ -767,8 +767,7 @@ extern SDL_DECLSPEC bool SDLCALL SDLNet_WriteToStreamSocket(SDLNet_StreamSocket 
  * other networking failures occurred), this function will report failure by
  * returning -1. Stream sockets only report failure for unrecoverable
  * conditions; once a stream socket fails, you should assume it is no longer
- * usable and should destroy it with
- * [SDLNet_DestroyStreamSocket()](SDLNet_DestroyStreamSocket).
+ * usable and should destroy it with SDL_DestroyStreamSocket().
  *
  * \param sock the stream socket to query.
  * \returns number of bytes still pending transmission, -1 on failure; call
