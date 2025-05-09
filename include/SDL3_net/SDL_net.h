@@ -1069,7 +1069,7 @@ extern SDL_DECLSPEC bool SDLCALL SDLNet_SendDatagram(SDLNet_DatagramSocket *sock
  * packets or they don't arrive at all, so you'll never receive half a packet.
  *
  * This call never blocks; if no new data isn't available at the time of the
- * call, it returns 0 immediately. The caller can try again later.
+ * call, it returns true immediately. The caller can try again later.
  *
  * On a successful call to this function, it returns zero, even if no new
  * packets are available, so you should check for a successful return and a
