@@ -12,32 +12,32 @@
 
 int main(int argc, char **argv)
 {
-    SDLNet_Address **addrs = NULL;
+    NET_Address **addrs = NULL;
     int num_addrs = 0;
     int i;
 
     (void)argc;
     (void)argv;
 
-    if (!SDLNet_Init()) {
-        SDL_Log("SDLNet_Init() failed: %s", SDL_GetError());
+    if (!NET_Init()) {
+        SDL_Log("NET_Init() failed: %s", SDL_GetError());
         return 1;
     }
 
-    addrs = SDLNet_GetLocalAddresses(&num_addrs);
+    addrs = NET_GetLocalAddresses(&num_addrs);
     if (addrs == NULL) {
         SDL_Log("Failed to determine local addresses: %s", SDL_GetError());
-        SDLNet_Quit();
+        NET_Quit();
         return 1;
     }
 
     SDL_Log("We saw %d local addresses:", num_addrs);
     for (i = 0; i < num_addrs; i++) {
-        SDL_Log("  - %s", SDLNet_GetAddressString(addrs[i]));
+        SDL_Log("  - %s", NET_GetAddressString(addrs[i]));
     }
 
-    SDLNet_FreeLocalAddresses(addrs);
-    SDLNet_Quit();
+    NET_FreeLocalAddresses(addrs);
+    NET_Quit();
 
     return 0;
 }

@@ -12,31 +12,31 @@
 
 int main(int argc, char **argv)
 {
-    if (!SDLNet_Init()) {
-        SDL_Log("SDLNet_Init() failed: %s", SDL_GetError());
+    if (!NET_Init()) {
+        SDL_Log("NET_Init() failed: %s", SDL_GetError());
         return 1;
     }
 
-    //SDLNet_SimulateAddressResolutionLoss(3000, 30);
+    //NET_SimulateAddressResolutionLoss(3000, 30);
 
-    SDLNet_Address **addrs = (SDLNet_Address **) SDL_calloc(argc, sizeof (SDLNet_Address *));
+    NET_Address **addrs = (NET_Address **) SDL_calloc(argc, sizeof (NET_Address *));
     for (int i = 1; i < argc; i++) {
-        addrs[i] = SDLNet_ResolveHostname(argv[i]);
+        addrs[i] = NET_ResolveHostname(argv[i]);
     }
 
     for (int i = 1; i < argc; i++) {
-        SDLNet_WaitUntilResolved(addrs[i], -1);
+        NET_WaitUntilResolved(addrs[i], -1);
 
-        if (SDLNet_GetAddressStatus(addrs[i]) == -1) {
+        if (NET_GetAddressStatus(addrs[i]) == -1) {
             SDL_Log("%s: [FAILED TO RESOLVE: %s]", argv[i], SDL_GetError());
         } else {
-            SDL_Log("%s: %s", argv[i], SDLNet_GetAddressString(addrs[i]));
+            SDL_Log("%s: %s", argv[i], NET_GetAddressString(addrs[i]));
         }
 
-        SDLNet_UnrefAddress(addrs[i]);
+        NET_UnrefAddress(addrs[i]);
     }
 
-    SDLNet_Quit();
+    NET_Quit();
 
     return 0;
 }
