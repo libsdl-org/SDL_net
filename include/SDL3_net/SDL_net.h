@@ -101,8 +101,8 @@ extern SDL_DECLSPEC bool SDLCALL NET_Init(void);
  * program.
  *
  * It is safe to call this multiple times; the library will only deinitialize
- * once, when this function is called the same number of times as NET_Init
- * was successfully called.
+ * once, when this function is called the same number of times as NET_Init was
+ * successfully called.
  *
  * Once you have successfully deinitialized the library, it is safe to call
  * NET_Init to reinitialize it for further use.
@@ -140,13 +140,13 @@ typedef struct NET_Address NET_Address;  /**< Opaque struct that deals with comp
  * NET_WaitUntilResolved(). Otherwise, you can do a non-blocking check with
  * NET_GetAddressStatus().
  *
- * When you are done with the returned NET_Address, call
- * NET_UnrefAddress() to dispose of it. You need to do this even if
- * resolution later fails asynchronously.
+ * When you are done with the returned NET_Address, call NET_UnrefAddress() to
+ * dispose of it. You need to do this even if resolution later fails
+ * asynchronously.
  *
  * \param host The hostname to resolve.
- * \returns A new NET_Address on success, NULL on error; call
- *          SDL_GetError() for details.
+ * \returns A new NET_Address on success, NULL on error; call SDL_GetError()
+ *          for details.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -162,8 +162,8 @@ extern SDL_DECLSPEC NET_Address * SDLCALL NET_ResolveHostname(const char *host);
 /**
  * Block until an address is resolved.
  *
- * The NET_Address objects returned by NET_ResolveHostname take time to
- * do their work, so it is does so _asynchronously_ instead of making your
+ * The NET_Address objects returned by NET_ResolveHostname take time to do
+ * their work, so it is does so _asynchronously_ instead of making your
  * program wait an indefinite amount of time.
  *
  * However, if you want your program to sleep until the address resolution is
@@ -182,8 +182,8 @@ extern SDL_DECLSPEC NET_Address * SDLCALL NET_ResolveHostname(const char *host);
  * Once an address is successfully resolved, it can be used to connect to the
  * host represented by the address.
  *
- * If you don't want your program to block, you can call
- * NET_GetAddressStatus from time to time until you get a non-zero result.
+ * If you don't want your program to block, you can call NET_GetAddressStatus
+ * from time to time until you get a non-zero result.
  *
  * \param address The NET_Address object to wait on.
  * \param timeout Number of milliseconds to wait for resolution to complete.
@@ -204,8 +204,8 @@ extern SDL_DECLSPEC int SDLCALL NET_WaitUntilResolved(NET_Address *address, Sint
 /**
  * Check if an address is resolved, without blocking.
  *
- * The NET_Address objects returned by NET_ResolveHostname take time to
- * do their work, so it is does so _asynchronously_ instead of making your
+ * The NET_Address objects returned by NET_ResolveHostname take time to do
+ * their work, so it is does so _asynchronously_ instead of making your
  * program wait an indefinite amount of time.
  *
  * This function allows you to check the progress of that work without
@@ -244,8 +244,8 @@ extern SDL_DECLSPEC int SDLCALL NET_GetAddressStatus(NET_Address *address);
  * the string.
  *
  * This will return NULL if resolution is still in progress, or if resolution
- * failed. You can use NET_GetAddressStatus() or NET_WaitUntilResolved()
- * to make sure resolution has successfully completed before calling this.
+ * failed. You can use NET_GetAddressStatus() or NET_WaitUntilResolved() to
+ * make sure resolution has successfully completed before calling this.
  *
  * \param address The NET_Address to query.
  * \returns a string, or NULL on error; call SDL_GetError() for details.
@@ -269,8 +269,8 @@ extern SDL_DECLSPEC const char * SDLCALL NET_GetAddressString(NET_Address *addre
  * done with it. The object's resources are freed when the last reference is
  * dropped.
  *
- * This function adds a reference to an NET_Address, increasing its
- * reference count by one.
+ * This function adds a reference to an NET_Address, increasing its reference
+ * count by one.
  *
  * The documentation will tell you when the app has to explicitly unref an
  * address. For example, NET_ResolveHostname() creates addresses that are
@@ -307,8 +307,8 @@ extern SDL_DECLSPEC NET_Address *SDLCALL NET_RefAddress(NET_Address *address);
  * done with it. The object's resources are freed when the last reference is
  * dropped.
  *
- * This function drops a reference to an NET_Address, decreasing its
- * reference count by one.
+ * This function drops a reference to an NET_Address, decreasing its reference
+ * count by one.
  *
  * The documentation will tell you when the app has to explicitly unref an
  * address. For example, NET_ResolveHostname() creates addresses that are
@@ -381,9 +381,8 @@ extern SDL_DECLSPEC int SDLCALL NET_CompareAddresses(const NET_Address *a, const
  * addresses that are accessible on the same LAN, but not public ones that are
  * accessible from the outside Internet.
  *
- * Usually it's better to use NET_CreateServer() or
- * NET_CreateDatagramSocket() with a NULL address, to say "bind to all
- * interfaces."
+ * Usually it's better to use NET_CreateServer() or NET_CreateDatagramSocket()
+ * with a NULL address, to say "bind to all interfaces."
  *
  * The array of addresses returned from this is guaranteed to be
  * NULL-terminated. You can also pass a pointer to an int, which will return
@@ -469,8 +468,8 @@ typedef struct NET_StreamSocket NET_StreamSocket;  /**< a TCP socket. Reliable t
  *
  * \param address the address of the remote server to connect to.
  * \param port the port on the remote server to connect to.
- * \returns a new NET_StreamSocket, pending connection, or NULL on error;
- *          call SDL_GetError() for details.
+ * \returns a new NET_StreamSocket, pending connection, or NULL on error; call
+ *          SDL_GetError() for details.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -485,8 +484,8 @@ extern SDL_DECLSPEC NET_StreamSocket * SDLCALL NET_CreateClient(NET_Address *add
 /**
  * Block until a stream socket has connected to a server.
  *
- * The NET_StreamSocket objects returned by NET_CreateClient take time
- * to do their work, so it is does so _asynchronously_ instead of making your
+ * The NET_StreamSocket objects returned by NET_CreateClient take time to do
+ * their work, so it is does so _asynchronously_ instead of making your
  * program wait an indefinite amount of time.
  *
  * However, if you want your program to sleep until the connection is
@@ -663,8 +662,8 @@ extern SDL_DECLSPEC NET_Address * SDLCALL NET_GetStreamSocketAddress(NET_StreamS
 /**
  * Check if a stream socket is connected, without blocking.
  *
- * The NET_StreamSocket objects returned by NET_CreateClient take time
- * to do negotiate a connection to a server, so it is does so _asynchronously_
+ * The NET_StreamSocket objects returned by NET_CreateClient take time to do
+ * negotiate a connection to a server, so it is does so _asynchronously_
  * instead of making your program wait an indefinite amount of time.
  *
  * This function allows you to check the progress of that work without
@@ -790,8 +789,8 @@ extern SDL_DECLSPEC int SDLCALL NET_GetStreamSocketPendingWrites(NET_StreamSocke
  * to calling NET_GetStreamSocketPendingWrites).
  *
  * If you don't want your program to block, you can call
- * NET_GetStreamSocketPendingWrites from time to time until you get a
- * result <= 0.
+ * NET_GetStreamSocketPendingWrites from time to time until you get a result
+ * <= 0.
  *
  * If the connection has failed (remote side dropped us, or one of a million
  * other networking failures occurred), this function will report failure by
@@ -1077,8 +1076,8 @@ extern SDL_DECLSPEC bool SDLCALL NET_SendDatagram(NET_DatagramSocket *sock, NET_
  *
  * You must pass received packets to NET_DestroyDatagram when you are done
  * with them. If you want to save the sender's address past this time, it is
- * safe to call NET_RefAddress() on the address and hold onto the pointer,
- * so long as you call NET_UnrefAddress() on it when you are done with it.
+ * safe to call NET_RefAddress() on the address and hold onto the pointer, so
+ * long as you call NET_UnrefAddress() on it when you are done with it.
  *
  * Since datagrams can arrive from any address or port on the network without
  * prior warning, this information is available in the NET_Datagram object
@@ -1113,14 +1112,13 @@ extern SDL_DECLSPEC bool SDLCALL NET_ReceiveDatagram(NET_DatagramSocket *sock, N
 /**
  * Dispose of a datagram packet previously received.
  *
- * You must pass packets received through NET_ReceiveDatagram to this
- * function when you are done with them. This will free resources used by this
- * packet and unref its NET_Address.
+ * You must pass packets received through NET_ReceiveDatagram to this function
+ * when you are done with them. This will free resources used by this packet
+ * and unref its NET_Address.
  *
  * If you want to save the sender's address from the packet past this time, it
- * is safe to call NET_RefAddress() on the address and hold onto its
- * pointer, so long as you call NET_UnrefAddress() on it when you are done
- * with it.
+ * is safe to call NET_RefAddress() on the address and hold onto its pointer,
+ * so long as you call NET_UnrefAddress() on it when you are done with it.
  *
  * Once you call this function, the datagram pointer becomes invalid and
  * should not be used again by the app.
@@ -1209,12 +1207,12 @@ extern SDL_DECLSPEC void SDLCALL NET_DestroyDatagramSocket(NET_DatagramSocket *s
  * The following things can be specified in the `vsockets` array, cast to
  * `void *`:
  *
- * - NET_Server (reports new input when a connection is ready to be
- *   accepted with NET_AcceptClient())
+ * - NET_Server (reports new input when a connection is ready to be accepted
+ *   with NET_AcceptClient())
  * - NET_StreamSocket (reports new input when the remote end has sent more
  *   bytes of data to be read with NET_ReadFromStreamSocket).
- * - NET_DatagramSocket (reports new input when a new packet arrives that
- *   can be read with NET_ReceiveDatagram).
+ * - NET_DatagramSocket (reports new input when a new packet arrives that can
+ *   be read with NET_ReceiveDatagram).
  *
  * This function takes a timeout value, represented in milliseconds, of how
  * long to wait for resolution to complete. Specifying a timeout of -1
