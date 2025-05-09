@@ -722,7 +722,7 @@ extern SDL_DECLSPEC int SDLCALL NET_GetConnectionStatus(NET_StreamSocket *sock);
  * other networking failures occurred), this function will report failure by
  * returning false. Stream sockets only report failure for unrecoverable
  * conditions; once a stream socket fails, you should assume it is no longer
- * usable and should destroy it with SDL_DestroyStreamSocket().
+ * usable and should destroy it with NET_DestroyStreamSocket().
  *
  * \param sock the stream socket to send data through.
  * \param buf a pointer to the data to send.
@@ -757,7 +757,7 @@ extern SDL_DECLSPEC bool SDLCALL NET_WriteToStreamSocket(NET_StreamSocket *sock,
  * other networking failures occurred), this function will report failure by
  * returning -1. Stream sockets only report failure for unrecoverable
  * conditions; once a stream socket fails, you should assume it is no longer
- * usable and should destroy it with SDL_DestroyStreamSocket().
+ * usable and should destroy it with NET_DestroyStreamSocket().
  *
  * \param sock the stream socket to query.
  * \returns number of bytes still pending transmission, -1 on failure; call
@@ -796,7 +796,7 @@ extern SDL_DECLSPEC int SDLCALL NET_GetStreamSocketPendingWrites(NET_StreamSocke
  * other networking failures occurred), this function will report failure by
  * returning -1. Stream sockets only report failure for unrecoverable
  * conditions; once a stream socket fails, you should assume it is no longer
- * usable and should destroy it with SDL_DestroyStreamSocket().
+ * usable and should destroy it with NET_DestroyStreamSocket().
  *
  * \param sock the stream socket to wait on.
  * \param timeout Number of milliseconds to wait for draining to complete. -1
@@ -846,7 +846,7 @@ extern SDL_DECLSPEC int SDLCALL NET_WaitUntilStreamSocketDrained(NET_StreamSocke
  * other networking failures occurred), this function will report failure by
  * returning -1. Stream sockets only report failure for unrecoverable
  * conditions; once a stream socket fails, you should assume it is no longer
- * usable and should destroy it with SDL_DestroyStreamSocket().
+ * usable and should destroy it with NET_DestroyStreamSocket().
  *
  * \param sock the stream socket to receive data from.
  * \param buf a pointer to a buffer where received data will be collected.
