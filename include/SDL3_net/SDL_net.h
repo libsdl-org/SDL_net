@@ -598,7 +598,7 @@ extern SDL_DECLSPEC NET_Server * SDLCALL NET_CreateServer(NET_Address *addr, Uin
  * NET_WaitUntilInputAvailable().
  *
  * When done with the newly-accepted client, you can disconnect and dispose of
- * the stream socket by calling SDL_DestroyStreamSocket().
+ * the stream socket by calling NET_DestroyStreamSocket().
  *
  * \param server the server object to check for pending connections.
  * \param client_stream Will be set to a new stream socket if a connection was
