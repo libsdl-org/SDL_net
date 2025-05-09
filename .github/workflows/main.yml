@@ -13,6 +13,7 @@ jobs:
       matrix:
         platform:
           - { name: 'Linux',                    os: ubuntu-latest,  shell: sh }
+          - { name: 'Linux (arm64)',            os: ubuntu-24.04-arm,  shell: sh }
           - { name: 'MacOS',                    os: macos-latest,   shell: sh }
 #          - { name: 'Windows msys2 (mingw32)',  os: windows-latest, shell: 'msys2 {0}', msystem: mingw32, msys-env: mingw-w64-i686 }
           - { name: 'Windows msys2 (mingw64)',  os: windows-latest, shell: 'msys2 {0}', msystem: mingw64, msys-env: mingw-w64-x86_64 }
@@ -86,5 +87,5 @@ jobs:
 
       - name: Check that versioning is consistent
         # We only need to run this once: arbitrarily use the Linux build
-        if: ${{ runner.os == 'Linux' }}
+        if: ${{ matrix.name == 'Linux' }}
         run: ./build-scripts/test-versioning.sh
