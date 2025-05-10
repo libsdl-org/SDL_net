@@ -111,7 +111,7 @@ extern SDL_DECLSPEC bool SDLCALL NET_Init(void);
  *
  * \since This function is available since SDL_Net 3.0.0.
  *
- * \sa NET_Quit
+ * \sa NET_Init
  */
 extern SDL_DECLSPEC void SDLCALL NET_Quit(void);
 
@@ -163,7 +163,7 @@ extern SDL_DECLSPEC NET_Address * SDLCALL NET_ResolveHostname(const char *host);
  * Block until an address is resolved.
  *
  * The NET_Address objects returned by NET_ResolveHostname take time to do
- * their work, so it is does so _asynchronously_ instead of making your
+ * their work, so it does so _asynchronously_ instead of making your
  * program wait an indefinite amount of time.
  *
  * However, if you want your program to sleep until the address resolution is
@@ -205,7 +205,7 @@ extern SDL_DECLSPEC int SDLCALL NET_WaitUntilResolved(NET_Address *address, Sint
  * Check if an address is resolved, without blocking.
  *
  * The NET_Address objects returned by NET_ResolveHostname take time to do
- * their work, so it is does so _asynchronously_ instead of making your
+ * their work, so it does so _asynchronously_ instead of making your
  * program wait an indefinite amount of time.
  *
  * This function allows you to check the progress of that work without
@@ -485,7 +485,7 @@ extern SDL_DECLSPEC NET_StreamSocket * SDLCALL NET_CreateClient(NET_Address *add
  * Block until a stream socket has connected to a server.
  *
  * The NET_StreamSocket objects returned by NET_CreateClient take time to do
- * their work, so it is does so _asynchronously_ instead of making your
+ * their work, so it does so _asynchronously_ instead of making your
  * program wait an indefinite amount of time.
  *
  * However, if you want your program to sleep until the connection is
@@ -663,7 +663,7 @@ extern SDL_DECLSPEC NET_Address * SDLCALL NET_GetStreamSocketAddress(NET_StreamS
  * Check if a stream socket is connected, without blocking.
  *
  * The NET_StreamSocket objects returned by NET_CreateClient take time to do
- * negotiate a connection to a server, so it is does so _asynchronously_
+ * negotiate a connection to a server, so it does so _asynchronously_
  * instead of making your program wait an indefinite amount of time.
  *
  * This function allows you to check the progress of that work without
