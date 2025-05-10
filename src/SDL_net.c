@@ -1592,6 +1592,8 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
     NET_GenericSocket **sockets = (NET_GenericSocket **) vsockets;
     if (!sockets) {
         return SDL_InvalidParamError("sockets");
+    } else if (numsockets < 0) {
+        return SDL_InvalidParamError("numsockets");
     } else if (numsockets == 0) {
         return 0;
     }
