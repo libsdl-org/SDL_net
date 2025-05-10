@@ -61,6 +61,15 @@ extern "C" {
      (SDL_NET_MAJOR_VERSION > X || SDL_NET_MINOR_VERSION >= Y) && \
      (SDL_NET_MAJOR_VERSION > X || SDL_NET_MINOR_VERSION > Y || SDL_NET_MICRO_VERSION >= Z))
 
+/**
+ * A variable setting the default IP value to "IPv4" or "IPv6"
+ *
+ * This hint should be set before creating a socket bound to a NULL address
+ * and before resolving a hostname.
+ *
+ * \since This hint is available since SDL_net 3.0.0
+ */
+#define SDL_NET_HINT_IP_DEFAULT_VERSION "SDL_NET_HINT_IP_DEFAULT_VERSION"
 
 /**
  * This function gets the version of the dynamically linked SDL_net library.
