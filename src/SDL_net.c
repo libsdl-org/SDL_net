@@ -78,6 +78,13 @@ typedef socklen_t SockLen;
 typedef struct sockaddr_storage AddressStorage;
 #endif
 
+typedef enum NET_Status
+{
+    NET_FAILURE = -1,
+    NET_WOULDBLOCK,
+    NET_SUCCESS,
+} NET_Status;
+
 typedef enum NET_SocketType
 {
     SOCKETTYPE_STREAM,
@@ -214,7 +221,7 @@ static bool SetGetAddrInfoErrorBool(const char *msg, int err)
 }
 
 // this blocks!
-static int ResolveAddress(NET_Address *addr)
+static NET_Status ResolveAddress(NET_Address *addr)
 {
     SDL_assert(addr != NULL);  // we control all this, so this shouldn't happen.
     struct addrinfo *ainfo = NULL;
@@ -225,10 +232,10 @@ static int ResolveAddress(NET_Address *addr)
     //SDL_Log("rc=%d", rc);
     if (rc != 0) {
         addr->errstr = CreateGetAddrInfoErrorString(rc);
-        return -1;  // error
+        return NET_FAILURE;  // error
     } else if (ainfo == NULL) {
         addr->errstr = SDL_strdup("Unknown error (query succeeded but result was NULL!)");
-        return -1;
+        return NET_FAILURE;
     }
 
     char buf[128];
@@ -236,12 +243,12 @@ static int ResolveAddress(NET_Address *addr)
     if (rc != 0) {
         addr->errstr = CreateGetAddrInfoErrorString(rc);
         freeaddrinfo(ainfo);
-        return -1;  // error
+        return NET_FAILURE;  // error
     }
 
     addr->human_readable = SDL_strdup(buf);
     addr->ainfo = ainfo;
-    return 1;  // success (zero means "still in progress").
+    return NET_SUCCESS;  // success (zero means "still in progress").
 }
 
 static int SDLCALL ResolverThread(void *data)
@@ -1335,22 +1342,22 @@ NET_DatagramSocket *NET_CreateDatagramSocket(NET_Address *addr, Uint16 port)
     return sock;
 }
 
-static int SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, const void *buf, int buflen)
+static NET_Status SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, const void *buf, int buflen)
 {
     struct addrinfo *addrwithport = MakeAddrInfoWithPort(addr, SOCK_DGRAM, port);
     if (!addrwithport) {
-        return -1;
+        return NET_FAILURE;
     }
     const int rc = sendto(sock->handle, buf, (size_t) buflen, 0, addrwithport->ai_addr, addrwithport->ai_addrlen);
     freeaddrinfo(addrwithport);
 
     if (rc == SOCKET_ERROR) {
         const int err = LastSocketError();
-        return WouldBlock(err) ? 0 : SetSocketError("Failed to send from socket", err);
+        return WouldBlock(err) ? NET_WOULDBLOCK : SetSocketError("Failed to send from socket", err);
     }
 
     SDL_assert(rc == buflen);
-    return 1;
+    return NET_SUCCESS;
 }
 
 // see if any pending data can finally be sent, etc
