@@ -357,7 +357,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    window = SDL_CreateWindow("SDL_Net3 voipchat example", 640, 480, 0);
+    window = SDL_CreateWindow("SDL3_net voipchat example", 640, 480, 0);
     renderer = SDL_CreateRenderer(window, NULL);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 

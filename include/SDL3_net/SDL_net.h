@@ -135,7 +135,7 @@ extern SDL_DECLSPEC bool SDLCALL NET_Init(void);
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_Init
  */
@@ -154,10 +154,10 @@ extern SDL_DECLSPEC void SDLCALL NET_Quit(void);
  * also used to decide what network interface to use when creating a server.
  *
  * These are intended to be protocol-independent; a given address might be for
- * IPv4, IPv6, or something more esoteric. SDL_Net attempts to hide the
+ * IPv4, IPv6, or something more esoteric. SDL_net attempts to hide the
  * differences.
  *
- * \since This datatype is available since SDL_Net 3.0.0.
+ * \since This datatype is available since SDL_net 3.0.0.
  *
  * \sa NET_ResolveHostname
  * \sa NET_GetLocalAddresses
@@ -195,7 +195,7 @@ typedef struct NET_Address NET_Address;
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_WaitUntilResolved
  * \sa NET_GetAddressStatus
@@ -240,7 +240,7 @@ extern SDL_DECLSPEC NET_Address * SDLCALL NET_ResolveHostname(const char *host);
  * \threadsafety It is safe to call this function from any thread, and several
  *               threads can block on the same address simultaneously.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_GetAddressStatus
  */
@@ -269,7 +269,7 @@ extern SDL_DECLSPEC int SDLCALL NET_WaitUntilResolved(NET_Address *address, Sint
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_WaitUntilResolved
  */
@@ -297,7 +297,7 @@ extern SDL_DECLSPEC int SDLCALL NET_GetAddressStatus(NET_Address *address);
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_GetAddressStatus
  * \sa NET_WaitUntilResolved
@@ -338,7 +338,7 @@ extern SDL_DECLSPEC const char * SDLCALL NET_GetAddressString(NET_Address *addre
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  */
 extern SDL_DECLSPEC NET_Address *SDLCALL NET_RefAddress(NET_Address *address);
 
@@ -363,7 +363,7 @@ extern SDL_DECLSPEC NET_Address *SDLCALL NET_RefAddress(NET_Address *address);
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  */
 extern SDL_DECLSPEC void SDLCALL NET_UnrefAddress(NET_Address *address);
 
@@ -394,7 +394,7 @@ extern SDL_DECLSPEC void SDLCALL NET_UnrefAddress(NET_Address *address);
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  */
 extern SDL_DECLSPEC void SDLCALL NET_SimulateAddressResolutionLoss(int percent_loss);
 
@@ -410,7 +410,7 @@ extern SDL_DECLSPEC void SDLCALL NET_SimulateAddressResolutionLoss(int percent_l
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  */
 extern SDL_DECLSPEC int SDLCALL NET_CompareAddresses(const NET_Address *a, const NET_Address *b);
 
@@ -445,7 +445,7 @@ extern SDL_DECLSPEC int SDLCALL NET_CompareAddresses(const NET_Address *a, const
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  */
 extern SDL_DECLSPEC NET_Address **SDLCALL NET_GetLocalAddresses(int *num_addresses);
 
@@ -464,7 +464,7 @@ extern SDL_DECLSPEC NET_Address **SDLCALL NET_GetLocalAddresses(int *num_address
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  */
 extern SDL_DECLSPEC void SDLCALL NET_FreeLocalAddresses(NET_Address **addresses);
 
@@ -482,7 +482,7 @@ extern SDL_DECLSPEC void SDLCALL NET_FreeLocalAddresses(NET_Address **addresses)
  * different clients. Each of these connections communicate over a separate
  * stream socket.
  *
- * \since This datatype is available since SDL_Net 3.0.0.
+ * \since This datatype is available since SDL_net 3.0.0.
  *
  * \sa NET_CreateClient
  * \sa NET_WriteToStreamSocket
@@ -535,7 +535,7 @@ typedef struct NET_StreamSocket NET_StreamSocket;
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_WaitUntilConnected
  * \sa NET_GetConnectionStatus
@@ -582,7 +582,7 @@ extern SDL_DECLSPEC NET_StreamSocket * SDLCALL NET_CreateClient(NET_Address *add
  *               mechanism. However, different threads may access different
  *               socket at the same time without problems.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_GetConnectionStatus
  */
@@ -598,7 +598,7 @@ extern SDL_DECLSPEC int SDLCALL NET_WaitUntilConnected(NET_StreamSocket *sock, S
  * connection, will provide the app with a stream socket to send and receive
  * data over that connection.
  *
- * \since This datatype is available since SDL_Net 3.0.0.
+ * \since This datatype is available since SDL_net 3.0.0.
  *
  * \sa NET_CreateServer
  */
@@ -644,7 +644,7 @@ typedef struct NET_Server NET_Server;
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_GetLocalAddresses
  * \sa NET_AcceptClient
@@ -687,7 +687,7 @@ extern SDL_DECLSPEC NET_Server * SDLCALL NET_CreateServer(NET_Address *addr, Uin
  *               mechanism. However, different threads may access different
  *               servers at the same time without problems.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_WaitUntilInputAvailable
  * \sa NET_DestroyStreamSocket
@@ -710,7 +710,7 @@ extern SDL_DECLSPEC bool SDLCALL NET_AcceptClient(NET_Server *server, NET_Stream
  *               mechanism. However, different threads may access different
  *               servers at the same time without problems.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_CreateServer
  */
@@ -731,7 +731,7 @@ extern SDL_DECLSPEC void SDLCALL NET_DestroyServer(NET_Server *server);
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  */
 extern SDL_DECLSPEC NET_Address * SDLCALL NET_GetStreamSocketAddress(NET_StreamSocket *sock);
 
@@ -766,7 +766,7 @@ extern SDL_DECLSPEC NET_Address * SDLCALL NET_GetStreamSocketAddress(NET_StreamS
  *               mechanism. However, different threads may access different
  *               sockets at the same time without problems.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_WaitUntilConnected
  */
@@ -811,7 +811,7 @@ extern SDL_DECLSPEC int SDLCALL NET_GetConnectionStatus(NET_StreamSocket *sock);
  *               mechanism. However, different threads may access different
  *               sockets at the same time without problems.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_GetStreamSocketPendingWrites
  * \sa NET_WaitUntilStreamSocketDrained
@@ -844,7 +844,7 @@ extern SDL_DECLSPEC bool SDLCALL NET_WriteToStreamSocket(NET_StreamSocket *sock,
  *               mechanism. However, different threads may access different
  *               sockets at the same time without problems.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_WriteToStreamSocket
  * \sa NET_WaitUntilStreamSocketDrained
@@ -885,7 +885,7 @@ extern SDL_DECLSPEC int SDLCALL NET_GetStreamSocketPendingWrites(NET_StreamSocke
  *               mechanism. However, different threads may access different
  *               sockets at the same time without problems.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_WriteToStreamSocket
  * \sa NET_GetStreamSocketPendingWrites
@@ -937,7 +937,7 @@ extern SDL_DECLSPEC int SDLCALL NET_WaitUntilStreamSocketDrained(NET_StreamSocke
  *               mechanism. However, different threads may access different
  *               sockets at the same time without problems.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_WriteToStreamSocket
  */
@@ -978,7 +978,7 @@ extern SDL_DECLSPEC int SDLCALL NET_ReadFromStreamSocket(NET_StreamSocket *sock,
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  */
 extern SDL_DECLSPEC void SDLCALL NET_SimulateStreamPacketLoss(NET_StreamSocket *sock, int percent_loss);
 
@@ -1002,7 +1002,7 @@ extern SDL_DECLSPEC void SDLCALL NET_SimulateStreamPacketLoss(NET_StreamSocket *
  *               mechanism. However, different threads may access different
  *               sockets at the same time without problems.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_CreateClient
  * \sa NET_AcceptClient
@@ -1031,7 +1031,7 @@ extern SDL_DECLSPEC void SDLCALL NET_DestroyStreamSocket(NET_StreamSocket *sock)
  * gets there, even if later packets get there first, and maybe it doesn't get
  * there at all, and you don't know when anything of this happens by default.
  *
- * \since This datatype is available since SDL_Net 3.0.0.
+ * \since This datatype is available since SDL_net 3.0.0.
  *
  * \sa NET_CreateDatagramSocket
  * \sa NET_SendDatagram
@@ -1042,7 +1042,7 @@ typedef struct NET_DatagramSocket NET_DatagramSocket;
 /**
  * The data provided for new incoming packets from NET_ReceiveDatagram().
  *
- * \since This datatype is available since SDL_Net 3.0.0.
+ * \since This datatype is available since SDL_net 3.0.0.
  *
  * \sa NET_ReceiveDatagram
  * \sa NET_DestroyDatagram
@@ -1108,7 +1108,7 @@ typedef struct NET_Datagram
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_GetLocalAddresses
  * \sa NET_DestroyDatagramSocket
@@ -1161,7 +1161,7 @@ extern SDL_DECLSPEC NET_DatagramSocket * SDLCALL NET_CreateDatagramSocket(NET_Ad
  *               mechanism. However, different threads may access different
  *               sockets at the same time without problems.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_ReceiveDatagram
  */
@@ -1208,7 +1208,7 @@ extern SDL_DECLSPEC bool SDLCALL NET_SendDatagram(NET_DatagramSocket *sock, NET_
  *               mechanism. However, different threads may access different
  *               sockets at the same time without problems.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_SendDatagram
  * \sa NET_DestroyDatagram
@@ -1233,7 +1233,7 @@ extern SDL_DECLSPEC bool SDLCALL NET_ReceiveDatagram(NET_DatagramSocket *sock, N
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  */
 extern SDL_DECLSPEC void SDLCALL NET_DestroyDatagram(NET_Datagram *dgram);
 
@@ -1266,7 +1266,7 @@ extern SDL_DECLSPEC void SDLCALL NET_DestroyDatagram(NET_Datagram *dgram);
  *
  * \threadsafety It is safe to call this function from any thread.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  */
 extern SDL_DECLSPEC void SDLCALL NET_SimulateDatagramPacketLoss(NET_DatagramSocket *sock, int percent_loss);
 
@@ -1290,7 +1290,7 @@ extern SDL_DECLSPEC void SDLCALL NET_SimulateDatagramPacketLoss(NET_DatagramSock
  *               mechanism. However, different threads may access different
  *               sockets at the same time without problems.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_CreateDatagramSocket
  * \sa NET_SendDatagram
@@ -1343,7 +1343,7 @@ extern SDL_DECLSPEC void SDLCALL NET_DestroyDatagramSocket(NET_DatagramSocket *s
  *               mechanism. However, different threads may access different
  *               sockets at the same time without problems.
  *
- * \since This function is available since SDL_Net 3.0.0.
+ * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_CreateDatagramSocket
  * \sa NET_SendDatagram

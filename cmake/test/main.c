@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     }
 
     if (!NET_Init()) {
-        SDL_Log("SDL_Net_Init() failed: %s", SDL_GetError());
+        SDL_Log("NET_Init() failed: %s", SDL_GetError());
     }
 
     NET_Quit();
