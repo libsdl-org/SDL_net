@@ -41,20 +41,46 @@ extern "C" {
 #endif
 
 /**
- * Printable format: "%d.%d.%d", MAJOR, MINOR, MICRO
+ * The current major version of SDL_net headers.
+ *
+ * If this were SDL_net version 3.2.1, this value would be 3.
+ *
+ * \since This macro is available since SDL_net 3.0.0.
  */
 #define SDL_NET_MAJOR_VERSION   3
+
+/**
+ * The current minor version of the SDL_net headers.
+ *
+ * If this were SDL_net version 3.2.1, this value would be 2.
+ *
+ * \since This macro is available since SDL_net 3.0.0.
+ */
 #define SDL_NET_MINOR_VERSION   0
+
+/**
+ * The current micro (or patchlevel) version of the SDL_net headers.
+ *
+ * If this were SDL_net version 3.2.1, this value would be 1.
+ *
+ * \since This macro is available since SDL_net 3.0.0.
+ */
 #define SDL_NET_MICRO_VERSION   0
 
 /**
  * This is the version number macro for the current SDL_net version.
+ *
+ * \since This macro is available since SDL_net 3.0.0.
+ *
+ * \sa NET_Version
  */
 #define SDL_NET_VERSION \
     SDL_VERSIONNUM(SDL_NET_MAJOR_VERSION, SDL_NET_MINOR_VERSION, SDL_NET_MICRO_VERSION)
 
 /**
  * This macro will evaluate to true if compiled with SDL_net at least X.Y.Z.
+ *
+ * \since This macro is available since SDL_net 3.0.0.
  */
 #define SDL_NET_VERSION_ATLEAST(X, Y, Z) \
     ((SDL_NET_MAJOR_VERSION >= X) && \
@@ -118,7 +144,26 @@ extern SDL_DECLSPEC void SDLCALL NET_Quit(void);
 
 /* hostname resolution API... */
 
-typedef struct NET_Address NET_Address;  /**< Opaque struct that deals with computer-readable addresses. */
+/**
+ * Opaque representation of a computer-readable network address.
+ *
+ * This is an opaque datatype, to be treated by the app as a handle.
+ *
+ * SDL_net uses these to identify other servers; you use them to connect to a
+ * remote machine, and you use them to find out who connected to you. They are
+ * also used to decide what network interface to use when creating a server.
+ *
+ * These are intended to be protocol-independent; a given address might be for
+ * IPv4, IPv6, or something more esoteric. SDL_Net attempts to hide the
+ * differences.
+ *
+ * \since This datatype is available since SDL_Net 3.0.0.
+ *
+ * \sa NET_ResolveHostname
+ * \sa NET_GetLocalAddresses
+ * \sa NET_CompareAddresses
+ */
+typedef struct NET_Address NET_Address;
 
 /**
  * Resolve a human-readable hostname.
@@ -426,6 +471,23 @@ extern SDL_DECLSPEC void SDLCALL NET_FreeLocalAddresses(NET_Address **addresses)
 
 /* Streaming (TCP) API... */
 
+/**
+ * An object that represents a streaming connection to another system.
+ *
+ * This is meant to be a reliable, stream-oriented connection, such as TCP.
+ *
+ * Each NET_StreamSocket represents a single connection between systems.
+ * Usually, a client app will have one connection to a server app on a
+ * different computer, and the server app might have many connections from
+ * different clients. Each of these connections communicate over a separate
+ * stream socket.
+ *
+ * \since This datatype is available since SDL_Net 3.0.0.
+ *
+ * \sa NET_CreateClient
+ * \sa NET_WriteToStreamSocket
+ * \sa NET_ReadFromStreamSocket
+ */
 typedef struct NET_StreamSocket NET_StreamSocket;  /**< a TCP socket. Reliable transmission, with the usual pros/cons. */
 
 /**
@@ -526,6 +588,20 @@ extern SDL_DECLSPEC NET_StreamSocket * SDLCALL NET_CreateClient(NET_Address *add
  */
 extern SDL_DECLSPEC int SDLCALL NET_WaitUntilConnected(NET_StreamSocket *sock, Sint32 timeout);
 
+/**
+ * The receiving end of a stream connection.
+ *
+ * This is an opaque datatype, to be treated by the app as a handle.
+ *
+ * Internally, this is what BSD sockets refers to as a "listen socket". Clients
+ * attempt to connect to a server, and if the server accepts the connection,
+ * will provide the app with a stream socket to send and receive data over that
+ * connection.
+ *
+ * \since This datatype is available since SDL_Net 3.0.0.
+ *
+ * \sa NET_CreateServer
+ */
 typedef struct NET_Server NET_Server;   /**< a listen socket, internally. Binds to a port, accepts connections. */
 
 /**
@@ -938,14 +1014,45 @@ extern SDL_DECLSPEC void SDLCALL NET_DestroyStreamSocket(NET_StreamSocket *sock)
 
 /* Datagram (UDP) API... */
 
+/**
+ * An object that represents a datagram connection to another system.
+ *
+ * This is meant to be an unreliable, packet-oriented connection, such as UDP.
+ *
+ * Datagram sockets follow different rules than stream sockets. They are not a
+ * reliable stream of bytes but rather packets, they are not limited to
+ * talking to a single other remote system, they do not maintain a single
+ * "connection" that can be dropped, and they are more nimble about network
+ * failures at the expense of being more complex to use. What makes sense for
+ * your app depends entirely on what your app is trying to accomplish.
+ *
+ * Generally the idea of a datagram socket is that you send data one chunk
+ * ("packet") at a time to any address you want, and it arrives whenever it
+ * gets there, even if later packets get there first, and maybe it doesn't get
+ * there at all, and you don't know when anything of this happens by default.
+ *
+ * \since This datatype is available since SDL_Net 3.0.0.
+ *
+ * \sa NET_CreateDatagramSocket
+ * \sa NET_SendDatagram
+ * \sa NET_ReceiveDatagram
+ */
 typedef struct NET_DatagramSocket NET_DatagramSocket;  /**< a UDP socket. Unreliable, packet-based transmission, with the usual pros/cons */
 
+/**
+ * The data provided for new incoming packets from NET_ReceiveDatagram().
+ *
+ * \since This datatype is available since SDL_Net 3.0.0.
+ *
+ * \sa NET_ReceiveDatagram
+ * \sa NET_DestroyDatagram
+ */
 typedef struct NET_Datagram
 {
     NET_Address *addr;  /**< this is unref'd by NET_DestroyDatagram. You only need to ref it if you want to keep it. */
-    Uint16 port;  /**< these do not have to come from the same port the receiver is bound to. */
-    Uint8 *buf;
-    int buflen;
+    Uint16 port;  /**< these do not have to come from the same port the receiver is bound to. These are in host byte order, don't byteswap them! */
+    Uint8 *buf;  /**< the payload of this datagram. */
+    int buflen;  /**< the number of bytes available at `buf`. */
 } NET_Datagram;
 
 /**
@@ -1060,7 +1167,6 @@ extern SDL_DECLSPEC NET_DatagramSocket * SDLCALL NET_CreateDatagramSocket(NET_Ad
  */
 extern SDL_DECLSPEC bool SDLCALL NET_SendDatagram(NET_DatagramSocket *sock, NET_Address *address, Uint16 port, const void *buf, int buflen);
 
-
 /**
  * Receive a new packet that a remote system sent to a datagram socket.
  *
@@ -1070,7 +1176,7 @@ extern SDL_DECLSPEC bool SDLCALL NET_SendDatagram(NET_DatagramSocket *sock, NET_
  * This call never blocks; if no new data isn't available at the time of the
  * call, it returns true immediately. The caller can try again later.
  *
- * On a successful call to this function, it returns zero, even if no new
+ * On a successful call to this function, it returns true, even if no new
  * packets are available, so you should check for a successful return and a
  * non-NULL value in `*dgram` to decide if a new packet is available.
  *
