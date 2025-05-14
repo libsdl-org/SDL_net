@@ -72,7 +72,7 @@ extern "C" {
  *
  * \since This macro is available since SDL_net 3.0.0.
  *
- * \sa NET_Version
+ * \sa NET_GetVersion
  */
 #define SDL_NET_VERSION \
     SDL_VERSIONNUM(SDL_NET_MAJOR_VERSION, SDL_NET_MINOR_VERSION, SDL_NET_MICRO_VERSION)
@@ -95,7 +95,7 @@ extern "C" {
  *
  * \since This function is available since SDL_net 3.0.0.
  */
-extern SDL_DECLSPEC int SDLCALL NET_Version(void);
+extern SDL_DECLSPEC int SDLCALL NET_GetVersion(void);
 
 
 /* init/quit functions... */
