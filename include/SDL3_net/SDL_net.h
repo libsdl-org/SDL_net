@@ -588,20 +588,6 @@ extern SDL_DECLSPEC NET_StreamSocket * SDLCALL NET_CreateClient(NET_Address *add
  */
 extern SDL_DECLSPEC int SDLCALL NET_WaitUntilConnected(NET_StreamSocket *sock, Sint32 timeout);
 
-/**
- * The receiving end of a stream connection.
- *
- * This is an opaque datatype, to be treated by the app as a handle.
- *
- * Internally, this is what BSD sockets refers to as a "listen socket". Clients
- * attempt to connect to a server, and if the server accepts the connection,
- * will provide the app with a stream socket to send and receive data over that
- * connection.
- *
- * \since This datatype is available since SDL_Net 3.0.0.
- *
- * \sa NET_CreateServer
- */
 typedef struct NET_Server NET_Server;   /**< a listen socket, internally. Binds to a port, accepts connections. */
 
 /**
@@ -1014,29 +1000,6 @@ extern SDL_DECLSPEC void SDLCALL NET_DestroyStreamSocket(NET_StreamSocket *sock)
 
 /* Datagram (UDP) API... */
 
-/**
- * An object that represents a datagram connection to another system.
- *
- * This is meant to be an unreliable, packet-oriented connection, such as UDP.
- *
- * Datagram sockets follow different rules than stream sockets. They are not a
- * reliable stream of bytes but rather packets, they are not limited to
- * talking to a single other remote system, they do not maintain a single
- * "connection" that can be dropped, and they are more nimble about network
- * failures at the expense of being more complex to use. What makes sense for
- * your app depends entirely on what your app is trying to accomplish.
- *
- * Generally the idea of a datagram socket is that you send data one chunk
- * ("packet") at a time to any address you want, and it arrives whenever it
- * gets there, even if later packets get there first, and maybe it doesn't get
- * there at all, and you don't know when anything of this happens by default.
- *
- * \since This datatype is available since SDL_Net 3.0.0.
- *
- * \sa NET_CreateDatagramSocket
- * \sa NET_SendDatagram
- * \sa NET_ReceiveDatagram
- */
 typedef struct NET_DatagramSocket NET_DatagramSocket;  /**< a UDP socket. Unreliable, packet-based transmission, with the usual pros/cons */
 
 /**
