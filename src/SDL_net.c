@@ -1354,11 +1354,11 @@ static int SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 p
 }
 
 // see if any pending data can finally be sent, etc
-static int PumpDatagramSocket(NET_DatagramSocket *sock)
+static bool PumpDatagramSocket(NET_DatagramSocket *sock)
 {
     if (!sock) {
         SDL_InvalidParamError("sock");
-        return -1;
+        return false;
     }
 
     while (sock->pending_output_len > 0) {
@@ -1366,7 +1366,7 @@ static int PumpDatagramSocket(NET_DatagramSocket *sock)
         NET_Datagram *dgram = sock->pending_output[0];
         const int rc = SendOneDatagram(sock, dgram->addr, dgram->port, dgram->buf, dgram->buflen);
         if (rc < 0) {  // failure!
-            return -1;
+            return false;
         } else if (rc == 0) {  // wouldblock
             break;  // stop trying to send packets for now.
         }
@@ -1378,13 +1378,13 @@ static int PumpDatagramSocket(NET_DatagramSocket *sock)
         sock->pending_output[sock->pending_output_len] = NULL;
     }
 
-    return 0;
+    return true;
 }
 
 
 bool NET_SendDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, const void *buf, int buflen)
 {
-    if (PumpDatagramSocket(sock) < 0) {  // try to flush any queued data to the socket now, before we handle more.
+    if (!PumpDatagramSocket(sock)) {  // try to flush any queued data to the socket now, before we handle more.
         return false;
     } else if (addr == NULL) {
         return SDL_InvalidParamError("address");
@@ -1454,7 +1454,7 @@ bool NET_ReceiveDatagram(NET_DatagramSocket *sock, NET_Datagram **dgram)
 
     *dgram = NULL;
 
-    if (PumpDatagramSocket(sock) < 0) {  // try to flush any queued data to the socket now, before we go further.
+    if (!PumpDatagramSocket(sock)) {  // try to flush any queued data to the socket now, before we go further.
         return false;
     }
 
