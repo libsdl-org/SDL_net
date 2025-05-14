@@ -488,7 +488,7 @@ extern SDL_DECLSPEC void SDLCALL NET_FreeLocalAddresses(NET_Address **addresses)
  * \sa NET_WriteToStreamSocket
  * \sa NET_ReadFromStreamSocket
  */
-typedef struct NET_StreamSocket NET_StreamSocket;  /**< a TCP socket. Reliable transmission, with the usual pros/cons. */
+typedef struct NET_StreamSocket NET_StreamSocket;
 
 /**
  * Begin connecting a socket as a client to a remote server.
@@ -593,16 +593,16 @@ extern SDL_DECLSPEC int SDLCALL NET_WaitUntilConnected(NET_StreamSocket *sock, S
  *
  * This is an opaque datatype, to be treated by the app as a handle.
  *
- * Internally, this is what BSD sockets refers to as a "listen socket". Clients
- * attempt to connect to a server, and if the server accepts the connection,
- * will provide the app with a stream socket to send and receive data over that
- * connection.
+ * Internally, this is what BSD sockets refers to as a "listen socket".
+ * Clients attempt to connect to a server, and if the server accepts the
+ * connection, will provide the app with a stream socket to send and receive
+ * data over that connection.
  *
  * \since This datatype is available since SDL_Net 3.0.0.
  *
  * \sa NET_CreateServer
  */
-typedef struct NET_Server NET_Server;   /**< a listen socket, internally. Binds to a port, accepts connections. */
+typedef struct NET_Server NET_Server;
 
 /**
  * Create a server, which listens for connections to accept.
@@ -1037,7 +1037,7 @@ extern SDL_DECLSPEC void SDLCALL NET_DestroyStreamSocket(NET_StreamSocket *sock)
  * \sa NET_SendDatagram
  * \sa NET_ReceiveDatagram
  */
-typedef struct NET_DatagramSocket NET_DatagramSocket;  /**< a UDP socket. Unreliable, packet-based transmission, with the usual pros/cons */
+typedef struct NET_DatagramSocket NET_DatagramSocket;
 
 /**
  * The data provided for new incoming packets from NET_ReceiveDatagram().
