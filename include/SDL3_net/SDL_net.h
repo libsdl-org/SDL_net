@@ -940,8 +940,33 @@ extern SDL_DECLSPEC int SDLCALL NET_WaitUntilStreamSocketDrained(NET_StreamSocke
  * \since This function is available since SDL_net 3.0.0.
  *
  * \sa NET_WriteToStreamSocket
+ * \sa NET_PeekFromStreamSocket
  */
 extern SDL_DECLSPEC int SDLCALL NET_ReadFromStreamSocket(NET_StreamSocket *sock, void *buf, int buflen);
+
+/**
+ * This function behaves similarly to NET_ReadFromStreamSocket, except it
+ * doesn't actually consume the available bytes (e.g. calling this function
+ * twice will write the same data to `buf` twice.)
+ *
+ * \param sock the stream socket to receive data from.
+ * \param buf a pointer to a buffer where received data will be collected.
+ * \param buflen the size of the buffer pointed to by `buf`, in bytes. This is
+ *               the maximum that will be read from the stream socket.
+ * \returns number of bytes read from the stream socket (which can be less
+ *          than `buflen` or zero if none available), -1 on failure; call
+ *          SDL_GetError() for details.
+ *
+ * \threadsafety You should not operate on the same socket from multiple
+ *               threads at the same time without supplying a serialization
+ *               mechanism. However, different threads may access different
+ *               sockets at the same time without problems.
+ *
+ * \since This function is available since SDL_net 3.0.0.
+ *
+ * \sa NET_ReadFromStreamSocket
+ */
+extern SDL_DECLSPEC int SDLCALL NET_PeekFromStreamSocket(NET_StreamSocket *sock, void *buf, int buflen);
 
 /**
  * Enable simulated stream socket failures.
