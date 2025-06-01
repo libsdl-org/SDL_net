@@ -20,6 +20,7 @@ SDL3_net_0.0.0 {
     NET_Init;
     NET_Quit;
     NET_ReadFromStreamSocket;
+    NET_PeekFromStreamSocket;
     NET_ReceiveDatagram;
     NET_RefAddress;
     NET_ResolveHostname;

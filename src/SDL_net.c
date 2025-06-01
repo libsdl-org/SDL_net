@@ -1237,6 +1237,36 @@ int NET_ReadFromStreamSocket(NET_StreamSocket *sock, void *buf, int buflen)
     return br;
 }
 
+int NET_PeekFromStreamSocket(NET_StreamSocket *sock, void *buf, int buflen)
+{
+    if (PumpStreamSocket(sock) < 0) {  // try to flush any queued data to the socket now, before we go further.
+        return -1;
+    } else if (sock->simulated_failure_until && (SDL_GetTicks() < sock->simulated_failure_until)) {
+        return 0;  // streams are reliable, so instead of packet loss, we introduce lag.
+    }
+
+    if (buf == NULL) {
+        return SDL_InvalidParamError("buf");
+    } else if (buflen < 0) {
+        return SDL_InvalidParamError("buflen");
+    } else if (buflen == 0) {
+        return 0;  // nothing to do.
+    }
+
+    const int br = (int) recv(sock->handle, buf, buflen, MSG_PEEK);
+    if (br == 0) {
+        SDL_SetError("End of stream");
+        return -1;
+    } else if (br < 0) {
+        const int err = LastSocketError();
+        return WouldBlock(err) ? 0 : SetSocketError("Failed to peek from socket", err);
+    }
+
+    UpdateStreamSocketSimulatedFailure(sock);
+
+    return br;
+}
+
 void NET_SimulateStreamPacketLoss(NET_StreamSocket *sock, int percent_loss)
 {
     if (!sock) {
