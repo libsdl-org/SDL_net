@@ -13,35 +13,35 @@
 
 int main(int argc, char **argv)
 {
-    if (!SDLNet_Init()) {
-        SDL_Log("SDLNet_Init() failed: %s", SDL_GetError());
+    if (!NET_Init()) {
+        SDL_Log("NET_Init() failed: %s", SDL_GetError());
         return 1;
     }
 
     for (int i = 1; i < argc; i++) {
         SDL_Log("Looking up %s ...", argv[i]);
-        SDLNet_Address *addr = SDLNet_ResolveHostname(argv[i]);
-        if (SDLNet_WaitUntilResolved(addr, -1) == -1) {
+        NET_Address *addr = NET_ResolveHostname(argv[i]);
+        if (NET_WaitUntilResolved(addr, -1) == -1) {
             SDL_Log("Failed to lookup %s: %s", argv[i], SDL_GetError());
         } else {
-            SDL_Log("%s is %s", argv[i], SDLNet_GetAddressString(addr));
+            SDL_Log("%s is %s", argv[i], NET_GetAddressString(addr));
             char *req = NULL;
             SDL_asprintf(&req, "GET / HTTP/1.0\r\nHost: %s\r\n\r\n", argv[i]);
-            SDLNet_StreamSocket *sock = req ? SDLNet_CreateClient(addr, 80) : NULL;
+            NET_StreamSocket *sock = req ? NET_CreateClient(addr, 80) : NULL;
             if (!req) {
                 SDL_Log("Out of memory!");
             } else if (!sock) {
                 SDL_Log("Failed to create stream socket to %s: %s\n", argv[i], SDL_GetError());
-            } else if (SDLNet_WaitUntilConnected(sock, -1) < 0) {
+            } else if (NET_WaitUntilConnected(sock, -1) < 0) {
                 SDL_Log("Failed to connect to %s: %s", argv[i], SDL_GetError());
-            } else if (!SDLNet_WriteToStreamSocket(sock, req, SDL_strlen(req))) {
+            } else if (!NET_WriteToStreamSocket(sock, req, SDL_strlen(req))) {
                 SDL_Log("Failed to write to %s: %s", argv[i], SDL_GetError());
-            } else if (SDLNet_WaitUntilStreamSocketDrained(sock, -1) < 0) {
+            } else if (NET_WaitUntilStreamSocketDrained(sock, -1) < 0) {
                 SDL_Log("Failed to finish write to %s: %s", argv[i], SDL_GetError());
             } else {
                 char buf[512];
                 int br;
-                while ((br = SDLNet_ReadFromStreamSocket(sock, buf, sizeof (buf))) >= 0) {
+                while ((br = NET_ReadFromStreamSocket(sock, buf, sizeof (buf))) >= 0) {
                     fwrite(buf, 1, br, stdout);
                 }
 
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
             }
 
             if (sock) {
-                SDLNet_DestroyStreamSocket(sock);
+                NET_DestroyStreamSocket(sock);
             }
 
             SDL_free(req);
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     }
 
 
-    SDLNet_Quit();
+    NET_Quit();
 
     return 0;
 }

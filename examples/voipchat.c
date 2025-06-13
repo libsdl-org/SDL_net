@@ -15,7 +15,7 @@
 typedef struct Voice
 {
     SDL_AudioStream *stream;
-    SDLNet_Address *addr;
+    NET_Address *addr;
     Uint16 port;
     Uint64 idnum;
     Uint64 last_seen;
@@ -24,8 +24,8 @@ typedef struct Voice
     struct Voice *next;
 } Voice;
 
-static SDLNet_DatagramSocket *sock = NULL;  /* you talk over this, client or server. */
-static SDLNet_Address *server_addr = NULL;  /* address of the server you're talking to, NULL if you _are_ the server. */
+static NET_DatagramSocket *sock = NULL;  /* you talk over this, client or server. */
+static NET_Address *server_addr = NULL;  /* address of the server you're talking to, NULL if you _are_ the server. */
 static Uint16 server_port = 3025;
 static int max_datagram = 0;
 static Voice *voices = NULL;
@@ -39,11 +39,11 @@ static SDL_AudioStream *capture_stream = NULL;
 static const SDL_AudioSpec audio_spec = { SDL_AUDIO_S16LE, 1, 8000 };
 static Uint64 scratch_area[512];
 
-static Voice *FindVoiceByAddr(const SDLNet_Address *addr, const Uint16 port)
+static Voice *FindVoiceByAddr(const NET_Address *addr, const Uint16 port)
 {
     Voice *i;
     for (i = voices; i != NULL; i = i->next) {
-        if ((i->port == port) && (SDLNet_CompareAddresses(i->addr, addr) == 0)) {
+        if ((i->port == port) && (NET_CompareAddresses(i->addr, addr) == 0)) {
             return i;
         }
     }
@@ -71,7 +71,7 @@ static void ClearOldVoices(const Uint64 now)
             if (!i->stream || (SDL_GetAudioStreamAvailable(i->stream) == 0)) {  /* they'll get a reprieve if data is still playing out */
                 SDL_Log("Destroying voice #%" SDL_PRIu64, i->idnum);
                 SDL_DestroyAudioStream(i->stream);
-                SDLNet_UnrefAddress(i->addr);
+                NET_UnrefAddress(i->addr);
                 if (i->prev) {
                     i->prev->next = next;
                 } else {
@@ -94,8 +94,8 @@ static void SendClientAudioToServer(void)
         next_idnum++;
         scratch_area[0] = SDL_Swap64LE(0);  /* just being nice and leaving space in the buffer for the server to replace. */
         scratch_area[1] = SDL_Swap64LE(next_idnum);
-        SDL_Log("CLIENT: Sending %d new bytes to server at %s:%d...", br + extra, SDLNet_GetAddressString(server_addr), (int) server_port);
-        SDLNet_SendDatagram(sock, server_addr, server_port, scratch_area, br + extra);
+        SDL_Log("CLIENT: Sending %d new bytes to server at %s:%d...", br + extra, NET_GetAddressString(server_addr), (int) server_port);
+        NET_SendDatagram(sock, server_addr, server_port, scratch_area, br + extra);
     }
 }
 
@@ -113,20 +113,20 @@ static void mainloop(void)
         bool activity = false;
         const Uint64 now = SDL_GetTicks();
         SDL_Event event;
-        SDLNet_Datagram *dgram = NULL;
+        NET_Datagram *dgram = NULL;
         int rc;
 
-        while (((rc = SDLNet_ReceiveDatagram(sock, &dgram)) == true) && (dgram != NULL)) {
-            SDL_Log("%s: got %d-byte datagram from %s:%d", is_client ? "CLIENT" : "SERVER", (int) dgram->buflen, SDLNet_GetAddressString(dgram->addr), (int) dgram->port);
+        while (((rc = NET_ReceiveDatagram(sock, &dgram)) == true) && (dgram != NULL)) {
+            SDL_Log("%s: got %d-byte datagram from %s:%d", is_client ? "CLIENT" : "SERVER", (int) dgram->buflen, NET_GetAddressString(dgram->addr), (int) dgram->port);
             activity = true;
             if (!is_client) {  /* we're the server? */
                 Voice *voice = FindVoiceByAddr(dgram->addr, dgram->port);
                 Voice *i;
 
                 if (!voice) {
-                    SDL_Log("SERVER: Creating voice idnum=%" SDL_PRIu64 " from %s:%d", next_idnum + 1, SDLNet_GetAddressString(dgram->addr), (int) dgram->port);
+                    SDL_Log("SERVER: Creating voice idnum=%" SDL_PRIu64 " from %s:%d", next_idnum + 1, NET_GetAddressString(dgram->addr), (int) dgram->port);
                     voice = (Voice *) SDL_calloc(1, sizeof (Voice));
-                    voice->addr = SDLNet_RefAddress(dgram->addr);
+                    voice->addr = NET_RefAddress(dgram->addr);
                     voice->port = dgram->port;
                     voice->idnum = ++next_idnum;
                     if (voices) {
@@ -142,15 +142,15 @@ static void mainloop(void)
                 if (dgram->buflen > extra) {  /* ignore it if too small, might just be a keepalive packet. */
                     *((Uint64 *) dgram->buf) = SDL_Swap64LE(voice->idnum);  /* the client leaves space to fill this in for convenience. */
                     for (i = voices; i != NULL; i = i->next) {
-                        if ((voice->port != i->port) || (SDLNet_CompareAddresses(voice->addr, i->addr) != 0)) {  /* don't send client's own voice back to them. */
-                            SDL_Log("SERVER: sending %d-byte datagram to %s:%d", (int) dgram->buflen, SDLNet_GetAddressString(i->addr), (int) i->port);
-                            SDLNet_SendDatagram(sock, i->addr, i->port, dgram->buf, dgram->buflen);
+                        if ((voice->port != i->port) || (NET_CompareAddresses(voice->addr, i->addr) != 0)) {  /* don't send client's own voice back to them. */
+                            SDL_Log("SERVER: sending %d-byte datagram to %s:%d", (int) dgram->buflen, NET_GetAddressString(i->addr), (int) i->port);
+                            NET_SendDatagram(sock, i->addr, i->port, dgram->buf, dgram->buflen);
                         }
                     }
                 }
             } else {  /* we're the client. */
-                if ((dgram->port != server_port) || (SDLNet_CompareAddresses(dgram->addr, server_addr) != 0)) {
-                    SDL_Log("CLIENT: Got packet from non-server address %s:%d. Ignoring.", SDLNet_GetAddressString(dgram->addr), (int) dgram->port);
+                if ((dgram->port != server_port) || (NET_CompareAddresses(dgram->addr, server_addr) != 0)) {
+                    SDL_Log("CLIENT: Got packet from non-server address %s:%d. Ignoring.", NET_GetAddressString(dgram->addr), (int) dgram->port);
                 } else if (dgram->buflen < extra) {
                     SDL_Log("CLIENT: Got bogus packet from the server. Ignoring.");
                 } else {
@@ -184,7 +184,7 @@ static void mainloop(void)
                 }
             }
 
-            SDLNet_DestroyDatagram(dgram);
+            NET_DestroyDatagram(dgram);
         }
 
         while (SDL_PollEvent(&event)) {
@@ -229,8 +229,8 @@ static void mainloop(void)
                 next_idnum++;
                 scratch_area[0] = SDL_Swap64LE(0);
                 scratch_area[1] = SDL_Swap64LE(next_idnum);
-                SDL_Log("CLIENT: Sending %d keepalive bytes to server at %s:%d...", extra, SDLNet_GetAddressString(server_addr), (int) server_port);
-                SDLNet_SendDatagram(sock, server_addr, server_port, scratch_area, extra);
+                SDL_Log("CLIENT: Sending %d keepalive bytes to server at %s:%d...", extra, NET_GetAddressString(server_addr), (int) server_port);
+                NET_SendDatagram(sock, server_addr, server_port, scratch_area, extra);
                 last_send_ticks = now;
             }
         }
@@ -283,10 +283,10 @@ static void run_voipchat(int argc, char **argv)
         SDL_Log("SERVER: Listening on port %d", server_port);
     } else {
         SDL_Log("CLIENT: Resolving server hostname '%s' ...", hostname);
-        server_addr = SDLNet_ResolveHostname(hostname);
+        server_addr = NET_ResolveHostname(hostname);
         if (server_addr) {
-            if (SDLNet_WaitUntilResolved(server_addr, -1) < 0) {
-                SDLNet_UnrefAddress(server_addr);
+            if (NET_WaitUntilResolved(server_addr, -1) < 0) {
+                NET_UnrefAddress(server_addr);
                 server_addr = NULL;
             }
         }
@@ -297,7 +297,7 @@ static void run_voipchat(int argc, char **argv)
             return;
         }
 
-        SDL_Log("CLIENT: Server is at %s:%d.", SDLNet_GetAddressString(server_addr), (int) server_port);
+        SDL_Log("CLIENT: Server is at %s:%d.", NET_GetAddressString(server_addr), (int) server_port);
 
         audio_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &audio_spec);
         if (!audio_device) {
@@ -318,12 +318,12 @@ static void run_voipchat(int argc, char **argv)
     }
 
     /* server _must_ be on the requested port. Clients can take anything available, server will respond to where it sees it come from. */
-    sock = SDLNet_CreateDatagramSocket(NULL, is_server ? server_port : 0);
+    sock = NET_CreateDatagramSocket(NULL, is_server ? server_port : 0);
     if (!sock) {
         SDL_Log("Failed to create datagram socket: %s", SDL_GetError());
     } else {
         if (simulate_failure) {
-            SDLNet_SimulateDatagramPacketLoss(sock, simulate_failure);
+            NET_SimulateDatagramPacketLoss(sock, simulate_failure);
         }
         mainloop();
     }
@@ -337,9 +337,9 @@ static void run_voipchat(int argc, char **argv)
     SDL_CloseAudioDevice(capture_device);
     audio_device = capture_device = 0;
 
-    SDLNet_UnrefAddress(server_addr);
+    NET_UnrefAddress(server_addr);
     server_addr = NULL;
-    SDLNet_DestroyDatagramSocket(sock);
+    NET_DestroyDatagramSocket(sock);
     sock = NULL;
 }
 
@@ -351,13 +351,13 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (!SDLNet_Init()) {
-        SDL_Log("SDLNet_Init failed: %s\n", SDL_GetError());
+    if (!NET_Init()) {
+        SDL_Log("NET_Init failed: %s\n", SDL_GetError());
         SDL_Quit();
         return 1;
     }
 
-    window = SDL_CreateWindow("SDL_Net3 voipchat example", 640, 480, 0);
+    window = SDL_CreateWindow("SDL3_net voipchat example", 640, 480, 0);
     renderer = SDL_CreateRenderer(window, NULL);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
@@ -368,7 +368,7 @@ int main(int argc, char **argv)
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
-    SDLNet_Quit();
+    NET_Quit();
     SDL_Quit();
     return 0;
 }

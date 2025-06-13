@@ -78,20 +78,27 @@ typedef socklen_t SockLen;
 typedef struct sockaddr_storage AddressStorage;
 #endif
 
-typedef enum SDLNet_SocketType
+typedef enum NET_Status
+{
+    NET_FAILURE = -1,
+    NET_WOULDBLOCK,
+    NET_SUCCESS,
+} NET_Status;
+
+typedef enum NET_SocketType
 {
     SOCKETTYPE_STREAM,
     SOCKETTYPE_DATAGRAM,
     SOCKETTYPE_SERVER
-} SDLNet_SocketType;
+} NET_SocketType;
 
 
-int SDLNet_Version(void)
+int NET_GetVersion(void)
 {
     return SDL_NET_VERSION;
 }
 
-struct SDLNet_Address
+struct NET_Address
 {
     char *hostname;
     char *human_readable;
@@ -99,13 +106,13 @@ struct SDLNet_Address
     SDL_AtomicInt refcount;
     SDL_AtomicInt status;  // 0==in progress, 1==resolved, -1==error
     struct addrinfo *ainfo;
-    SDLNet_Address *resolver_next;  // a linked list for the resolution job queue.
+    NET_Address *resolver_next;  // a linked list for the resolution job queue.
 };
 
 #define MIN_RESOLVER_THREADS 2
 #define MAX_RESOLVER_THREADS 10
 
-static SDLNet_Address *resolver_queue = NULL;
+static NET_Address *resolver_queue = NULL;
 static SDL_Thread *resolver_threads[MAX_RESOLVER_THREADS];
 static SDL_Mutex *resolver_lock = NULL;
 static SDL_Condition *resolver_condition = NULL;
@@ -214,7 +221,7 @@ static bool SetGetAddrInfoErrorBool(const char *msg, int err)
 }
 
 // this blocks!
-static int ResolveAddress(SDLNet_Address *addr)
+static NET_Status ResolveAddress(NET_Address *addr)
 {
     SDL_assert(addr != NULL);  // we control all this, so this shouldn't happen.
     struct addrinfo *ainfo = NULL;
@@ -240,10 +247,10 @@ static int ResolveAddress(SDLNet_Address *addr)
     //SDL_Log("rc=%d", rc);
     if (rc != 0) {
         addr->errstr = CreateGetAddrInfoErrorString(rc);
-        return -1;  // error
+        return NET_FAILURE;  // error
     } else if (ainfo == NULL) {
         addr->errstr = SDL_strdup("Unknown error (query succeeded but result was NULL!)");
-        return -1;
+        return NET_FAILURE;
     }
 
     char buf[128];
@@ -251,12 +258,12 @@ static int ResolveAddress(SDLNet_Address *addr)
     if (rc != 0) {
         addr->errstr = CreateGetAddrInfoErrorString(rc);
         freeaddrinfo(ainfo);
-        return -1;  // error
+        return NET_FAILURE;  // error
     }
 
     addr->human_readable = SDL_strdup(buf);
     addr->ainfo = ainfo;
-    return 1;  // success (zero means "still in progress").
+    return NET_SUCCESS;  // success (zero means "still in progress").
 }
 
 static int SDLCALL ResolverThread(void *data)
@@ -267,7 +274,7 @@ static int SDLCALL ResolverThread(void *data)
     SDL_LockMutex(resolver_lock);
 
     while (!SDL_GetAtomicInt(&resolver_shutdown)) {
-        SDLNet_Address *addr = SDL_GetAtomicPointer((void **) &resolver_queue);
+        NET_Address *addr = SDL_GetAtomicPointer((void **) &resolver_queue);
         if (!addr) {
             if (SDL_GetAtomicInt(&resolver_num_threads) > MIN_RESOLVER_THREADS) {  // nothing pending and too many threads waiting in reserve? Quit.
                 SDL_DetachThread(resolver_threads[threadnum]);  // detach ourselves so no one has to wait on us.
@@ -303,7 +310,7 @@ static int SDLCALL ResolverThread(void *data)
         SDL_SetAtomicInt(&addr->status, outcome);
         //SDL_Log("ResolverThread #%d finished current task (%s, '%s' => '%s')", threadnum, (outcome < 0) ? "failure" : "success", addr->hostname, (outcome < 0) ? addr->errstr : addr->human_readable);
 
-        SDLNet_UnrefAddress(addr);  // we're done with it, but others might still own it.
+        NET_UnrefAddress(addr);  // we're done with it, but others might still own it.
 
         SDL_AddAtomicInt(&resolver_num_requests, -1);
 
@@ -338,7 +345,7 @@ static SDL_Thread *SpinResolverThread(const int num)
     return resolver_threads[num];
 }
 
-static void DestroyAddress(SDLNet_Address *addr)
+static void DestroyAddress(NET_Address *addr)
 {
     if (addr) {
         if (addr->ainfo) {
@@ -351,7 +358,7 @@ static void DestroyAddress(SDLNet_Address *addr)
     }
 }
 
-static SDLNet_Address *CreateSDLNetAddrFromSockAddr(struct sockaddr *saddr, SockLen saddrlen)
+static NET_Address *CreateSDLNetAddrFromSockAddr(struct sockaddr *saddr, SockLen saddrlen)
 {
     // !!! FIXME: this all seems inefficient in the name of keeping addresses generic.
     char hostbuf[128];
@@ -361,7 +368,7 @@ static SDLNet_Address *CreateSDLNetAddrFromSockAddr(struct sockaddr *saddr, Sock
         return NULL;
     }
 
-    SDLNet_Address *addr = (SDLNet_Address *) SDL_calloc(1, sizeof (SDLNet_Address));
+    NET_Address *addr = (NET_Address *) SDL_calloc(1, sizeof (NET_Address));
     if (!addr) {
         return NULL;
     }
@@ -388,12 +395,12 @@ static SDLNet_Address *CreateSDLNetAddrFromSockAddr(struct sockaddr *saddr, Sock
         return NULL;
     }
 
-    return SDLNet_RefAddress(addr);
+    return NET_RefAddress(addr);
 }
 
 static SDL_AtomicInt initialize_count;
 
-bool SDLNet_Init(void)
+bool NET_Init(void)
 {
     if (SDL_AddAtomicInt(&initialize_count, 1) > 0) {
         return true;  // already initialized, call it a success.
@@ -440,7 +447,7 @@ bool SDLNet_Init(void)
 failed:
     origerrstr = SDL_strdup(SDL_GetError());
 
-    SDLNet_Quit();
+    NET_Quit();
 
     if (origerrstr) {
         SDL_SetError("%s", origerrstr);
@@ -450,7 +457,7 @@ failed:
     return false;
 }
 
-void SDLNet_Quit(void)
+void NET_Quit(void)
 {
     const int prevcount = SDL_AddAtomicInt(&initialize_count, -1);
     if (prevcount <= 0) {
@@ -497,9 +504,9 @@ void SDLNet_Quit(void)
     #endif
 }
 
-SDLNet_Address *SDLNet_ResolveHostname(const char *host)
+NET_Address *NET_ResolveHostname(const char *host)
 {
-    SDLNet_Address *addr = SDL_calloc(1, sizeof (SDLNet_Address));
+    NET_Address *addr = SDL_calloc(1, sizeof (NET_Address));
     if (!addr) {
         return NULL;
     }
@@ -537,7 +544,7 @@ SDLNet_Address *SDLNet_ResolveHostname(const char *host)
     return addr;
 }
 
-int SDLNet_WaitUntilResolved(SDLNet_Address *addr, Sint32 timeout)
+int NET_WaitUntilResolved(NET_Address *addr, Sint32 timeout)
 {
     if (!addr) {
         return SDL_InvalidParamError("address");  // obviously nothing to wait for.
@@ -564,10 +571,10 @@ int SDLNet_WaitUntilResolved(SDLNet_Address *addr, Sint32 timeout)
         SDL_UnlockMutex(resolver_lock);
     }
 
-    return SDLNet_GetAddressStatus(addr);  // so we set the error string if necessary.
+    return NET_GetAddressStatus(addr);  // so we set the error string if necessary.
 }
 
-int SDLNet_GetAddressStatus(SDLNet_Address *addr)
+int NET_GetAddressStatus(NET_Address *addr)
 {
     if (!addr) {
         return SDL_InvalidParamError("address");
@@ -579,7 +586,7 @@ int SDLNet_GetAddressStatus(SDLNet_Address *addr)
     return retval;
 }
 
-const char *SDLNet_GetAddressString(SDLNet_Address *addr)
+const char *NET_GetAddressString(NET_Address *addr)
 {
     if (!addr) {
         SDL_InvalidParamError("address");
@@ -588,7 +595,7 @@ const char *SDLNet_GetAddressString(SDLNet_Address *addr)
 
     const char *retval = (const char *) SDL_GetAtomicPointer((void **) &addr->human_readable);
     if (!retval) {
-        const int rc = SDLNet_GetAddressStatus(addr);
+        const int rc = NET_GetAddressStatus(addr);
         if (rc != -1) {  // if -1, it'll set the error message.
             SDL_SetError("Address not yet resolved");  // if this resolved in a race condition, too bad, try again.
         }
@@ -596,7 +603,7 @@ const char *SDLNet_GetAddressString(SDLNet_Address *addr)
     return retval;
 }
 
-int SDLNet_CompareAddresses(const SDLNet_Address *sdlneta, const SDLNet_Address *sdlnetb)
+int NET_CompareAddresses(const NET_Address *sdlneta, const NET_Address *sdlnetb)
 {
     const struct addrinfo *a;
     const struct addrinfo *b;
@@ -630,7 +637,7 @@ int SDLNet_CompareAddresses(const SDLNet_Address *sdlneta, const SDLNet_Address 
     return SDL_memcmp(a->ai_addr, b->ai_addr, a->ai_addrlen);
 }
 
-SDLNet_Address *SDLNet_RefAddress(SDLNet_Address *addr)
+NET_Address *NET_RefAddress(NET_Address *addr)
 {
     if (addr) {
         SDL_AtomicIncRef(&addr->refcount);
@@ -638,24 +645,24 @@ SDLNet_Address *SDLNet_RefAddress(SDLNet_Address *addr)
     return addr;
 }
 
-void SDLNet_UnrefAddress(SDLNet_Address *addr)
+void NET_UnrefAddress(NET_Address *addr)
 {
     if (addr && SDL_AtomicDecRef(&addr->refcount)) {
         DestroyAddress(addr);
     }
 }
 
-void SDLNet_SimulateAddressResolutionLoss(int percent_loss)
+void NET_SimulateAddressResolutionLoss(int percent_loss)
 {
     percent_loss = SDL_min(100, percent_loss);
     percent_loss = SDL_max(0, percent_loss);
     SDL_SetAtomicInt(&resolver_percent_loss, percent_loss);
 }
 
-SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
+NET_Address **NET_GetLocalAddresses(int *num_addresses)
 {
     int count = 0;
-    SDLNet_Address **retval = NULL;
+    NET_Address **retval = NULL;
 
     int dummy_addresses;
     if (!num_addresses) {
@@ -698,7 +705,7 @@ SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
         }
     }
 
-    retval = (SDLNet_Address **) SDL_calloc(((size_t)count) + 1, sizeof (SDLNet_Address *));
+    retval = (NET_Address **) SDL_calloc(((size_t)count) + 1, sizeof (NET_Address *));
     if (!retval) {
         SDL_free(addrs);
         return NULL;
@@ -707,7 +714,7 @@ SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
     count = 0;
     for (IP_ADAPTER_ADDRESSES *i = addrs; i != NULL; i = i->Next) {
         for (IP_ADAPTER_UNICAST_ADDRESS *j = i->FirstUnicastAddress; j != NULL; j = j->Next) {
-            SDLNet_Address *addr = CreateSDLNetAddrFromSockAddr(j->Address.lpSockaddr, j->Address.iSockaddrLength);
+            NET_Address *addr = CreateSDLNetAddrFromSockAddr(j->Address.lpSockaddr, j->Address.iSockaddrLength);
             if (addr) {
                 retval[count++] = addr;
             }
@@ -729,7 +736,7 @@ SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
         }
     }
 
-    retval = (SDLNet_Address **) SDL_calloc(count + 1, sizeof (SDLNet_Address *));
+    retval = (NET_Address **) SDL_calloc(count + 1, sizeof (NET_Address *));
     if (!retval) {
         if (ifaddr) {
             freeifaddrs(ifaddr);
@@ -740,7 +747,7 @@ SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
     count = 0;
     for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next) {
         if (i->ifa_name != NULL) {
-            SDLNet_Address *addr = NULL;
+            NET_Address *addr = NULL;
             // !!! FIXME: getifaddrs doesn't return the sockaddr length, so we have to go with known protocols.  :/
             if (i->ifa_addr->sa_family == AF_INET) {
                 addr = CreateSDLNetAddrFromSockAddr(i->ifa_addr, sizeof (struct sockaddr_in));
@@ -762,25 +769,25 @@ SDLNet_Address **SDLNet_GetLocalAddresses(int *num_addresses)
     *num_addresses = count;
 
     // try to shrink allocation.
-    void *ptr = SDL_realloc(retval, (((size_t) count) + 1) * sizeof (SDLNet_Address *));
+    void *ptr = SDL_realloc(retval, (((size_t) count) + 1) * sizeof (NET_Address *));
     if (ptr) {
-        retval = (SDLNet_Address **) ptr;
+        retval = (NET_Address **) ptr;
     }
 
     return retval;
 }
 
-void SDLNet_FreeLocalAddresses(SDLNet_Address **addresses)
+void NET_FreeLocalAddresses(NET_Address **addresses)
 {
     if (addresses) {
         for (int i = 0; addresses[i] != NULL; i++) {
-            SDLNet_UnrefAddress(addresses[i]);
+            NET_UnrefAddress(addresses[i]);
         }
         SDL_free(addresses);
     }
 }
 
-static struct addrinfo *MakeAddrInfoWithPort(const SDLNet_Address *addr, const int socktype, const Uint16 port)
+static struct addrinfo *MakeAddrInfoWithPort(const NET_Address *addr, const int socktype, const Uint16 port)
 {
     const struct addrinfo *ainfo = addr ? addr->ainfo : NULL;
     SDL_assert(!addr || ainfo);
@@ -820,10 +827,10 @@ static struct addrinfo *MakeAddrInfoWithPort(const SDLNet_Address *addr, const i
 }
 
 
-struct SDLNet_StreamSocket
+struct NET_StreamSocket
 {
-    SDLNet_SocketType socktype;
-    SDLNet_Address *addr;
+    NET_SocketType socktype;
+    NET_Address *addr;
     Uint16 port;
     Socket handle;
     int status;
@@ -853,7 +860,7 @@ static bool WouldBlock(const int err)
     #endif
 }
 
-SDLNet_StreamSocket *SDLNet_CreateClient(SDLNet_Address *addr, Uint16 port)
+NET_StreamSocket *NET_CreateClient(NET_Address *addr, Uint16 port)
 {
     if (addr == NULL) {
         SDL_InvalidParamError("address");
@@ -863,7 +870,7 @@ SDLNet_StreamSocket *SDLNet_CreateClient(SDLNet_Address *addr, Uint16 port)
         return NULL;
     }
 
-    SDLNet_StreamSocket *sock = (SDLNet_StreamSocket *) SDL_calloc(1, sizeof (SDLNet_StreamSocket));
+    NET_StreamSocket *sock = (NET_StreamSocket *) SDL_calloc(1, sizeof (NET_StreamSocket));
     if (!sock) {
         return NULL;
     }
@@ -910,11 +917,11 @@ SDLNet_StreamSocket *SDLNet_CreateClient(SDLNet_Address *addr, Uint16 port)
         }
     }
 
-    SDLNet_RefAddress(addr);
+    NET_RefAddress(addr);
     return sock;
 }
 
-static int CheckClientConnection(SDLNet_StreamSocket *sock, int timeoutms)
+static int CheckClientConnection(NET_StreamSocket *sock, int timeoutms)
 {
     if (!sock) {
         return SDL_InvalidParamError("sock");
@@ -924,40 +931,40 @@ static int CheckClientConnection(SDLNet_StreamSocket *sock, int timeoutms)
             if (SDL_GetTicks() >= sock->simulated_failure_ticks) {
                 sock->status = SDL_SetError("simulated failure");
         } else */
-        if (SDLNet_WaitUntilInputAvailable((void **) &sock, 1, timeoutms) == -1) {
+        if (NET_WaitUntilInputAvailable((void **) &sock, 1, timeoutms) == -1) {
             sock->status = -1;  // just abandon the whole enterprise.
         }
     }
     return sock->status;
 }
 
-int SDLNet_WaitUntilConnected(SDLNet_StreamSocket *sock, Sint32 timeout)
+int NET_WaitUntilConnected(NET_StreamSocket *sock, Sint32 timeout)
 {
     return CheckClientConnection(sock, (int) timeout);
 }
 
-int SDLNet_GetConnectionStatus(SDLNet_StreamSocket *sock)
+int NET_GetConnectionStatus(NET_StreamSocket *sock)
 {
     return CheckClientConnection(sock, 0);
 }
 
 
-struct SDLNet_Server
+struct NET_Server
 {
-    SDLNet_SocketType socktype;
-    SDLNet_Address *addr;  // bound to this address (NULL for any).
+    NET_SocketType socktype;
+    NET_Address *addr;  // bound to this address (NULL for any).
     Uint16 port;
     Socket handle;
 };
 
-SDLNet_Server *SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port)
+NET_Server *NET_CreateServer(NET_Address *addr, Uint16 port)
 {
     if (addr && SDL_GetAtomicInt(&addr->status) != 1) {
         SDL_SetError("Address is not resolved");  // strictly speaking, this should be a local interface, but a resolved address can fail later.
         return NULL;
     }
 
-    SDLNet_Server *server = (SDLNet_Server *) SDL_calloc(1, sizeof (SDLNet_Server));
+    NET_Server *server = (NET_Server *) SDL_calloc(1, sizeof (NET_Server));
     if (!server) {
         return NULL;
     }
@@ -1013,11 +1020,11 @@ SDLNet_Server *SDLNet_CreateServer(SDLNet_Address *addr, Uint16 port)
         return NULL;
     }
 
-    SDLNet_RefAddress(addr);
+    NET_RefAddress(addr);
     return server;
 }
 
-bool SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_stream)
+bool NET_AcceptClient(NET_Server *server, NET_StreamSocket **client_stream)
 {
     if (!client_stream) {
         return SDL_InvalidParamError("client_stream");
@@ -1049,15 +1056,15 @@ bool SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_str
         return SetGetAddrInfoErrorBool("Failed to determine port number", gairc);
     }
 
-    SDLNet_Address *fromaddr = CreateSDLNetAddrFromSockAddr((struct sockaddr *) &from, fromlen);
+    NET_Address *fromaddr = CreateSDLNetAddrFromSockAddr((struct sockaddr *) &from, fromlen);
     if (!fromaddr) {
         CloseSocketHandle(handle);
         return false;  // error string was already set.
     }
 
-    SDLNet_StreamSocket *sock = (SDLNet_StreamSocket *) SDL_calloc(1, sizeof (SDLNet_StreamSocket));
+    NET_StreamSocket *sock = (NET_StreamSocket *) SDL_calloc(1, sizeof (NET_StreamSocket));
     if (!sock) {
-        SDLNet_UnrefAddress(fromaddr);
+        NET_UnrefAddress(fromaddr);
         CloseSocketHandle(handle);
         return false;
     }
@@ -1072,28 +1079,28 @@ bool SDLNet_AcceptClient(SDLNet_Server *server, SDLNet_StreamSocket **client_str
     return true;
 }
 
-void SDLNet_DestroyServer(SDLNet_Server *server)
+void NET_DestroyServer(NET_Server *server)
 {
     if (server) {
         if (server->handle != INVALID_SOCKET) {
             CloseSocketHandle(server->handle);
         }
-        SDLNet_UnrefAddress(server->addr);
+        NET_UnrefAddress(server->addr);
         SDL_free(server);
     }
 }
 
 
-SDLNet_Address *SDLNet_GetStreamSocketAddress(SDLNet_StreamSocket *sock)
+NET_Address *NET_GetStreamSocketAddress(NET_StreamSocket *sock)
 {
     if (!sock) {
         SDL_InvalidParamError("sock");
         return NULL;
     }
-    return SDLNet_RefAddress(sock->addr);
+    return NET_RefAddress(sock->addr);
 }
 
-static void UpdateStreamSocketSimulatedFailure(SDLNet_StreamSocket *sock)
+static void UpdateStreamSocketSimulatedFailure(NET_StreamSocket *sock)
 {
     if (sock->percent_loss && (RandomNumberBetween(0, 100) > sock->percent_loss)) {
         // won the percent_loss lottery? Refuse to move more data for between 250 and 7000 milliseconds.
@@ -1104,7 +1111,7 @@ static void UpdateStreamSocketSimulatedFailure(SDLNet_StreamSocket *sock)
 }
 
 // see if any pending data can finally be sent, etc
-static int PumpStreamSocket(SDLNet_StreamSocket *sock)
+static int PumpStreamSocket(NET_StreamSocket *sock)
 {
     if (!sock) {
         return SDL_InvalidParamError("sock");
@@ -1129,7 +1136,7 @@ static int PumpStreamSocket(SDLNet_StreamSocket *sock)
     return 0;
 }
 
-bool SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int buflen)
+bool NET_WriteToStreamSocket(NET_StreamSocket *sock, const void *buf, int buflen)
 {
     if (PumpStreamSocket(sock) < 0) {  // try to flush any queued data to the socket now, before we handle more.
         return false;
@@ -1183,7 +1190,7 @@ bool SDLNet_WriteToStreamSocket(SDLNet_StreamSocket *sock, const void *buf, int 
     return true;
 }
 
-int SDLNet_GetStreamSocketPendingWrites(SDLNet_StreamSocket *sock)
+int NET_GetStreamSocketPendingWrites(NET_StreamSocket *sock)
 {
     if (PumpStreamSocket(sock) < 0) {
         return -1;
@@ -1191,7 +1198,7 @@ int SDLNet_GetStreamSocketPendingWrites(SDLNet_StreamSocket *sock)
     return sock->pending_output_len;
 }
 
-int SDLNet_WaitUntilStreamSocketDrained(SDLNet_StreamSocket *sock, int timeoutms)
+int NET_WaitUntilStreamSocketDrained(NET_StreamSocket *sock, int timeoutms)
 {
     if (!sock) {
         return SDL_InvalidParamError("sock");
@@ -1199,7 +1206,7 @@ int SDLNet_WaitUntilStreamSocketDrained(SDLNet_StreamSocket *sock, int timeoutms
 
     if (timeoutms != 0) {
         const Uint64 endtime = (timeoutms > 0) ? (SDL_GetTicks() + timeoutms) : 0;
-        while (SDLNet_GetStreamSocketPendingWrites(sock) > 0) {
+        while (NET_GetStreamSocketPendingWrites(sock) > 0) {
             struct pollfd pfd;
             SDL_zero(pfd);
             pfd.fd = sock->handle;
@@ -1222,10 +1229,10 @@ int SDLNet_WaitUntilStreamSocketDrained(SDLNet_StreamSocket *sock, int timeoutms
         }
     }
 
-    return SDLNet_GetStreamSocketPendingWrites(sock);
+    return NET_GetStreamSocketPendingWrites(sock);
 }
 
-int SDLNet_ReadFromStreamSocket(SDLNet_StreamSocket *sock, void *buf, int buflen)
+int NET_ReadFromStreamSocket(NET_StreamSocket *sock, void *buf, int buflen)
 {
     if (PumpStreamSocket(sock) < 0) {  // try to flush any queued data to the socket now, before we go further.
         return -1;
@@ -1255,7 +1262,7 @@ int SDLNet_ReadFromStreamSocket(SDLNet_StreamSocket *sock, void *buf, int buflen
     return br;
 }
 
-void SDLNet_SimulateStreamPacketLoss(SDLNet_StreamSocket *sock, int percent_loss)
+void NET_SimulateStreamPacketLoss(NET_StreamSocket *sock, int percent_loss)
 {
     if (!sock) {
         return;
@@ -1271,12 +1278,12 @@ void SDLNet_SimulateStreamPacketLoss(SDLNet_StreamSocket *sock, int percent_loss
 }
 
 // !!! FIXME: docs should note that this will THROW AWAY pending writes in _our_ buffers (not the kernel-level buffers) if you didn't wait for them to finish.
-void SDLNet_DestroyStreamSocket(SDLNet_StreamSocket *sock)
+void NET_DestroyStreamSocket(NET_StreamSocket *sock)
 {
     if (sock) {
         PumpStreamSocket(sock);  // try one last time to send any last pending data.
 
-        SDLNet_UnrefAddress(sock->addr);
+        NET_UnrefAddress(sock->addr);
         if (sock->handle != INVALID_SOCKET) {
             CloseSocketHandle(sock->handle);  // !!! FIXME: what does this do with non-blocking sockets? Release the descriptor but the kernel continues sending queued buffers behind the scenes?
         }
@@ -1287,30 +1294,30 @@ void SDLNet_DestroyStreamSocket(SDLNet_StreamSocket *sock)
 
 
 
-struct SDLNet_DatagramSocket
+struct NET_DatagramSocket
 {
-    SDLNet_SocketType socktype;
-    SDLNet_Address *addr;  // bound to this address (NULL for any).
+    NET_SocketType socktype;
+    NET_Address *addr;  // bound to this address (NULL for any).
     Uint16 port;
     Socket handle;
     int percent_loss;
     Uint8 recv_buffer[64*1024];
-    SDLNet_Datagram **pending_output;
+    NET_Datagram **pending_output;
     int pending_output_len;
     int pending_output_allocation;
-    SDLNet_Address *latest_recv_addrs[64];
+    NET_Address *latest_recv_addrs[64];
     int latest_recv_addrs_idx;
 };
 
 
-SDLNet_DatagramSocket *SDLNet_CreateDatagramSocket(SDLNet_Address *addr, Uint16 port)
+NET_DatagramSocket *NET_CreateDatagramSocket(NET_Address *addr, Uint16 port)
 {
     if (addr && SDL_GetAtomicInt(&addr->status) != 1) {
         SDL_SetError("Address is not resolved");  // strictly speaking, this should be a local interface, but a resolved address can fail later.
         return NULL;
     }
 
-    SDLNet_DatagramSocket *sock = (SDLNet_DatagramSocket *) SDL_calloc(1, sizeof (SDLNet_DatagramSocket));
+    NET_DatagramSocket *sock = (NET_DatagramSocket *) SDL_calloc(1, sizeof (NET_DatagramSocket));
     if (!sock) {
         return NULL;
     }
@@ -1356,60 +1363,60 @@ SDLNet_DatagramSocket *SDLNet_CreateDatagramSocket(SDLNet_Address *addr, Uint16 
         return NULL;
     }
 
-    SDLNet_RefAddress(addr);
+    NET_RefAddress(addr);
     return sock;
 }
 
-static int SendOneDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint16 port, const void *buf, int buflen)
+static NET_Status SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, const void *buf, int buflen)
 {
     struct addrinfo *addrwithport = MakeAddrInfoWithPort(addr, SOCK_DGRAM, port);
     if (!addrwithport) {
-        return -1;
+        return NET_FAILURE;
     }
     const int rc = sendto(sock->handle, buf, (size_t) buflen, 0, addrwithport->ai_addr, addrwithport->ai_addrlen);
     freeaddrinfo(addrwithport);
 
     if (rc == SOCKET_ERROR) {
         const int err = LastSocketError();
-        return WouldBlock(err) ? 0 : SetSocketError("Failed to send from socket", err);
+        return WouldBlock(err) ? NET_WOULDBLOCK : SetSocketError("Failed to send from socket", err);
     }
 
     SDL_assert(rc == buflen);
-    return 1;
+    return NET_SUCCESS;
 }
 
 // see if any pending data can finally be sent, etc
-static int PumpDatagramSocket(SDLNet_DatagramSocket *sock)
+static bool PumpDatagramSocket(NET_DatagramSocket *sock)
 {
     if (!sock) {
         SDL_InvalidParamError("sock");
-        return -1;
+        return false;
     }
 
     while (sock->pending_output_len > 0) {
         SDL_assert(sock->pending_output != NULL);
-        SDLNet_Datagram *dgram = sock->pending_output[0];
+        NET_Datagram *dgram = sock->pending_output[0];
         const int rc = SendOneDatagram(sock, dgram->addr, dgram->port, dgram->buf, dgram->buflen);
         if (rc < 0) {  // failure!
-            return -1;
+            return false;
         } else if (rc == 0) {  // wouldblock
             break;  // stop trying to send packets for now.
         }
 
         /* else if (rc > 0) */
-        SDLNet_DestroyDatagram(dgram);
+        NET_DestroyDatagram(dgram);
         sock->pending_output_len--;
-        SDL_memmove(sock->pending_output, sock->pending_output + 1, sock->pending_output_len * sizeof (SDLNet_Datagram *));
+        SDL_memmove(sock->pending_output, sock->pending_output + 1, sock->pending_output_len * sizeof (NET_Datagram *));
         sock->pending_output[sock->pending_output_len] = NULL;
     }
 
-    return 0;
+    return true;
 }
 
 
-bool SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint16 port, const void *buf, int buflen)
+bool NET_SendDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, const void *buf, int buflen)
 {
-    if (PumpDatagramSocket(sock) < 0) {  // try to flush any queued data to the socket now, before we handle more.
+    if (!PumpDatagramSocket(sock)) {  // try to flush any queued data to the socket now, before we handle more.
         return false;
     } else if (addr == NULL) {
         return SDL_InvalidParamError("address");
@@ -1445,15 +1452,15 @@ bool SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint
                 return SDL_OutOfMemory();
             }
         }
-        void *ptr = SDL_realloc(sock->pending_output, newlen * sizeof (SDLNet_Datagram *));
+        void *ptr = SDL_realloc(sock->pending_output, newlen * sizeof (NET_Datagram *));
         if (!ptr) {
             return false;
         }
-        sock->pending_output = (SDLNet_Datagram **) ptr;
+        sock->pending_output = (NET_Datagram **) ptr;
         sock->pending_output_allocation = newlen;
     }
 
-    SDLNet_Datagram *dgram = (SDLNet_Datagram *) SDL_malloc(sizeof (SDLNet_Datagram) + buflen);
+    NET_Datagram *dgram = (NET_Datagram *) SDL_malloc(sizeof (NET_Datagram) + buflen);
     if (!dgram) {
         return false;
     }
@@ -1461,7 +1468,7 @@ bool SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint
     dgram->buf = (Uint8 *) (dgram+1);
     SDL_memcpy(dgram->buf, buf, buflen);
 
-    dgram->addr = SDLNet_RefAddress(addr);
+    dgram->addr = NET_RefAddress(addr);
     dgram->port = port;
     dgram->buflen = buflen;
 
@@ -1471,7 +1478,7 @@ bool SDLNet_SendDatagram(SDLNet_DatagramSocket *sock, SDLNet_Address *addr, Uint
 }
 
 
-bool SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram)
+bool NET_ReceiveDatagram(NET_DatagramSocket *sock, NET_Datagram **dgram)
 {
     if (!dgram) {
         return SDL_InvalidParamError("dgram");
@@ -1479,7 +1486,7 @@ bool SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram
 
     *dgram = NULL;
 
-    if (PumpDatagramSocket(sock) < 0) {  // try to flush any queued data to the socket now, before we go further.
+    if (!PumpDatagramSocket(sock)) {  // try to flush any queued data to the socket now, before we go further.
         return false;
     }
 
@@ -1503,10 +1510,10 @@ bool SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram
     }
 
     // Cache the last X addresses we saw; if we see it again, refcount it and reuse it.
-    SDLNet_Address *fromaddr = NULL;
+    NET_Address *fromaddr = NULL;
     for (int i = sock->latest_recv_addrs_idx - 1; i >= 0; i--) {
         SDL_assert(sock->latest_recv_addrs != NULL);
-        SDLNet_Address *a = sock->latest_recv_addrs[i];
+        NET_Address *a = sock->latest_recv_addrs[i];
         SDL_assert(a != NULL);  // can't be NULL, we either set this before or wrapped around to set again, but it can't be NULL.
         if (SDL_strcmp(a->human_readable, hostbuf) == 0) {
             fromaddr = a;
@@ -1517,7 +1524,7 @@ bool SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram
     if (!fromaddr) {
         const int idx = sock->latest_recv_addrs_idx;
         for (int i = SDL_arraysize(sock->latest_recv_addrs) - 1; i >= idx; i--) {
-            SDLNet_Address *a = sock->latest_recv_addrs[i];
+            NET_Address *a = sock->latest_recv_addrs[i];
             if (a == NULL) {
                 break;  // ran out of already-seen entries.
             }
@@ -1536,17 +1543,17 @@ bool SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram
         }
     }
 
-    SDLNet_Datagram *dg = SDL_malloc(sizeof (SDLNet_Datagram) + br);
+    NET_Datagram *dg = SDL_malloc(sizeof (NET_Datagram) + br);
     if (!dg) {
         if (create_fromaddr) {
-            SDLNet_UnrefAddress(fromaddr);
+            NET_UnrefAddress(fromaddr);
         }
         return false;
     }
 
     dg->buf = (Uint8 *) (dg+1);
     SDL_memcpy(dg->buf, sock->recv_buffer, br);
-    dg->addr = create_fromaddr ? fromaddr : SDLNet_RefAddress(fromaddr);
+    dg->addr = create_fromaddr ? fromaddr : NET_RefAddress(fromaddr);
     dg->port = (Uint16) SDL_atoi(portbuf);
     dg->buflen = br;
 
@@ -1554,23 +1561,23 @@ bool SDLNet_ReceiveDatagram(SDLNet_DatagramSocket *sock, SDLNet_Datagram **dgram
 
     if (create_fromaddr) {
         // keep track of the last X addresses we saw.
-        SDLNet_UnrefAddress(sock->latest_recv_addrs[sock->latest_recv_addrs_idx]);  // okay if "oldest" address slot is still NULL.
-        sock->latest_recv_addrs[sock->latest_recv_addrs_idx++] = SDLNet_RefAddress(fromaddr);
+        NET_UnrefAddress(sock->latest_recv_addrs[sock->latest_recv_addrs_idx]);  // okay if "oldest" address slot is still NULL.
+        sock->latest_recv_addrs[sock->latest_recv_addrs_idx++] = NET_RefAddress(fromaddr);
         sock->latest_recv_addrs_idx %= SDL_arraysize(sock->latest_recv_addrs);
     }
 
     return true;
 }
 
-void SDLNet_DestroyDatagram(SDLNet_Datagram *dgram)
+void NET_DestroyDatagram(NET_Datagram *dgram)
 {
     if (dgram) {
-        SDLNet_UnrefAddress(dgram->addr);
+        NET_UnrefAddress(dgram->addr);
         SDL_free(dgram);  // the buffer is allocated in the same block as the main struct.
     }
 }
 
-void SDLNet_SimulateDatagramPacketLoss(SDLNet_DatagramSocket *sock, int percent_loss)
+void NET_SimulateDatagramPacketLoss(NET_DatagramSocket *sock, int percent_loss)
 {
     if (!sock) {
         return;
@@ -1583,7 +1590,7 @@ void SDLNet_SimulateDatagramPacketLoss(SDLNet_DatagramSocket *sock, int percent_
     sock->percent_loss = percent_loss;
 }
 
-void SDLNet_DestroyDatagramSocket(SDLNet_DatagramSocket *sock)
+void NET_DestroyDatagramSocket(NET_DatagramSocket *sock)
 {
     if (sock) {
         PumpDatagramSocket(sock);  // try one last time to send any last pending data.
@@ -1592,31 +1599,33 @@ void SDLNet_DestroyDatagramSocket(SDLNet_DatagramSocket *sock)
             CloseSocketHandle(sock->handle);  // !!! FIXME: what does this do with non-blocking sockets? Release the descriptor but the kernel continues sending queued buffers behind the scenes?
         }
         for (int i = 0; i < ((int) SDL_arraysize(sock->latest_recv_addrs)); i++) {
-            SDLNet_UnrefAddress(sock->latest_recv_addrs[i]);
+            NET_UnrefAddress(sock->latest_recv_addrs[i]);
         }
         for (int i = 0; i < sock->pending_output_len; i++) {
-            SDLNet_DestroyDatagram(sock->pending_output[i]);
+            NET_DestroyDatagram(sock->pending_output[i]);
         }
-        SDLNet_UnrefAddress(sock->addr);
+        NET_UnrefAddress(sock->addr);
         SDL_free(sock->pending_output);
         SDL_free(sock);
     }
 }
 
-typedef union SDLNet_GenericSocket
+typedef union NET_GenericSocket
 {
-    SDLNet_SocketType socktype;
-    SDLNet_StreamSocket stream;
-    SDLNet_DatagramSocket dgram;
-    SDLNet_Server server;
-} SDLNet_GenericSocket;
+    NET_SocketType socktype;
+    NET_StreamSocket stream;
+    NET_DatagramSocket dgram;
+    NET_Server server;
+} NET_GenericSocket;
 
 
-int SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
+int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
 {
-    SDLNet_GenericSocket **sockets = (SDLNet_GenericSocket **) vsockets;
+    NET_GenericSocket **sockets = (NET_GenericSocket **) vsockets;
     if (!sockets) {
         return SDL_InvalidParamError("sockets");
+    } else if (numsockets < 0) {
+        return SDL_InvalidParamError("numsockets");
     } else if (numsockets == 0) {
         return 0;
     }
@@ -1640,7 +1649,7 @@ int SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutm
         SDL_memset(pfds, '\0', sizeof (*pfds) * numsockets);
 
         for (int i = 0; i < numsockets; i++) {
-            SDLNet_GenericSocket *sock = sockets[i];
+            NET_GenericSocket *sock = sockets[i];
             struct pollfd *pfd = &pfds[i];
 
             switch (sock->socktype) {
@@ -1679,7 +1688,7 @@ int SDLNet_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutm
         }
 
         for (int i = 0; i < numsockets; i++) {
-            SDLNet_GenericSocket *sock = sockets[i];
+            NET_GenericSocket *sock = sockets[i];
             const struct pollfd *pfd = &pfds[i];
             const bool failed = ((pfd->revents & (POLLERR|POLLHUP|POLLNVAL)) != 0) ? true : false;
             const bool writable = (pfd->revents & POLLOUT) ? true : false;

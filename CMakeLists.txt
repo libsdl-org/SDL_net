@@ -281,7 +281,7 @@ if(SDLNET_INSTALL)
         sdl_get_git_revision_hash(SDLNET_REVISION)
         SDL_generate_manpages(
             HEADERS_DIR "${PROJECT_SOURCE_DIR}/include/SDL3_net"
-            SYMBOL "SDLNet_Init"
+            SYMBOL "NET_Init"
             WIKIHEADERS_PL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build-scripts/wikiheaders.pl"
             REVISION "${SDLNET_REVISION}"
         )

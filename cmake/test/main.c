@@ -9,11 +9,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (!SDLNet_Init()) {
-        SDL_Log("SDL_Net_Init() failed: %s", SDL_GetError());
+    if (!NET_Init()) {
+        SDL_Log("NET_Init() failed: %s", SDL_GetError());
     }
 
-    SDLNet_Quit();
+    NET_Quit();
     SDL_Quit();
     return 0;
 }
