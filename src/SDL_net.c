@@ -93,7 +93,7 @@ typedef enum NET_SocketType
 } NET_SocketType;
 
 
-int NET_GetVersion(void)
+int NET_Version(void)
 {
     return SDL_NET_VERSION;
 }
