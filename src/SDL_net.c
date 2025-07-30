@@ -121,21 +121,11 @@ static SDL_AtomicInt resolver_num_threads;
 static SDL_AtomicInt resolver_num_requests;
 static SDL_AtomicInt resolver_percent_loss;
 
-// I really want an SDL_random().  :(
-static int random_seed = 0;
-static int RandomNumber(void)
-{
-    // this is POSIX.1-2001's potentially bad suggestion, but we're not exactly doing cryptography here.
-    random_seed = random_seed * 1103515245 + 12345;
-    return (int) ((unsigned int) (random_seed / 65536) % 32768);
-}
-
 // between lo and hi (inclusive; it can return lo or hi itself, too!).
 static int RandomNumberBetween(const int lo, const int hi)
 {
-    return (RandomNumber() % (hi + 1 - lo)) + lo;
+    return SDL_rand(((hi + 1) - lo)) + lo;
 }
-
 
 static int CloseSocketHandle(Socket handle)
 {
@@ -424,8 +414,6 @@ bool NET_Init(void)
             goto failed;
         }
     }
-
-    random_seed = (int) ((unsigned int) (SDL_GetPerformanceCounter() & 0xFFFFFFFF));
 
     return true;  // good to go.
 
