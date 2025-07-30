@@ -127,6 +127,14 @@ static int RandomNumberBetween(const int lo, const int hi)
     return SDL_rand(((hi + 1) - lo)) + lo;
 }
 
+static bool ShouldSimulateLoss(const int percent_likely_to_lose)
+{
+    // these should be clamped when assigning them.
+    SDL_assert(percent_likely_to_lose >= 0);
+    SDL_assert(percent_likely_to_lose <= 100);
+    return (percent_likely_to_lose > 0) ? (RandomNumberBetween(0, 100) < percent_likely_to_lose) : false;
+}
+
 static int CloseSocketHandle(Socket handle)
 {
 #ifdef _WIN32
@@ -269,17 +277,17 @@ static int SDLCALL ResolverThread(void *data)
 
         const int simulated_loss = SDL_GetAtomicInt(&resolver_percent_loss);
 
-        if (simulated_loss && (RandomNumberBetween(0, 100) > simulated_loss)) {
+        if (ShouldSimulateLoss(simulated_loss)) {
             // won the percent_loss lottery? Delay resolving this address between 250 and 7000 milliseconds
             SDL_Delay(RandomNumberBetween(250, 2000 + (50 * simulated_loss)));
         }
 
         int outcome;
-        if (!simulated_loss || (RandomNumberBetween(0, 100) > simulated_loss)) {
-            outcome = ResolveAddress(addr);            
-        } else {
+        if (ShouldSimulateLoss(simulated_loss)) {
             outcome = -1;
             addr->errstr = SDL_strdup("simulated failure");
+        } else {
+            outcome = ResolveAddress(addr);
         }
 
         SDL_SetAtomicInt(&addr->status, outcome);
@@ -627,9 +635,7 @@ void NET_UnrefAddress(NET_Address *addr)
 
 void NET_SimulateAddressResolutionLoss(int percent_loss)
 {
-    percent_loss = SDL_min(100, percent_loss);
-    percent_loss = SDL_max(0, percent_loss);
-    SDL_SetAtomicInt(&resolver_percent_loss, percent_loss);
+    SDL_SetAtomicInt(&resolver_percent_loss, SDL_clamp(percent_loss, 0, 100));
 }
 
 NET_Address **NET_GetLocalAddresses(int *num_addresses)
@@ -1065,7 +1071,7 @@ NET_Address *NET_GetStreamSocketAddress(NET_StreamSocket *sock)
 
 static void UpdateStreamSocketSimulatedFailure(NET_StreamSocket *sock)
 {
-    if (sock->percent_loss && (RandomNumberBetween(0, 100) > sock->percent_loss)) {
+    if (ShouldSimulateLoss(sock->percent_loss)) {
         // won the percent_loss lottery? Refuse to move more data for between 250 and 7000 milliseconds.
         sock->simulated_failure_until = SDL_GetTicks() + (Uint64) (RandomNumberBetween(250, 2000 + (50 * sock->percent_loss)));
     } else {
@@ -1233,9 +1239,7 @@ void NET_SimulateStreamPacketLoss(NET_StreamSocket *sock, int percent_loss)
 
     PumpStreamSocket(sock);
 
-    percent_loss = SDL_min(100, percent_loss);
-    percent_loss = SDL_max(0, percent_loss);
-    sock->percent_loss = percent_loss;
+    sock->percent_loss = SDL_clamp(percent_loss, 0, 100);
 
     UpdateStreamSocketSimulatedFailure(sock);
 }
@@ -1391,7 +1395,7 @@ bool NET_SendDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, 
         return SDL_SetError("buffer is too large to send in a single datagram packet");
     } else if (buflen == 0) {
         return true;  // nothing to do.  (!!! FIXME: but strictly speaking, a UDP packet with no payload is legal.)
-    } else if (sock->percent_loss && (RandomNumberBetween(0, 100) > sock->percent_loss)) {
+    } else if (ShouldSimulateLoss(sock->percent_loss)) {
         return true;  // you won the percent_loss lottery. Drop this packet as if you sent it and it never arrived.
     }
 
@@ -1460,7 +1464,7 @@ bool NET_ReceiveDatagram(NET_DatagramSocket *sock, NET_Datagram **dgram)
     if (br == SOCKET_ERROR) {
         const int err = LastSocketError();
         return WouldBlock(err) ? true : SetSocketErrorBool("Failed to receive datagrams", err);
-    } else if (sock->percent_loss && (RandomNumberBetween(0, 100) > sock->percent_loss)) {
+    } else if (ShouldSimulateLoss(sock->percent_loss)) {
         // you won the percent_loss lottery. Drop this packet as if it never arrived.
         return true;
     }
@@ -1548,9 +1552,7 @@ void NET_SimulateDatagramPacketLoss(NET_DatagramSocket *sock, int percent_loss)
 
     PumpDatagramSocket(sock);
 
-    percent_loss = SDL_min(100, percent_loss);
-    percent_loss = SDL_max(0, percent_loss);
-    sock->percent_loss = percent_loss;
+    sock->percent_loss = SDL_clamp(percent_loss, 0, 100);
 }
 
 void NET_DestroyDatagramSocket(NET_DatagramSocket *sock)
