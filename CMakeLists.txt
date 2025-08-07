@@ -85,7 +85,6 @@ add_library(SDL2_net
 )
 
 add_library(SDL2_net::${sdl2_net_export_name} ALIAS SDL2_net)
-sdl_add_platform_link_options(SDL2_net)
 target_include_directories(SDL2_net
   PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/src"
@@ -292,17 +291,14 @@ if(SDL2NET_SAMPLES)
     add_executable(showinterfaces examples/showinterfaces.c)
     target_compile_definitions(showinterfaces PRIVATE SDL_MAIN_HANDLED)
     target_link_libraries(showinterfaces PRIVATE SDL2_net::${sdl2_net_export_name} ${sdl2_target_name})
-    sdl_add_platform_link_options(showinterfaces)
 
     add_executable(chat examples/chat.c examples/chat.h)
     if(TARGET SDL2::SDL2main)
         target_link_libraries(chat PRIVATE SDL2::SDL2main)
     endif()
     target_link_libraries(chat PRIVATE SDL2_net::${sdl2_net_export_name} SDL2::SDL2test ${sdl2_target_name})
-    sdl_add_platform_link_options(chat)
 
     add_executable(chatd examples/chatd.c examples/chat.h)
     target_compile_definitions(chatd PRIVATE SDL_MAIN_HANDLED)
     target_link_libraries(chatd PRIVATE SDL2_net::${sdl2_net_export_name} ${sdl2_target_name})
-    sdl_add_platform_link_options(chatd)
 endif()
