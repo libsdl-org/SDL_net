@@ -34,7 +34,7 @@ int main(int argc, char **argv)
                 SDL_Log("Failed to create stream socket to %s: %s\n", argv[i], SDL_GetError());
             } else if (NET_WaitUntilConnected(sock, -1) < 0) {
                 SDL_Log("Failed to connect to %s: %s", argv[i], SDL_GetError());
-            } else if (!NET_WriteToStreamSocket(sock, req, SDL_strlen(req))) {
+            } else if (!NET_WriteToStreamSocket(sock, req, (int) SDL_strlen(req))) {
                 SDL_Log("Failed to write to %s: %s", argv[i], SDL_GetError());
             } else if (NET_WaitUntilStreamSocketDrained(sock, -1) < 0) {
                 SDL_Log("Failed to finish write to %s: %s", argv[i], SDL_GetError());
