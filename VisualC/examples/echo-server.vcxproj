@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{A01E2216-139A-480E-8458-03CB4E90FE61}</ProjectGuid>
+    <ProjectGuid>{DFDBDF0E-87C3-4421-B6D1-90B2C5C28C2B}</ProjectGuid>
     <RootNamespace>echo-server</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
