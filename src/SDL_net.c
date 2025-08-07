@@ -237,7 +237,7 @@ static NET_Status ResolveAddress(NET_Address *addr)
     }
 
     char buf[128];
-    rc = getnameinfo(ainfo->ai_addr, ainfo->ai_addrlen, buf, sizeof (buf), NULL, 0, NI_NUMERICHOST);
+    rc = getnameinfo(ainfo->ai_addr, (socklen_t) ainfo->ai_addrlen, buf, sizeof (buf), NULL, 0, NI_NUMERICHOST);
     if (rc != 0) {
         addr->errstr = CreateGetAddrInfoErrorString(rc);
         freeaddrinfo(ainfo);
@@ -546,7 +546,7 @@ int NET_WaitUntilResolved(NET_Address *addr, Sint32 timeout)
                 if (now >= endtime) {
                     break;
                 }
-                SDL_WaitConditionTimeout(resolver_condition, resolver_lock, (Uint64) (endtime - now));
+                SDL_WaitConditionTimeout(resolver_condition, resolver_lock, (Sint32) (endtime - now));
             }
         }
         SDL_UnlockMutex(resolver_lock);
@@ -872,7 +872,7 @@ NET_StreamSocket *NET_CreateClient(NET_Address *addr, Uint16 port)
         return NULL;
     }
 
-    const int rc = connect(sock->handle, addrwithport->ai_addr, addrwithport->ai_addrlen);
+    const int rc = connect(sock->handle, addrwithport->ai_addr, (SockLen) addrwithport->ai_addrlen);
 
     freeaddrinfo(addrwithport);
 
@@ -995,7 +995,7 @@ NET_Server *NET_CreateServer(NET_Address *addr, Uint16 port)
             setsockopt(handle, IPPROTO_IPV6, IPV6_V6ONLY, (const char *) &one, sizeof (one));  // if this fails, oh well.
         }
 
-        int rc = bind(handle, ainfo->ai_addr, ainfo->ai_addrlen);
+        int rc = bind(handle, ainfo->ai_addr, (SockLen) ainfo->ai_addrlen);
         if (rc == SOCKET_ERROR) {
             const int err = LastSocketError();
             SDL_assert(!WouldBlock(err));  // binding shouldn't be a blocking operation.
@@ -1410,7 +1410,7 @@ for (struct addrinfo *i = addrwithport; i != NULL; i = i->ai_next) {
             setsockopt(handle, IPPROTO_IPV6, IPV6_V6ONLY, (const char *) &one, sizeof (one));  // if this fails, oh well.
         }
 
-        const int rc = bind(handle, ainfo->ai_addr, ainfo->ai_addrlen);
+        const int rc = bind(handle, ainfo->ai_addr, (SockLen) ainfo->ai_addrlen);
         if (rc == SOCKET_ERROR) {
             const int err = LastSocketError();
             SDL_assert(!WouldBlock(err));  // binding shouldn't be a blocking operation.
@@ -1446,7 +1446,7 @@ static NET_Status SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, U
     for (int i = 0; i < sock->num_handles; i++) {
         const NET_DatagramSocketHandle *handle = &sock->handles[i];
         if ((handle->family == family) && (handle->protocol == protocol)) {  // !!! FIXME: strictly speaking, this _probably_ just needs to check `family`, right?
-            const int rc = sendto(handle->handle, buf, (size_t) buflen, 0, addrwithport->ai_addr, addrwithport->ai_addrlen);
+            const int rc = sendto(handle->handle, buf, (size_t) buflen, 0, addrwithport->ai_addr, (SockLen) addrwithport->ai_addrlen);
             const int err = (rc == SOCKET_ERROR) ? LastSocketError() : 0;
             freeaddrinfo(addrwithport);
             if (err != 0) {
