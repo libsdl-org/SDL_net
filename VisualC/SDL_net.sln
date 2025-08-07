@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple-http-get", "examples
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "voipchat", "examples\voipchat.vcxproj", "{A01E2216-139A-480E-8458-03CB4E90FE61}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "echo-server", "examples\echo-server.vcxproj", "{DFDBDF0E-87C3-4421-B6D1-90B2C5C28C2B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
