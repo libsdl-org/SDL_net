@@ -995,7 +995,7 @@ NET_Server *NET_CreateServer(NET_Address *addr, Uint16 port)
             setsockopt(handle, IPPROTO_IPV6, IPV6_V6ONLY, (const char *) &one, sizeof (one));  // if this fails, oh well.
         }
 
-        setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &one, sizeof (one));
+        setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, (const char *) &one, sizeof (one));
 
         int rc = bind(handle, ainfo->ai_addr, (SockLen) ainfo->ai_addrlen);
         if (rc == SOCKET_ERROR) {
@@ -1412,7 +1412,7 @@ for (struct addrinfo *i = addrwithport; i != NULL; i = i->ai_next) {
             setsockopt(handle, IPPROTO_IPV6, IPV6_V6ONLY, (const char *) &one, sizeof (one));  // if this fails, oh well.
         }
 
-        setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &one, sizeof (one));
+        setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, (const char *) &one, sizeof (one));
 
         const int rc = bind(handle, ainfo->ai_addr, (SockLen) ainfo->ai_addrlen);
         if (rc == SOCKET_ERROR) {
