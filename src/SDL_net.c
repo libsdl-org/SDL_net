@@ -1661,13 +1661,10 @@ void NET_DestroyDatagram(NET_Datagram *dgram)
 
 void NET_SimulateDatagramPacketLoss(NET_DatagramSocket *sock, int percent_loss)
 {
-    if (!sock) {
-        return;
+    if (sock) {
+        PumpDatagramSocket(sock);
+        sock->percent_loss = SDL_clamp(percent_loss, 0, 100);
     }
-
-    PumpDatagramSocket(sock);
-
-    sock->percent_loss = SDL_clamp(percent_loss, 0, 100);
 }
 
 void NET_DestroyDatagramSocket(NET_DatagramSocket *sock)
