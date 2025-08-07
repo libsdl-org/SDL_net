@@ -1316,7 +1316,8 @@ extern SDL_DECLSPEC void SDLCALL NET_DestroyDatagramSocket(NET_DatagramSocket *s
  * - NET_Server (reports new input when a connection is ready to be accepted
  *   with NET_AcceptClient())
  * - NET_StreamSocket (reports new input when the remote end has sent more
- *   bytes of data to be read with NET_ReadFromStreamSocket).
+ *   bytes of data to be read with NET_ReadFromStreamSocket, or if the socket
+ *   finished making its initial connection).
  * - NET_DatagramSocket (reports new input when a new packet arrives that can
  *   be read with NET_ReceiveDatagram).
  *

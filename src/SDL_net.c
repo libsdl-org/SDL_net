@@ -237,7 +237,7 @@ static NET_Status ResolveAddress(NET_Address *addr)
     }
 
     char buf[128];
-    rc = getnameinfo(ainfo->ai_addr, ainfo->ai_addrlen, buf, sizeof (buf), NULL, 0, NI_NUMERICHOST);
+    rc = getnameinfo(ainfo->ai_addr, (socklen_t) ainfo->ai_addrlen, buf, sizeof (buf), NULL, 0, NI_NUMERICHOST);
     if (rc != 0) {
         addr->errstr = CreateGetAddrInfoErrorString(rc);
         freeaddrinfo(ainfo);
@@ -546,7 +546,7 @@ int NET_WaitUntilResolved(NET_Address *addr, Sint32 timeout)
                 if (now >= endtime) {
                     break;
                 }
-                SDL_WaitConditionTimeout(resolver_condition, resolver_lock, (Uint64) (endtime - now));
+                SDL_WaitConditionTimeout(resolver_condition, resolver_lock, (Sint32) (endtime - now));
             }
         }
         SDL_UnlockMutex(resolver_lock);
@@ -872,7 +872,7 @@ NET_StreamSocket *NET_CreateClient(NET_Address *addr, Uint16 port)
         return NULL;
     }
 
-    const int rc = connect(sock->handle, addrwithport->ai_addr, addrwithport->ai_addrlen);
+    const int rc = connect(sock->handle, addrwithport->ai_addr, (SockLen) addrwithport->ai_addrlen);
 
     freeaddrinfo(addrwithport);
 
@@ -923,7 +923,9 @@ struct NET_Server
     NET_SocketType socktype;
     NET_Address *addr;  // bound to this address (NULL for any).
     Uint16 port;
-    Socket handle;
+    int num_handles;   // for INADDR_ANY things, one handle per network family.
+    Socket *handles;
+    Socket handle_pool[4];
 };
 
 NET_Server *NET_CreateServer(NET_Address *addr, Uint16 port)
@@ -933,8 +935,14 @@ NET_Server *NET_CreateServer(NET_Address *addr, Uint16 port)
         return NULL;
     }
 
+    struct addrinfo *addrwithport = MakeAddrInfoWithPort(addr, SOCK_STREAM, port);
+    if (!addrwithport) {
+        return NULL;
+    }
+
     NET_Server *server = (NET_Server *) SDL_calloc(1, sizeof (NET_Server));
     if (!server) {
+        freeaddrinfo(addrwithport);
         return NULL;
     }
 
@@ -942,55 +950,83 @@ NET_Server *NET_CreateServer(NET_Address *addr, Uint16 port)
     server->addr = addr;
     server->port = port;
 
-    struct addrinfo *addrwithport = MakeAddrInfoWithPort(addr, SOCK_STREAM, port);
-    if (!addrwithport) {
-        SDL_free(server);
-        return NULL;
+    int num_handles = 0;
+    Socket *allocated_handles = NULL;
+    if (addr != NULL) {
+        num_handles = 1;
+        server->handles = server->handle_pool;
+    } else {  // bind to all interfaces.
+        for (struct addrinfo *i = addrwithport; i != NULL; i = i->ai_next) {
+            num_handles++;
+        }
+        if (num_handles <= (int) SDL_arraysize(server->handle_pool)) {
+            server->handles = server->handle_pool;
+        } else {
+            allocated_handles = (Socket *) SDL_calloc(num_handles, sizeof (*server->handles));
+            if (!allocated_handles) {
+                SDL_free(server);
+                freeaddrinfo(addrwithport);
+                return NULL;
+            }
+            server->handles = allocated_handles;
+        }
     }
 
-    server->handle = socket(addrwithport->ai_family, addrwithport->ai_socktype, addrwithport->ai_protocol);
-    if (server->handle == INVALID_SOCKET) {
-        SetLastSocketError("Failed to create listen socket");
-        freeaddrinfo(addrwithport);
-        SDL_free(server);
-        return NULL;
+    // Make sockets for all desired interfaces; if addr!=NULL, this is one socket on one interface,
+    //  but if addr==NULL, it might be multiple sockets for IPv4, IPv6, etc, bound to their INADDR_ANY equivalent.
+    struct addrinfo *ainfo = addrwithport;
+    for (int i = 0; i < num_handles; i++, ainfo = ainfo->ai_next) {
+        SDL_assert(ainfo != NULL);
+        Socket handle = socket(ainfo->ai_family, ainfo->ai_socktype, ainfo->ai_protocol);
+        if (handle == INVALID_SOCKET) {
+            SetLastSocketError("Failed to create listen socket");
+            goto failed;
+        }
+
+        server->handles[server->num_handles++] = handle;
+
+        if (MakeSocketNonblocking(handle) < 0) {
+            SDL_SetError("Failed to make new listen socket non-blocking");
+            goto failed;
+        }
+
+        const int one = 1;
+        if (ainfo->ai_family == AF_INET6) {
+            setsockopt(handle, IPPROTO_IPV6, IPV6_V6ONLY, (const char *) &one, sizeof (one));  // if this fails, oh well.
+        }
+
+        setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, (const char *) &one, sizeof (one));
+
+        int rc = bind(handle, ainfo->ai_addr, (SockLen) ainfo->ai_addrlen);
+        if (rc == SOCKET_ERROR) {
+            const int err = LastSocketError();
+            SDL_assert(!WouldBlock(err));  // binding shouldn't be a blocking operation.
+            SetSocketError("Failed to bind listen socket", err);
+            goto failed;
+        }
+
+        rc = listen(handle, 16);
+        if (rc == SOCKET_ERROR) {
+            const int err = LastSocketError();
+            SDL_assert(!WouldBlock(err));  // listen shouldn't be a blocking operation.
+            SetSocketError("Failed to listen on socket", err);
+            goto failed;
+        }
     }
 
-    if (MakeSocketNonblocking(server->handle) < 0) {
-        CloseSocketHandle(server->handle);
-        freeaddrinfo(addrwithport);
-        SDL_free(server);
-        SDL_SetError("Failed to make new listen socket non-blocking");
-        return NULL;
-    }
-
-    int zero = 0;
-    setsockopt(server->handle, IPPROTO_IPV6, IPV6_V6ONLY, (const char *) &zero, sizeof (zero));  // if this fails, oh well.
-
-    int rc = bind(server->handle, addrwithport->ai_addr, addrwithport->ai_addrlen);
     freeaddrinfo(addrwithport);
-
-    if (rc == SOCKET_ERROR) {
-        const int err = LastSocketError();
-        SDL_assert(!WouldBlock(err));  // binding shouldn't be a blocking operation.
-        SetSocketError("Failed to bind listen socket", err);
-        CloseSocketHandle(server->handle);
-        SDL_free(server);
-        return NULL;
-    }
-
-    rc = listen(server->handle, 16);
-    if (rc == SOCKET_ERROR) {
-        const int err = LastSocketError();
-        SDL_assert(!WouldBlock(err));  // listen shouldn't be a blocking operation.
-        SetSocketError("Failed to listen on socket", err);
-        CloseSocketHandle(server->handle);
-        SDL_free(server);
-        return NULL;
-    }
 
     NET_RefAddress(addr);
     return server;
+
+failed:
+    for (int i = 0; i < server->num_handles; i++) {
+        CloseSocketHandle(server->handles[i]);
+    }
+    freeaddrinfo(addrwithport);
+    SDL_free(allocated_handles);
+    SDL_free(server);
+    return NULL;
 }
 
 bool NET_AcceptClient(NET_Server *server, NET_StreamSocket **client_stream)
@@ -1005,60 +1041,71 @@ bool NET_AcceptClient(NET_Server *server, NET_StreamSocket **client_stream)
         return SDL_InvalidParamError("server");
     }
 
-    AddressStorage from;
-    SockLen fromlen = sizeof (from);
-    const Socket handle = accept(server->handle, (struct sockaddr *) &from, &fromlen);
-    if (handle == INVALID_SOCKET) {
-        const int err = LastSocketError();
-        return WouldBlock(err) ? true : SetSocketErrorBool("Failed to accept new connection", err);
+    for (int i = 0; i < server->num_handles; i++) {
+        AddressStorage from;
+        SockLen fromlen = sizeof (from);
+        const Socket handle = accept(server->handles[i], (struct sockaddr *) &from, &fromlen);
+        if (handle == INVALID_SOCKET) {
+            const int err = LastSocketError();
+            if (WouldBlock(err)) {
+                continue;
+            }
+            return SetSocketErrorBool("Failed to accept new connection", err);
+        }
+
+        if (MakeSocketNonblocking(handle) < 0) {
+            CloseSocketHandle(handle);
+            return SDL_SetError("Failed to make incoming socket non-blocking");
+        }
+
+        char portbuf[16];
+        const int gairc = getnameinfo((struct sockaddr *) &from, fromlen, NULL, 0, portbuf, sizeof (portbuf), NI_NUMERICSERV);
+        if (gairc != 0) {
+            CloseSocketHandle(handle);
+            return SetGetAddrInfoErrorBool("Failed to determine port number", gairc);
+        }
+
+        NET_Address *fromaddr = CreateSDLNetAddrFromSockAddr((struct sockaddr *) &from, fromlen);
+        if (!fromaddr) {
+            CloseSocketHandle(handle);
+            return false;  // error string was already set.
+        }
+
+        NET_StreamSocket *sock = (NET_StreamSocket *) SDL_calloc(1, sizeof (NET_StreamSocket));
+        if (!sock) {
+            NET_UnrefAddress(fromaddr);
+            CloseSocketHandle(handle);
+            return false;
+        }
+
+        sock->socktype = SOCKETTYPE_STREAM;
+        sock->addr = fromaddr;
+        sock->port = (Uint16) SDL_atoi(portbuf);
+        sock->handle = handle;
+        sock->status = 1;  // connected
+
+        *client_stream = sock;
+        return true;  // we got one!
     }
 
-    if (MakeSocketNonblocking(handle) < 0) {
-        CloseSocketHandle(handle);
-        return SDL_SetError("Failed to make incoming socket non-blocking");
-    }
-
-    char portbuf[16];
-    const int gairc = getnameinfo((struct sockaddr *) &from, fromlen, NULL, 0, portbuf, sizeof (portbuf), NI_NUMERICSERV);
-    if (gairc != 0) {
-        CloseSocketHandle(handle);
-        return SetGetAddrInfoErrorBool("Failed to determine port number", gairc);
-    }
-
-    NET_Address *fromaddr = CreateSDLNetAddrFromSockAddr((struct sockaddr *) &from, fromlen);
-    if (!fromaddr) {
-        CloseSocketHandle(handle);
-        return false;  // error string was already set.
-    }
-
-    NET_StreamSocket *sock = (NET_StreamSocket *) SDL_calloc(1, sizeof (NET_StreamSocket));
-    if (!sock) {
-        NET_UnrefAddress(fromaddr);
-        CloseSocketHandle(handle);
-        return false;
-    }
-
-    sock->socktype = SOCKETTYPE_STREAM;
-    sock->addr = fromaddr;
-    sock->port = (Uint16) SDL_atoi(portbuf);
-    sock->handle = handle;
-    sock->status = 1;  // connected
-
-    *client_stream = sock;
-    return true;
+    return true;  // nothing new.
 }
 
 void NET_DestroyServer(NET_Server *server)
 {
     if (server) {
-        if (server->handle != INVALID_SOCKET) {
-            CloseSocketHandle(server->handle);
+        for (int i = 0; i < server->num_handles; i++) {
+            if (server->handles[i] != INVALID_SOCKET) {
+                CloseSocketHandle(server->handles[i]);
+            }
+        }
+        if (server->handles != server->handle_pool) {
+            SDL_free(server->handles);
         }
         NET_UnrefAddress(server->addr);
         SDL_free(server);
     }
 }
-
 
 NET_Address *NET_GetStreamSocketAddress(NET_StreamSocket *sock)
 {
@@ -1259,21 +1306,28 @@ void NET_DestroyStreamSocket(NET_StreamSocket *sock)
     }
 }
 
-
+typedef struct NET_DatagramSocketHandle
+{
+    Socket handle;
+    int family;
+    int protocol;
+} NET_DatagramSocketHandle;
 
 struct NET_DatagramSocket
 {
     NET_SocketType socktype;
     NET_Address *addr;  // bound to this address (NULL for any).
     Uint16 port;
-    Socket handle;
     int percent_loss;
     Uint8 recv_buffer[64*1024];
+    NET_Address *latest_recv_addrs[64];
+    int latest_recv_addrs_idx;
+    int num_handles;   // for INADDR_ANY things, one handle (etc) per network family.
+    NET_DatagramSocketHandle *handles;
+    NET_DatagramSocketHandle handle_pool[4];
     NET_Datagram **pending_output;
     int pending_output_len;
     int pending_output_allocation;
-    NET_Address *latest_recv_addrs[64];
-    int latest_recv_addrs_idx;
 };
 
 
@@ -1284,8 +1338,14 @@ NET_DatagramSocket *NET_CreateDatagramSocket(NET_Address *addr, Uint16 port)
         return NULL;
     }
 
+    struct addrinfo *addrwithport = MakeAddrInfoWithPort(addr, SOCK_DGRAM, port);
+    if (!addrwithport) {
+        return NULL;
+    }
+
     NET_DatagramSocket *sock = (NET_DatagramSocket *) SDL_calloc(1, sizeof (NET_DatagramSocket));
     if (!sock) {
+        freeaddrinfo(addrwithport);
         return NULL;
     }
 
@@ -1293,45 +1353,89 @@ NET_DatagramSocket *NET_CreateDatagramSocket(NET_Address *addr, Uint16 port)
     sock->addr = addr;
     sock->port = port;
 
-    struct addrinfo *addrwithport = MakeAddrInfoWithPort(addr, SOCK_DGRAM, port);
-    if (!addrwithport) {
-        SDL_free(sock);
-        return NULL;
+    int num_handles = 0;
+    NET_DatagramSocketHandle *allocated_handles = NULL;
+    if (addr != NULL) {
+        num_handles = 1;
+        sock->handles = sock->handle_pool;
+    } else {  // bind to all interfaces.
+        for (struct addrinfo *i = addrwithport; i != NULL; i = i->ai_next) {
+            num_handles++;
+        }
+        if (num_handles <= (int) SDL_arraysize(sock->handle_pool)) {
+            sock->handles = sock->handle_pool;
+        } else {
+            allocated_handles = (NET_DatagramSocketHandle *) SDL_calloc(num_handles, sizeof (*sock->handles));
+            if (!allocated_handles) {
+                SDL_free(sock);
+                freeaddrinfo(addrwithport);
+                return NULL;
+            }
+            sock->handles = allocated_handles;
+        }
     }
 
-    sock->handle = socket(addrwithport->ai_family, addrwithport->ai_socktype, addrwithport->ai_protocol);
-    if (sock->handle == INVALID_SOCKET) {
-        SetLastSocketError("Failed to create socket");
-        freeaddrinfo(addrwithport);
-        SDL_free(sock);
-        return NULL;
+for (struct addrinfo *i = addrwithport; i != NULL; i = i->ai_next) {
+    SDL_Log("addr:");
+    SDL_Log(" - ai_flags: %d", i->ai_flags);
+    SDL_Log(" - ai_family: %d", i->ai_family);
+    SDL_Log(" - ai_socktype: %d", i->ai_socktype);
+    SDL_Log(" - ai_protocol: %d", i->ai_protocol);
+    SDL_Log(" - ai_canonname: '%s'", i->ai_canonname);
+}
+
+
+    // Make sockets for all desired interfaces; if addr!=NULL, this is one socket on one interface,
+    //  but if addr==NULL, it might be multiple sockets for IPv4, IPv6, etc, bound to their INADDR_ANY equivalent.
+    struct addrinfo *ainfo = addrwithport;
+    for (int i = 0; i < num_handles; i++, ainfo = ainfo->ai_next) {
+        SDL_assert(ainfo != NULL);
+        Socket handle = socket(ainfo->ai_family, ainfo->ai_socktype, ainfo->ai_protocol);
+
+        if (handle == INVALID_SOCKET) {
+            SetLastSocketError("Failed to create socket");
+            goto failed;
+        }
+
+        sock->handles[sock->num_handles].handle = handle;
+        sock->handles[sock->num_handles].family = ainfo->ai_family;
+        sock->handles[sock->num_handles].protocol = ainfo->ai_protocol;
+        sock->num_handles++;
+
+        if (MakeSocketNonblocking(handle) < 0) {
+            SDL_SetError("Failed to make new socket non-blocking");
+            goto failed;
+        }
+
+        const int one = 1;
+        if (ainfo->ai_family == AF_INET6) {
+            setsockopt(handle, IPPROTO_IPV6, IPV6_V6ONLY, (const char *) &one, sizeof (one));  // if this fails, oh well.
+        }
+
+        setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, (const char *) &one, sizeof (one));
+
+        const int rc = bind(handle, ainfo->ai_addr, (SockLen) ainfo->ai_addrlen);
+        if (rc == SOCKET_ERROR) {
+            const int err = LastSocketError();
+            SDL_assert(!WouldBlock(err));  // binding shouldn't be a blocking operation.
+            SetSocketError("Failed to bind socket", err);
+            goto failed;
+        }
     }
 
-    if (MakeSocketNonblocking(sock->handle) < 0) {
-        CloseSocketHandle(sock->handle);
-        freeaddrinfo(addrwithport);
-        SDL_free(sock);
-        SDL_SetError("Failed to make new socket non-blocking");
-        return NULL;
-    }
-
-    int zero = 0;
-    setsockopt(sock->handle, IPPROTO_IPV6, IPV6_V6ONLY, (const char *) &zero, sizeof (zero));  // if this fails, oh well.
-
-    const int rc = bind(sock->handle, addrwithport->ai_addr, addrwithport->ai_addrlen);
     freeaddrinfo(addrwithport);
-
-    if (rc == SOCKET_ERROR) {
-        const int err = LastSocketError();
-        SDL_assert(!WouldBlock(err));  // binding shouldn't be a blocking operation.
-        SetSocketError("Failed to bind socket", err);
-        CloseSocketHandle(sock->handle);
-        SDL_free(sock);
-        return NULL;
-    }
 
     NET_RefAddress(addr);
     return sock;
+
+failed:
+    for (int i = 0; i < sock->num_handles; i++) {
+        CloseSocketHandle(sock->handles[i].handle);
+    }
+    freeaddrinfo(addrwithport);
+    SDL_free(allocated_handles);
+    SDL_free(sock);
+    return NULL;
 }
 
 static NET_Status SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, const void *buf, int buflen)
@@ -1340,16 +1444,25 @@ static NET_Status SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, U
     if (!addrwithport) {
         return NET_FAILURE;
     }
-    const int rc = sendto(sock->handle, buf, (size_t) buflen, 0, addrwithport->ai_addr, addrwithport->ai_addrlen);
-    freeaddrinfo(addrwithport);
 
-    if (rc == SOCKET_ERROR) {
-        const int err = LastSocketError();
-        return WouldBlock(err) ? NET_WOULDBLOCK : SetSocketError("Failed to send from socket", err);
+    const int family = addrwithport->ai_family;
+    const int protocol = addrwithport->ai_protocol;
+    for (int i = 0; i < sock->num_handles; i++) {
+        const NET_DatagramSocketHandle *handle = &sock->handles[i];
+        if ((handle->family == family) && (handle->protocol == protocol)) {  // !!! FIXME: strictly speaking, this _probably_ just needs to check `family`, right?
+            const int rc = sendto(handle->handle, buf, (size_t) buflen, 0, addrwithport->ai_addr, (SockLen) addrwithport->ai_addrlen);
+            const int err = (rc == SOCKET_ERROR) ? LastSocketError() : 0;
+            freeaddrinfo(addrwithport);
+            if (err != 0) {
+                return WouldBlock(err) ? NET_WOULDBLOCK : SetSocketError("Failed to send from socket", err);
+            }
+            SDL_assert(rc == buflen);
+            return NET_SUCCESS;
+        }
     }
 
-    SDL_assert(rc == buflen);
-    return NET_SUCCESS;
+    SDL_SetError("Unsupported network family in destination address");
+    return NET_FAILURE;
 }
 
 // see if any pending data can finally be sent, etc
@@ -1364,13 +1477,13 @@ static bool PumpDatagramSocket(NET_DatagramSocket *sock)
         SDL_assert(sock->pending_output != NULL);
         NET_Datagram *dgram = sock->pending_output[0];
         const NET_Status rc = SendOneDatagram(sock, dgram->addr, dgram->port, dgram->buf, dgram->buflen);
-        if (rc == NET_FAILURE) {  // failure!
+        if (rc == NET_FAILURE) {
             return false;
         } else if (rc == NET_WOULDBLOCK) {
             break;  // stop trying to send packets for now.
         }
 
-        /* else if (rc > 0) */
+        // else if (rc == NET_SUCCESS)
         NET_DestroyDatagram(dgram);
         sock->pending_output_len--;
         SDL_memmove(sock->pending_output, sock->pending_output + 1, sock->pending_output_len * sizeof (NET_Datagram *));
@@ -1379,7 +1492,6 @@ static bool PumpDatagramSocket(NET_DatagramSocket *sock)
 
     return true;
 }
-
 
 bool NET_SendDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, const void *buf, int buflen)
 {
@@ -1406,7 +1518,7 @@ bool NET_SendDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, 
         } else if (rc == NET_SUCCESS) {
             return true;   // successfully sent.
         }
-        // if rc == NET_WOULDBLOCK, it wasn't sent. Queue it for later, below.
+        // if rc==NET_WOULDBLOCK, it wasn't sent, because we would have blocked. Queue it for later, below.
     }
 
     // queue this up for sending later.
@@ -1457,83 +1569,90 @@ bool NET_ReceiveDatagram(NET_DatagramSocket *sock, NET_Datagram **dgram)
         return false;
     }
 
-    AddressStorage from;
-    SockLen fromlen = sizeof (from);
-    // WinSock's recvfrom wants a `char *` buffer instead of `void *`. The cast here is harmless on BSD Sockets.
-    const int br = recvfrom(sock->handle, (char *) sock->recv_buffer, sizeof (sock->recv_buffer), 0, (struct sockaddr *) &from, &fromlen);
-    if (br == SOCKET_ERROR) {
-        const int err = LastSocketError();
-        return WouldBlock(err) ? true : SetSocketErrorBool("Failed to receive datagrams", err);
-    } else if (ShouldSimulateLoss(sock->percent_loss)) {
-        // you won the percent_loss lottery. Drop this packet as if it never arrived.
-        return true;
-    }
-
-    char hostbuf[128];
-    char portbuf[16];
-    const int rc = getnameinfo((struct sockaddr *) &from, fromlen, hostbuf, sizeof (hostbuf), portbuf, sizeof (portbuf), NI_NUMERICHOST | NI_NUMERICSERV);
-    if (rc != 0) {
-        return SetGetAddrInfoErrorBool("Failed to determine incoming packet's address", rc);
-    }
-
-    // Cache the last X addresses we saw; if we see it again, refcount it and reuse it.
-    NET_Address *fromaddr = NULL;
-    for (int i = sock->latest_recv_addrs_idx - 1; i >= 0; i--) {
-        SDL_assert(sock->latest_recv_addrs != NULL);
-        NET_Address *a = sock->latest_recv_addrs[i];
-        SDL_assert(a != NULL);  // can't be NULL, we either set this before or wrapped around to set again, but it can't be NULL.
-        if (SDL_strcmp(a->human_readable, hostbuf) == 0) {
-            fromaddr = a;
-            break;
-        }
-    }
-
-    if (!fromaddr) {
-        const int idx = sock->latest_recv_addrs_idx;
-        for (int i = SDL_arraysize(sock->latest_recv_addrs) - 1; i >= idx; i--) {
-            NET_Address *a = sock->latest_recv_addrs[i];
-            if (a == NULL) {
-                break;  // ran out of already-seen entries.
+    for (int i = 0; i < sock->num_handles; i++) {
+        AddressStorage from;
+        SockLen fromlen = sizeof (from);
+        // WinSock's recvfrom wants a `char *` buffer instead of `void *`. The cast here is harmless on BSD Sockets.
+        const int br = recvfrom(sock->handles[i].handle, (char *) sock->recv_buffer, sizeof (sock->recv_buffer), 0, (struct sockaddr *) &from, &fromlen);
+        if (br == SOCKET_ERROR) {
+            const int err = LastSocketError();
+            if (WouldBlock(err)) {
+                continue;
             }
+            return SetSocketErrorBool("Failed to receive datagrams", err);
+        } else if (ShouldSimulateLoss(sock->percent_loss)) {
+            // you won the percent_loss lottery. Drop this packet as if it never arrived.
+            continue;
+        }
+
+        char hostbuf[128];
+        char portbuf[16];
+        const int rc = getnameinfo((struct sockaddr *) &from, fromlen, hostbuf, sizeof (hostbuf), portbuf, sizeof (portbuf), NI_NUMERICHOST | NI_NUMERICSERV);
+        if (rc != 0) {
+            return SetGetAddrInfoErrorBool("Failed to determine incoming packet's address", rc);
+        }
+
+        // Cache the last X addresses we saw; if we see it again, refcount it and reuse it.
+        NET_Address *fromaddr = NULL;
+        for (int i = sock->latest_recv_addrs_idx - 1; i >= 0; i--) {
+            SDL_assert(sock->latest_recv_addrs != NULL);
+            NET_Address *a = sock->latest_recv_addrs[i];
+            SDL_assert(a != NULL);  // can't be NULL, we either set this before or wrapped around to set again, but it can't be NULL.
             if (SDL_strcmp(a->human_readable, hostbuf) == 0) {
                 fromaddr = a;
                 break;
             }
         }
-    }
 
-    const bool create_fromaddr = (!fromaddr) ? true : false;
-    if (create_fromaddr) {
-        fromaddr = CreateSDLNetAddrFromSockAddr((struct sockaddr *) &from, fromlen);
         if (!fromaddr) {
-            return false;  // already set the error string.
+            const int idx = sock->latest_recv_addrs_idx;
+            for (int i = (int) SDL_arraysize(sock->latest_recv_addrs) - 1; i >= idx; i--) {
+                NET_Address *a = sock->latest_recv_addrs[i];
+                if (a == NULL) {
+                    break;  // ran out of already-seen entries.
+                }
+                if (SDL_strcmp(a->human_readable, hostbuf) == 0) {
+                    fromaddr = a;
+                    break;
+                }
+            }
         }
-    }
 
-    NET_Datagram *dg = SDL_malloc(sizeof (NET_Datagram) + br);
-    if (!dg) {
+        const bool create_fromaddr = (!fromaddr) ? true : false;
         if (create_fromaddr) {
-            NET_UnrefAddress(fromaddr);
+            fromaddr = CreateSDLNetAddrFromSockAddr((struct sockaddr *) &from, fromlen);
+            if (!fromaddr) {
+                return false;  // already set the error string.
+            }
         }
-        return false;
+
+        NET_Datagram *dg = SDL_malloc(sizeof (NET_Datagram) + br);
+        if (!dg) {
+            if (create_fromaddr) {
+                NET_UnrefAddress(fromaddr);
+            }
+            return false;
+        }
+
+        dg->buf = (Uint8 *) (dg+1);
+        SDL_memcpy(dg->buf, sock->recv_buffer, br);
+        dg->addr = create_fromaddr ? fromaddr : NET_RefAddress(fromaddr);
+        dg->port = (Uint16) SDL_atoi(portbuf);
+        dg->buflen = br;
+
+        *dgram = dg;
+
+        if (create_fromaddr) {
+            // keep track of the last X addresses we saw.
+            NET_UnrefAddress(sock->latest_recv_addrs[sock->latest_recv_addrs_idx]);  // okay if "oldest" address slot is still NULL.
+            sock->latest_recv_addrs[sock->latest_recv_addrs_idx++] = NET_RefAddress(fromaddr);
+            sock->latest_recv_addrs_idx %= SDL_arraysize(sock->latest_recv_addrs);
+        }
+
+        return true;  // we got one!
     }
 
-    dg->buf = (Uint8 *) (dg+1);
-    SDL_memcpy(dg->buf, sock->recv_buffer, br);
-    dg->addr = create_fromaddr ? fromaddr : NET_RefAddress(fromaddr);
-    dg->port = (Uint16) SDL_atoi(portbuf);
-    dg->buflen = br;
-
-    *dgram = dg;
-
-    if (create_fromaddr) {
-        // keep track of the last X addresses we saw.
-        NET_UnrefAddress(sock->latest_recv_addrs[sock->latest_recv_addrs_idx]);  // okay if "oldest" address slot is still NULL.
-        sock->latest_recv_addrs[sock->latest_recv_addrs_idx++] = NET_RefAddress(fromaddr);
-        sock->latest_recv_addrs_idx %= SDL_arraysize(sock->latest_recv_addrs);
-    }
-
-    return true;
+    return true;  // nothing new.
 }
 
 void NET_DestroyDatagram(NET_Datagram *dgram)
@@ -1546,13 +1665,10 @@ void NET_DestroyDatagram(NET_Datagram *dgram)
 
 void NET_SimulateDatagramPacketLoss(NET_DatagramSocket *sock, int percent_loss)
 {
-    if (!sock) {
-        return;
+    if (sock) {
+        PumpDatagramSocket(sock);
+        sock->percent_loss = SDL_clamp(percent_loss, 0, 100);
     }
-
-    PumpDatagramSocket(sock);
-
-    sock->percent_loss = SDL_clamp(percent_loss, 0, 100);
 }
 
 void NET_DestroyDatagramSocket(NET_DatagramSocket *sock)
@@ -1560,8 +1676,8 @@ void NET_DestroyDatagramSocket(NET_DatagramSocket *sock)
     if (sock) {
         PumpDatagramSocket(sock);  // try one last time to send any last pending data.
 
-        if (sock->handle != INVALID_SOCKET) {
-            CloseSocketHandle(sock->handle);  // !!! FIXME: what does this do with non-blocking sockets? Release the descriptor but the kernel continues sending queued buffers behind the scenes?
+        for (int i = 0; i < sock->num_handles; i++) {
+            CloseSocketHandle(sock->handles[i].handle);  // !!! FIXME: what does this do with non-blocking sockets? Release the descriptor but the kernel continues sending queued buffers behind the scenes?
         }
         for (int i = 0; i < ((int) SDL_arraysize(sock->latest_recv_addrs)); i++) {
             NET_UnrefAddress(sock->latest_recv_addrs[i]);
@@ -1569,8 +1685,11 @@ void NET_DestroyDatagramSocket(NET_DatagramSocket *sock)
         for (int i = 0; i < sock->pending_output_len; i++) {
             NET_DestroyDatagram(sock->pending_output[i]);
         }
-        NET_UnrefAddress(sock->addr);
         SDL_free(sock->pending_output);
+        if (sock->handles != sock->handle_pool) {
+            SDL_free(sock->handles);
+        }
+        NET_UnrefAddress(sock->addr);
         SDL_free(sock);
     }
 }
@@ -1595,12 +1714,28 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
         return 0;
     }
 
-    struct pollfd stack_pfds[32];
+    struct pollfd stack_pfds[64];
     struct pollfd *pfds = stack_pfds;
     struct pollfd *malloced_pfds = NULL;
 
-    if (numsockets > ((int) SDL_arraysize(stack_pfds))) {  // allocate if there's a _ton_ of these.
-        malloced_pfds = (struct pollfd *) SDL_malloc(numsockets * sizeof (*pfds));
+    int numhandles = 0;
+    for (int i = 0; i < numsockets; i++) {
+        const NET_GenericSocket *sock = sockets[i];
+        switch (sock->socktype) {
+            case SOCKETTYPE_STREAM:
+                numhandles++;
+                break;
+            case SOCKETTYPE_DATAGRAM:
+                numhandles += sock->dgram.num_handles;
+                break;
+            case SOCKETTYPE_SERVER:
+                numhandles += sock->server.num_handles;
+                break;
+        }
+    }
+
+    if (numhandles > ((int) SDL_arraysize(stack_pfds))) {  // allocate if there's a _ton_ of these.
+        malloced_pfds = (struct pollfd *) SDL_malloc(numhandles * sizeof (*pfds));
         if (!malloced_pfds) {
             return -1;
         }
@@ -1611,11 +1746,11 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
     const Uint64 endtime = (timeoutms > 0) ? (SDL_GetTicks() + timeoutms) : 0;
 
     while (true) {
-        SDL_memset(pfds, '\0', sizeof (*pfds) * numsockets);
+        struct pollfd *pfd = &pfds[0];
+        SDL_memset(pfds, '\0', sizeof (*pfds) * numhandles);
 
         for (int i = 0; i < numsockets; i++) {
-            NET_GenericSocket *sock = sockets[i];
-            struct pollfd *pfd = &pfds[i];
+            const NET_GenericSocket *sock = sockets[i];
 
             switch (sock->socktype) {
                 case SOCKETTYPE_STREAM:
@@ -1627,44 +1762,54 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
                     } else {
                         pfd->events = POLLIN;  // poll for input or when we can write more of the pending buffer.
                     }
+                    pfd++;
                     break;
 
                 case SOCKETTYPE_DATAGRAM:
-                    pfd->fd = sock->dgram.handle;
-                    if (sock->dgram.pending_output_len > 0) {
-                        pfd->events = POLLIN|POLLOUT;  // poll for input or when we can write more of the pending buffer.
-                    } else {
-                        pfd->events = POLLIN;  // poll for input or when we can write more of the pending buffer.
+                    for (int j = 0; j < sock->dgram.num_handles; j++) {
+                        pfd->fd = sock->dgram.handles[j].handle;
+                        if (sock->dgram.pending_output_len > 0) {
+                            pfd->events = POLLIN|POLLOUT;  // poll for input or when we can write more of the pending buffer.
+                        } else {
+                            pfd->events = POLLIN;  // poll for input or when we can write more of the pending buffer.
+                        }
+                        pfd++;
                     }
                     break;
 
                 case SOCKETTYPE_SERVER:
-                    pfd->fd = sock->server.handle;
-                    pfd->events = POLLIN;  // poll for new connections.
+                    for (int j = 0; j < sock->server.num_handles; j++) {
+                        pfd->fd = sock->server.handles[j];
+                        pfd->events = POLLIN;  // poll for new connections.
+                        pfd++;
+                    }
                     break;
             }
         }
 
-        const int rc = poll(pfds, numsockets, timeoutms);
+        const int rc = poll(pfds, numhandles, timeoutms);
 
         if (rc == SOCKET_ERROR) {
             SDL_free(malloced_pfds);
             return SetLastSocketError("Socket poll failed");
         }
 
+        pfd = &pfds[0];
         for (int i = 0; i < numsockets; i++) {
             NET_GenericSocket *sock = sockets[i];
-            const struct pollfd *pfd = &pfds[i];
-            const bool failed = ((pfd->revents & (POLLERR|POLLHUP|POLLNVAL)) != 0) ? true : false;
-            const bool writable = (pfd->revents & POLLOUT) ? true : false;
-            const bool readable = (pfd->revents & POLLIN) ? true : false;
-
-            if (readable || failed) {
-                retval++;
-            }
+            bool count_it = false;
 
             switch (sock->socktype) {
-                case SOCKETTYPE_STREAM:
+                case SOCKETTYPE_STREAM: {
+                    SDL_assert(pfd->fd == sock->stream.handle);
+                    const bool failed = ((pfd->revents & (POLLERR|POLLHUP|POLLNVAL)) != 0) ? true : false;
+                    const bool writable = (pfd->revents & POLLOUT) ? true : false;
+                    const bool readable = (pfd->revents & POLLIN) ? true : false;
+
+                    if (readable || failed) {
+                        count_it = true;
+                    }
+
                     if (sock->stream.status == 0) {
                         if (failed) {
                             int err = 0;
@@ -1673,21 +1818,56 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
                             sock->stream.status = SetSocketError("Socket failed to connect", err);
                         } else if (writable) {
                             sock->stream.status = 1;
+                            count_it = true;
                         }
                     } else if (writable) {
                         PumpStreamSocket(&sock->stream);
                     }
-                    break;
 
-                case SOCKETTYPE_DATAGRAM:
-                    if (writable) {
+                    pfd++;
+                }
+                break;
+
+                case SOCKETTYPE_DATAGRAM: {
+                    bool pump_socket = false;
+                    for (int j = 0; j < sock->dgram.num_handles; j++) {
+                        SDL_assert(pfd->fd == sock->dgram.handles[j].handle);
+                        const bool failed = ((pfd->revents & (POLLERR|POLLHUP|POLLNVAL)) != 0) ? true : false;
+                        const bool writable = (pfd->revents & POLLOUT) ? true : false;
+                        const bool readable = (pfd->revents & POLLIN) ? true : false;
+
+                        if (readable || failed) {
+                            count_it = true;
+                        }
+
+                        if (writable) {
+                            pump_socket = true;
+                        }
+                        pfd++;
+                    }
+
+                    if (pump_socket) {
                         PumpDatagramSocket(&sock->dgram);
                     }
-                    break;
+                }
+                break;
 
-                case SOCKETTYPE_SERVER:
-                    // we already checked `readable`.
-                    break;
+                case SOCKETTYPE_SERVER: {
+                    for (int j = 0; j < sock->server.num_handles; j++) {
+                        SDL_assert(pfd->fd == sock->server.handles[j]);
+                        const bool failed = ((pfd->revents & (POLLERR|POLLHUP|POLLNVAL)) != 0) ? true : false;
+                        const bool readable = (pfd->revents & POLLIN) ? true : false;
+                        if (readable || failed) {
+                            count_it = true;
+                        }
+                        pfd++;
+                    }
+                }
+                break;
+            }
+
+            if (count_it) {
+                retval++;
             }
         }
 

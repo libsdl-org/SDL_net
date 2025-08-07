@@ -11,6 +11,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple-http-get", "examples
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "voipchat", "examples\voipchat.vcxproj", "{A01E2216-139A-480E-8458-03CB4E90FE61}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "echo-server", "examples\echo-server.vcxproj", "{DFDBDF0E-87C3-4421-B6D1-90B2C5C28C2B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{642C114F-3ABE-4CFE-8C08-8CC5EF0D2324}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -62,5 +66,15 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7B1F60CD-2A09-4514-937C-D9DD044428FB} = {642C114F-3ABE-4CFE-8C08-8CC5EF0D2324}
+		{8DAC2820-128D-4FAF-9416-A8AD4C6D7A9A} = {642C114F-3ABE-4CFE-8C08-8CC5EF0D2324}
+		{35F14669-ED09-4105-A035-7984B94FDFBC} = {642C114F-3ABE-4CFE-8C08-8CC5EF0D2324}
+		{A01E2216-139A-480E-8458-03CB4E90FE61} = {642C114F-3ABE-4CFE-8C08-8CC5EF0D2324}
+		{DFDBDF0E-87C3-4421-B6D1-90B2C5C28C2B} = {642C114F-3ABE-4CFE-8C08-8CC5EF0D2324}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F2325A01-6A77-410B-B0DA-E0F6B9313F15}
 	EndGlobalSection
 EndGlobal

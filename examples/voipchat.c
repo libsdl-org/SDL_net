@@ -95,7 +95,9 @@ static void SendClientAudioToServer(void)
         scratch_area[0] = SDL_Swap64LE(0);  /* just being nice and leaving space in the buffer for the server to replace. */
         scratch_area[1] = SDL_Swap64LE(next_idnum);
         SDL_Log("CLIENT: Sending %d new bytes to server at %s:%d...", br + extra, NET_GetAddressString(server_addr), (int) server_port);
-        NET_SendDatagram(sock, server_addr, server_port, scratch_area, br + extra);
+        if (!NET_SendDatagram(sock, server_addr, server_port, scratch_area, br + extra)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "NET_SendDatagram failed: %s", SDL_GetError());
+        }
     }
 }
 
@@ -245,6 +247,9 @@ static void mainloop(void)
         SDL_RenderPresent(renderer);
     }
 }
+static void print_usage(const char *prog) {
+    SDL_Log("USAGE: %s <hostname|ip> [--help] [--server] [--port X] [--simulate-failure Y]", prog);
+}
 
 static void run_voipchat(int argc, char **argv)
 {
@@ -252,10 +257,14 @@ static void run_voipchat(int argc, char **argv)
     bool is_server = false;
     int simulate_failure = 0;
     int i;
+    NET_Address *socket_address = NULL;
 
     for (i = 1; i < argc; i++) {
         const char *arg = argv[i];
-        if (SDL_strcmp(arg, "--server") == 0) {
+        if (SDL_strcmp(arg, "--help") == 0) {
+            print_usage(argv[0]);
+            return;
+        } else if (SDL_strcmp(arg, "--server") == 0) {
             is_server = true;
         } else if ((SDL_strcmp(arg, "--port") == 0) && (i < (argc-1))) {
             server_port = (Uint16) SDL_atoi(argv[++i]);
@@ -266,21 +275,42 @@ static void run_voipchat(int argc, char **argv)
         }
     }
 
-    simulate_failure = SDL_min(SDL_max(simulate_failure, 0), 100);
-
+    simulate_failure = SDL_clamp(simulate_failure, 0, 100);
     if (simulate_failure) {
         SDL_Log("Simulating failure at %d percent", simulate_failure);
     }
 
-    if (is_server && hostname) {
-        SDL_Log("WARNING: Specified --server and a hostname, ignoring the hostname");
-    } else if (!is_server && !hostname) {
-        SDL_Log("USAGE: %s <--server|hostname> [--port X] [--simulate-failure Y]", argv[0]);
+    if (!is_server && !hostname) {
+        print_usage(argv[0]);
         return;
     }
 
     if (is_server) {
-        SDL_Log("SERVER: Listening on port %d", server_port);
+        if (hostname) {
+            SDL_Log("SERVER: Resolving binding hostname '%s' ...", hostname);
+            socket_address = NET_ResolveHostname(hostname);
+            if (socket_address) {
+                if (NET_WaitUntilResolved(socket_address, -1) < 0) {
+                    NET_UnrefAddress(socket_address);
+                    socket_address = NULL;
+                }
+            }
+        } else {
+            int num_addresses;
+            NET_Address **addresses;
+            addresses = NET_GetLocalAddresses(&num_addresses);
+            if (addresses == NULL || num_addresses <= 0) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to to get local addresses: %s", SDL_GetError());
+            } else {
+                socket_address = addresses[0];
+                NET_RefAddress(socket_address);
+            }
+        }
+        if (socket_address) {
+            SDL_Log("SERVER: Listening on %s:%d.", NET_GetAddressString(socket_address), server_port);
+        } else {
+            SDL_Log("SERVER: Listening on port %d", server_port);
+        }
     } else {
         SDL_Log("CLIENT: Resolving server hostname '%s' ...", hostname);
         server_addr = NET_ResolveHostname(hostname);
@@ -301,16 +331,16 @@ static void run_voipchat(int argc, char **argv)
 
         audio_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &audio_spec);
         if (!audio_device) {
-            SDL_Log("CLIENT: Failed to open output audio device (%s), going on without sound playback!", SDL_GetError());
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "CLIENT: Failed to open output audio device (%s), going on without sound playback!", SDL_GetError());
         }
 
         capture_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_RECORDING, &audio_spec);
         if (!capture_device) {
-            SDL_Log("CLIENT: Failed to open capture audio device (%s), going on without sound recording!", SDL_GetError());
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "CLIENT: Failed to open capture audio device (%s), going on without sound recording!", SDL_GetError());
         } else {
             capture_stream = SDL_CreateAudioStream(&audio_spec, &audio_spec);
             if (!capture_stream) {
-                SDL_Log("CLIENT: Failed to create capture audio stream (%s), going on without sound recording!", SDL_GetError());
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "CLIENT: Failed to create capture audio stream (%s), going on without sound recording!", SDL_GetError());
                 SDL_CloseAudioDevice(capture_device);
                 capture_device = 0;
             }
@@ -318,9 +348,10 @@ static void run_voipchat(int argc, char **argv)
     }
 
     /* server _must_ be on the requested port. Clients can take anything available, server will respond to where it sees it come from. */
-    sock = NET_CreateDatagramSocket(NULL, is_server ? server_port : 0);
+    sock = NET_CreateDatagramSocket(socket_address, is_server ? server_port : 0);
+    NET_UnrefAddress(socket_address);
     if (!sock) {
-        SDL_Log("Failed to create datagram socket: %s", SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to create datagram socket: %s", SDL_GetError());
     } else {
         if (simulate_failure) {
             NET_SimulateDatagramPacketLoss(sock, simulate_failure);
@@ -347,12 +378,12 @@ static void run_voipchat(int argc, char **argv)
 int main(int argc, char **argv)
 {
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
-        SDL_Log("SDL_Init failed: %s\n", SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_Init failed: %s", SDL_GetError());
         return 1;
     }
 
     if (!NET_Init()) {
-        SDL_Log("NET_Init failed: %s\n", SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "NET_Init failed: %s", SDL_GetError());
         SDL_Quit();
         return 1;
     }
