@@ -990,10 +990,12 @@ NET_Server *NET_CreateServer(NET_Address *addr, Uint16 port)
             goto failed;
         }
 
+        const int one = 1;
         if (ainfo->ai_family == AF_INET6) {
-            int one = 1;
             setsockopt(handle, IPPROTO_IPV6, IPV6_V6ONLY, (const char *) &one, sizeof (one));  // if this fails, oh well.
         }
+
+        setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &one, sizeof (one));
 
         int rc = bind(handle, ainfo->ai_addr, (SockLen) ainfo->ai_addrlen);
         if (rc == SOCKET_ERROR) {
@@ -1405,10 +1407,12 @@ for (struct addrinfo *i = addrwithport; i != NULL; i = i->ai_next) {
             goto failed;
         }
 
+        const int one = 1;
         if (ainfo->ai_family == AF_INET6) {
-            int one = 1;
             setsockopt(handle, IPPROTO_IPV6, IPV6_V6ONLY, (const char *) &one, sizeof (one));  // if this fails, oh well.
         }
+
+        setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &one, sizeof (one));
 
         const int rc = bind(handle, ainfo->ai_addr, (SockLen) ainfo->ai_addrlen);
         if (rc == SOCKET_ERROR) {
