@@ -266,8 +266,7 @@ static void run_voipchat(int argc, char **argv)
         }
     }
 
-    simulate_failure = SDL_min(SDL_max(simulate_failure, 0), 100);
-
+    simulate_failure = SDL_clamp(simulate_failure, 0, 100);
     if (simulate_failure) {
         SDL_Log("Simulating failure at %d percent", simulate_failure);
     }
