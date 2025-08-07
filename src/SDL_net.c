@@ -282,9 +282,9 @@ static int SDLCALL ResolverThread(void *data)
             SDL_Delay(RandomNumberBetween(250, 2000 + (50 * simulated_loss)));
         }
 
-        int outcome;
+        NET_Status outcome;
         if (ShouldSimulateLoss(simulated_loss)) {
-            outcome = -1;
+            outcome = NET_FAILURE;
             addr->errstr = SDL_strdup("simulated failure");
         } else {
             outcome = ResolveAddress(addr);
