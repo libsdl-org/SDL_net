@@ -1814,6 +1814,7 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
                             sock->stream.status = SetSocketError("Socket failed to connect", err);
                         } else if (writable) {
                             sock->stream.status = 1;
+                            count_it = true;
                         }
                     } else if (writable) {
                         PumpStreamSocket(&sock->stream);
