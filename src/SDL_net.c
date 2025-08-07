@@ -1472,14 +1472,14 @@ static bool PumpDatagramSocket(NET_DatagramSocket *sock)
     while (sock->pending_output_len > 0) {
         SDL_assert(sock->pending_output != NULL);
         NET_Datagram *dgram = sock->pending_output[0];
-        const int rc = SendOneDatagram(sock, dgram->addr, dgram->port, dgram->buf, dgram->buflen);
-        if (rc < 0) {  // failure!
+        const NET_Status rc = SendOneDatagram(sock, dgram->addr, dgram->port, dgram->buf, dgram->buflen);
+        if (rc == NET_FAILURE) {
             return false;
-        } else if (rc == 0) {  // wouldblock
+        } else if (rc == NET_WOULDBLOCK) {
             break;  // stop trying to send packets for now.
         }
 
-        /* else if (rc > 0) */
+        // else if (rc == NET_SUCCESS)
         NET_DestroyDatagram(dgram);
         sock->pending_output_len--;
         SDL_memmove(sock->pending_output, sock->pending_output + 1, sock->pending_output_len * sizeof (NET_Datagram *));
@@ -1508,13 +1508,13 @@ bool NET_SendDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, 
     }
 
     if (sock->pending_output_len == 0) {  // nothing queued? See if we can just send this without queueing.
-        const int rc = SendOneDatagram(sock, addr, port, buf, buflen);
-        if (rc < 0) {
+        const NET_Status rc = SendOneDatagram(sock, addr, port, buf, buflen);
+        if (rc == NET_FAILURE) {
             return false;  // error string was already set in SendOneDatagram.
-        } else if (rc == 1) {
+        } else if (rc == NET_SUCCESS) {
             return true;   // successfully sent.
         }
-        // if rc==0, it wasn't sent, because we would have blocked. Queue it for later, below.
+        // if rc==NET_WOULDBLOCK, it wasn't sent, because we would have blocked. Queue it for later, below.
     }
 
     // queue this up for sending later.
