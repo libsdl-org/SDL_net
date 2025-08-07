@@ -1375,15 +1375,16 @@ NET_DatagramSocket *NET_CreateDatagramSocket(NET_Address *addr, Uint16 port)
         }
     }
 
-for (struct addrinfo *i = addrwithport; i != NULL; i = i->ai_next) {
-    SDL_Log("addr:");
-    SDL_Log(" - ai_flags: %d", i->ai_flags);
-    SDL_Log(" - ai_family: %d", i->ai_family);
-    SDL_Log(" - ai_socktype: %d", i->ai_socktype);
-    SDL_Log(" - ai_protocol: %d", i->ai_protocol);
-    SDL_Log(" - ai_canonname: '%s'", i->ai_canonname);
-}
-
+    #if 0
+    for (struct addrinfo *i = addrwithport; i != NULL; i = i->ai_next) {
+        SDL_Log("addr:");
+        SDL_Log(" - ai_flags: %d", i->ai_flags);
+        SDL_Log(" - ai_family: %d", i->ai_family);
+        SDL_Log(" - ai_socktype: %d", i->ai_socktype);
+        SDL_Log(" - ai_protocol: %d", i->ai_protocol);
+        SDL_Log(" - ai_canonname: '%s'", i->ai_canonname);
+    }
+    #endif
 
     // Make sockets for all desired interfaces; if addr!=NULL, this is one socket on one interface,
     //  but if addr==NULL, it might be multiple sockets for IPv4, IPv6, etc, bound to their INADDR_ANY equivalent.
