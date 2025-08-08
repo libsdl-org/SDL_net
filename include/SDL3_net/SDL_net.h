@@ -53,17 +53,17 @@
  * connect to these hosts over the Internet.
  *
  * Something that initiates a connection to a remote system is called a
- * "client," connecting to a "server." To establish a connection, use
- * the NET_Address you resolved with NET_CreateClient(). Once the connection
- * is established (a non-blocking operation), you'll have a NET_StreamSocket
+ * "client," connecting to a "server." To establish a connection, use the
+ * NET_Address you resolved with NET_CreateClient(). Once the connection is
+ * established (a non-blocking operation), you'll have a NET_StreamSocket
  * object that can send and receive data over the connection, using
  * NET_WriteToStreamSocket() and NET_ReadFromStreamSocket().
  *
- * To instead be a server, that clients connect to, call
- * NET_CreateServer() to get a NET_Server object. All a NET_Server does is
- * allow you to accept connections from clients, turning them into
- * NET_StreamSockets, where you can read and write from the opposite side of
- * the connection from a given client.
+ * To instead be a server, that clients connect to, call NET_CreateServer() to
+ * get a NET_Server object. All a NET_Server does is allow you to accept
+ * connections from clients, turning them into NET_StreamSockets, where you
+ * can read and write from the opposite side of the connection from a given
+ * client.
  *
  * These things are, underneath this API, TCP connections, which means you can
  * use a client or server to talk to something that _isn't_ using SDL_net at
@@ -73,21 +73,21 @@
  * There are tradeoffs to using these, especially in poor network conditions.
  * Another option is to use "datagram sockets," which map to UDP packet
  * transmission. With datagrams, everyone involved can send small packets of
- * data that may arrive in any order, or not at all, but transmission
- * can carry on if a packet is lost, each packet is clearly separated
- * from every other, and communication can happen in a peer-to-peer model
- * instead of client-server: while datagrams can be more complex, these _are_
- * useful properties not avaiable to stream sockets.
- * NET_CreateDatagramSocket() is used to prepare for datagram communication,
- * then NET_SendDatagram() and NET_ReceiveDatagram() transmit packets.
+ * data that may arrive in any order, or not at all, but transmission can
+ * carry on if a packet is lost, each packet is clearly separated from every
+ * other, and communication can happen in a peer-to-peer model instead of
+ * client-server: while datagrams can be more complex, these _are_ useful
+ * properties not avaiable to stream sockets. NET_CreateDatagramSocket() is
+ * used to prepare for datagram communication, then NET_SendDatagram() and
+ * NET_ReceiveDatagram() transmit packets.
  *
  * As previously mentioned, SDL_net's API is "non-blocking" (asynchronous).
  * Any network operation might take time, but SDL_net's APIs will not wait
- * until they complete. Any operation will return immediately, with options
- * to check if the operation has completed later. Generally this is what
- * a video game needs, but there are times where it makes sense to pause
- * until an operation completes; in a background thread this might make
- * sense, as it could simplify the code dramatically.
+ * until they complete. Any operation will return immediately, with options to
+ * check if the operation has completed later. Generally this is what a video
+ * game needs, but there are times where it makes sense to pause until an
+ * operation completes; in a background thread this might make sense, as it
+ * could simplify the code dramatically.
  *
  * The functions that block until an operation completes:
  *
