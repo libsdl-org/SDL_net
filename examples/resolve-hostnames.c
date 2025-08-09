@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     for (int i = 1; i < argc; i++) {
         NET_WaitUntilResolved(addrs[i], -1);
 
-        if (NET_GetAddressStatus(addrs[i]) == -1) {
+        if (NET_GetAddressStatus(addrs[i]) == NET_FAILURE) {
             SDL_Log("%s: [FAILED TO RESOLVE: %s]", argv[i], SDL_GetError());
         } else {
             SDL_Log("%s: %s", argv[i], NET_GetAddressString(addrs[i]));

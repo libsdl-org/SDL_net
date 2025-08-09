@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     NET_Address *server_addr = NULL;
     if (interface) {
         server_addr = NET_ResolveHostname(interface);
-        if (!server_addr || (NET_WaitUntilResolved(server_addr, -1) != 1)) {
+        if (!server_addr || (NET_WaitUntilResolved(server_addr, -1) != NET_SUCCESS)) {
             SDL_Log("Failed to resolve interface for '%s': %s", interface, SDL_GetError());
             if (server_addr) {
                 NET_UnrefAddress(server_addr);
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
         void *vsockets[128];
         SDL_zeroa(vsockets);
         vsockets[0] = server;
-        while (NET_WaitUntilInputAvailable(vsockets, num_vsockets, -1) == 1) {
+        while (NET_WaitUntilInputAvailable(vsockets, num_vsockets, -1) >= 0) {
             NET_StreamSocket *streamsocket = NULL;
             if (!NET_AcceptClient(server, &streamsocket)) {
                 SDL_Log("NET_AcceptClient failed: %s", SDL_GetError());

@@ -173,9 +173,37 @@ extern "C" {
  *
  * \returns SDL_net version.
  *
+ * \threadsafety It is safe to call this function from any thread.
+ *
  * \since This function is available since SDL_net 3.0.0.
  */
 extern SDL_DECLSPEC int SDLCALL NET_Version(void);
+
+
+/**
+ * A tri-state for asynchronous operations.
+ *
+ * Lots of tasks in SDL_net are asynchronous, as they can't complete until
+ * data passes over a network at some murky future point in time.
+ *
+ * This includes sending data over a stream socket, resolving a hostname,
+ * connecting to a remote system, and other tasks.
+ *
+ * The library never blocks on tasks that take time to complete, with the
+ * exception of functions named "Wait", which are intended to do nothing but
+ * block until a task completes. Functions that are attempting to do something
+ * that might block, or are querying the status of a task in-progress, will
+ * return a NET_Status, so an app can see if a task completed, and its final
+ * outcome.
+ *
+ * \since This enum is available since SDL_net 3.0.0.
+ */
+typedef enum NET_Status
+{
+    NET_FAILURE = -1,  /**< Async operation complete, result was failure. */
+    NET_WAITING = 0,   /**< Async operation is still in progress, check again later. */
+    NET_SUCCESS = 1    /**< Async operation complete, result was success. */
+} NET_Status;
 
 
 /* init/quit functions... */
@@ -313,9 +341,10 @@ extern SDL_DECLSPEC NET_Address * SDLCALL NET_ResolveHostname(const char *host);
  * \param address The NET_Address object to wait on.
  * \param timeout Number of milliseconds to wait for resolution to complete.
  *                -1 to wait indefinitely, 0 to check once without waiting.
- * \returns 1 if successfully resolved, -1 if resolution failed, 0 if still
- *          resolving (this function timed out without resolution); if -1,
- *          call SDL_GetError() for details.
+ * \returns NET_SUCCESS if successfully resolved, NET_FAILURE if resolution
+ *          failed, NET_WAITING if still resolving (this function timed out
+ *          without resolution); if NET_FAILURE, call SDL_GetError() for
+ *          details.
  *
  * \threadsafety It is safe to call this function from any thread, and several
  *               threads can block on the same address simultaneously.
@@ -324,7 +353,7 @@ extern SDL_DECLSPEC NET_Address * SDLCALL NET_ResolveHostname(const char *host);
  *
  * \sa NET_GetAddressStatus
  */
-extern SDL_DECLSPEC int SDLCALL NET_WaitUntilResolved(NET_Address *address, Sint32 timeout);
+extern SDL_DECLSPEC NET_Status SDLCALL NET_WaitUntilResolved(NET_Address *address, Sint32 timeout);
 
 /**
  * Check if an address is resolved, without blocking.
@@ -344,8 +373,10 @@ extern SDL_DECLSPEC int SDLCALL NET_WaitUntilResolved(NET_Address *address, Sint
  * host represented by the address.
  *
  * \param address The NET_Address to query.
- * \returns 1 if successfully resolved, -1 if resolution failed, 0 if still
- *          resolving; if -1, call SDL_GetError() for details.
+ * \returns NET_SUCCESS if successfully resolved, NET_FAILURE if resolution
+ *          failed, NET_WAITING if still resolving (this function timed out
+ *          without resolution); if NET_FAILURE, call SDL_GetError() for
+ *          details.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -353,7 +384,7 @@ extern SDL_DECLSPEC int SDLCALL NET_WaitUntilResolved(NET_Address *address, Sint
  *
  * \sa NET_WaitUntilResolved
  */
-extern SDL_DECLSPEC int SDLCALL NET_GetAddressStatus(NET_Address *address);
+extern SDL_DECLSPEC NET_Status SDLCALL NET_GetAddressStatus(NET_Address *address);
 
 /**
  * Get a human-readable string from a resolved address.
@@ -486,7 +517,8 @@ extern SDL_DECLSPEC void SDLCALL NET_SimulateAddressResolutionLoss(int percent_l
  *
  * \param a first address to compare.
  * \param b second address to compare.
- * \returns -1 if `a` is "less than" `b`, 1 if "greater than", 0 if equal.
+ * \returns a value less than zero if `a` is "less than" `b`, a value greater than zero
+ *          if "greater than", zero if equal.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -653,9 +685,10 @@ extern SDL_DECLSPEC NET_StreamSocket * SDLCALL NET_CreateClient(NET_Address *add
  * \param sock The NET_StreamSocket object to wait on.
  * \param timeout Number of milliseconds to wait for resolution to complete.
  *                -1 to wait indefinitely, 0 to check once without waiting.
- * \returns 1 if successfully connected, -1 if connection failed, 0 if still
- *          connecting (this function timed out without resolution); if -1,
- *          call SDL_GetError() for details.
+ * \returns NET_SUCCESS if successfully connected, NET_FAILURE if connection
+ *          failed, NET_WAITING if still connecting (this function timed out
+ *          without resolution); if NET_FAILURE, call SDL_GetError() for
+ *          details.
  *
  * \threadsafety You should not operate on the same socket from multiple
  *               threads at the same time without supplying a serialization
@@ -666,7 +699,7 @@ extern SDL_DECLSPEC NET_StreamSocket * SDLCALL NET_CreateClient(NET_Address *add
  *
  * \sa NET_GetConnectionStatus
  */
-extern SDL_DECLSPEC int SDLCALL NET_WaitUntilConnected(NET_StreamSocket *sock, Sint32 timeout);
+extern SDL_DECLSPEC NET_Status SDLCALL NET_WaitUntilConnected(NET_StreamSocket *sock, Sint32 timeout);
 
 /**
  * The receiving end of a stream connection.
@@ -838,8 +871,9 @@ extern SDL_DECLSPEC NET_Address * SDLCALL NET_GetStreamSocketAddress(NET_StreamS
  * connection dropped later when your reads and writes report failures.
  *
  * \param sock the stream socket to query.
- * \returns 1 if successfully connected, -1 if connection failed, 0 if still
- *          connecting; if -1, call SDL_GetError() for details.
+ * \returns NET_SUCCESS if successfully connected, NET_FAILURE if connection
+ *          failed, NET_WAITING if still connecting; if NET_FAILURE, call
+ *          SDL_GetError() for details.
  *
  * \threadsafety You should not operate on the same socket from multiple
  *               threads at the same time without supplying a serialization
@@ -850,7 +884,7 @@ extern SDL_DECLSPEC NET_Address * SDLCALL NET_GetStreamSocketAddress(NET_StreamS
  *
  * \sa NET_WaitUntilConnected
  */
-extern SDL_DECLSPEC int SDLCALL NET_GetConnectionStatus(NET_StreamSocket *sock);
+extern SDL_DECLSPEC NET_Status SDLCALL NET_GetConnectionStatus(NET_StreamSocket *sock);
 
 /**
  * Send bytes over a stream socket to a remote system.

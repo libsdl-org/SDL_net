@@ -290,7 +290,7 @@ static void run_voipchat(int argc, char **argv)
             SDL_Log("SERVER: Resolving binding hostname '%s' ...", hostname);
             socket_address = NET_ResolveHostname(hostname);
             if (socket_address) {
-                if (NET_WaitUntilResolved(socket_address, -1) < 0) {
+                if (NET_WaitUntilResolved(socket_address, -1) == NET_FAILURE) {
                     NET_UnrefAddress(socket_address);
                     socket_address = NULL;
                 }
@@ -315,7 +315,7 @@ static void run_voipchat(int argc, char **argv)
         SDL_Log("CLIENT: Resolving server hostname '%s' ...", hostname);
         server_addr = NET_ResolveHostname(hostname);
         if (server_addr) {
-            if (NET_WaitUntilResolved(server_addr, -1) < 0) {
+            if (NET_WaitUntilResolved(server_addr, -1) == NET_FAILURE) {
                 NET_UnrefAddress(server_addr);
                 server_addr = NULL;
             }

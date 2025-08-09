@@ -85,13 +85,6 @@ typedef socklen_t SockLen;
 typedef struct sockaddr_storage AddressStorage;
 #endif
 
-typedef enum NET_Status
-{
-    NET_FAILURE = -1,
-    NET_WOULDBLOCK,
-    NET_SUCCESS,
-} NET_Status;
-
 typedef enum NET_SocketType
 {
     SOCKETTYPE_STREAM,
@@ -111,7 +104,7 @@ struct NET_Address
     char *human_readable;
     char *errstr;
     SDL_AtomicInt refcount;
-    SDL_AtomicInt status;  // 0==in progress, 1==resolved, -1==error
+    SDL_AtomicInt status;  // This is actually a NET_Status.
     struct addrinfo *ainfo;
     NET_Address *resolver_next;  // a linked list for the resolution job queue.
 };
@@ -297,8 +290,8 @@ static int SDLCALL ResolverThread(void *data)
             outcome = ResolveAddress(addr);
         }
 
-        SDL_SetAtomicInt(&addr->status, outcome);
-        //SDL_Log("ResolverThread #%d finished current task (%s, '%s' => '%s')", threadnum, (outcome < 0) ? "failure" : "success", addr->hostname, (outcome < 0) ? addr->errstr : addr->human_readable);
+        SDL_SetAtomicInt(&addr->status, (int) outcome);
+        //SDL_Log("ResolverThread #%d finished current task (%s, '%s' => '%s')", threadnum, (outcome == NET_FAILURE) ? "failure" : "success", addr->hostname, (outcome < 0) ? addr->errstr : addr->human_readable);
 
         NET_UnrefAddress(addr);  // we're done with it, but others might still own it.
 
@@ -362,7 +355,7 @@ static NET_Address *CreateSDLNetAddrFromSockAddr(const struct sockaddr *saddr, S
     if (!addr) {
         return NULL;
     }
-    SDL_SetAtomicInt(&addr->status, 1);
+    SDL_SetAtomicInt(&addr->status, (int) NET_SUCCESS);
 
     struct addrinfo hints;
     SDL_zero(hints);
@@ -556,10 +549,10 @@ NET_Address *NET_ResolveHostname(const char *host)
     return addr;
 }
 
-int NET_WaitUntilResolved(NET_Address *addr, Sint32 timeout)
+NET_Status NET_WaitUntilResolved(NET_Address *addr, Sint32 timeout)
 {
     if (!addr) {
-        return SDL_InvalidParamError("address");  // obviously nothing to wait for.
+        return (NET_Status) SDL_InvalidParamError("address");  // obviously nothing to wait for.
     }
 
     // we _could_ use a different lock for this, but this is Good Enough.
@@ -567,12 +560,12 @@ int NET_WaitUntilResolved(NET_Address *addr, Sint32 timeout)
     if (timeout) {
         SDL_LockMutex(resolver_lock);
         if (timeout < 0) {
-            while (SDL_GetAtomicInt(&addr->status) == 0) {
+            while (((NET_Status) SDL_GetAtomicInt(&addr->status)) == NET_WAITING) {
                 SDL_WaitCondition(resolver_condition, resolver_lock);
             }
         } else {
             const Uint64 endtime = (SDL_GetTicks() + timeout);
-            while (SDL_GetAtomicInt(&addr->status) == 0) {
+            while (((NET_Status) SDL_GetAtomicInt(&addr->status)) == NET_WAITING) {
                 const Uint64 now = SDL_GetTicks();
                 if (now >= endtime) {
                     break;
@@ -586,13 +579,13 @@ int NET_WaitUntilResolved(NET_Address *addr, Sint32 timeout)
     return NET_GetAddressStatus(addr);  // so we set the error string if necessary.
 }
 
-int NET_GetAddressStatus(NET_Address *addr)
+NET_Status NET_GetAddressStatus(NET_Address *addr)
 {
     if (!addr) {
-        return SDL_InvalidParamError("address");
+        return (NET_Status) SDL_InvalidParamError("address");
     }
-    const int retval = SDL_GetAtomicInt(&addr->status);
-    if (retval == -1) {
+    const NET_Status retval = (NET_Status) SDL_GetAtomicInt(&addr->status);
+    if (retval == NET_FAILURE) {
         SDL_SetError("%s", (const char *) SDL_GetAtomicPointer((void **) &addr->errstr));
     }
     return retval;
@@ -607,8 +600,8 @@ const char *NET_GetAddressString(NET_Address *addr)
 
     const char *retval = (const char *) SDL_GetAtomicPointer((void **) &addr->human_readable);
     if (!retval) {
-        const int rc = NET_GetAddressStatus(addr);
-        if (rc != -1) {  // if -1, it'll set the error message.
+        const NET_Status rc = NET_GetAddressStatus(addr);
+        if (rc != NET_FAILURE) {  // if NET_FAILURE, it'll set the error message.
             SDL_SetError("Address not yet resolved");  // if this resolved in a race condition, too bad, try again.
         }
     }
@@ -963,7 +956,7 @@ struct NET_StreamSocket
     NET_Address *addr;
     Uint16 port;
     Socket handle;
-    int status;
+    NET_Status status;
     Uint8 *pending_output_buffer;
     int pending_output_len;
     int pending_output_allocation;
@@ -995,7 +988,7 @@ NET_StreamSocket *NET_CreateClient(NET_Address *addr, Uint16 port)
     if (addr == NULL) {
         SDL_InvalidParamError("address");
         return NULL;
-    } else if (SDL_GetAtomicInt(&addr->status) != 1) {
+    } else if (((NET_Status) SDL_GetAtomicInt(&addr->status)) != NET_SUCCESS) {
         SDL_SetError("Address is not resolved");
         return NULL;
     }
@@ -1051,29 +1044,29 @@ NET_StreamSocket *NET_CreateClient(NET_Address *addr, Uint16 port)
     return sock;
 }
 
-static int CheckClientConnection(NET_StreamSocket *sock, int timeoutms)
+static NET_Status CheckClientConnection(NET_StreamSocket *sock, int timeoutms)
 {
     if (!sock) {
         return SDL_InvalidParamError("sock");
-    } else if (sock->status == 0) {  // still pending?
+    } else if (sock->status == NET_WAITING) {  // still pending?
         /*!!! FIXME: add this later?
         if (sock->simulated_failure_ticks) {
             if (SDL_GetTicks() >= sock->simulated_failure_ticks) {
-                sock->status = SDL_SetError("simulated failure");
+                sock->status = (NET_Status) SDL_SetError("simulated failure");
         } else */
-        if (NET_WaitUntilInputAvailable((void **) &sock, 1, timeoutms) == -1) {
-            sock->status = -1;  // just abandon the whole enterprise.
+        if (NET_WaitUntilInputAvailable((void **) &sock, 1, timeoutms) == NET_FAILURE) {
+            sock->status = NET_FAILURE;  // just abandon the whole enterprise.
         }
     }
     return sock->status;
 }
 
-int NET_WaitUntilConnected(NET_StreamSocket *sock, Sint32 timeout)
+NET_Status NET_WaitUntilConnected(NET_StreamSocket *sock, Sint32 timeout)
 {
     return CheckClientConnection(sock, (int) timeout);
 }
 
-int NET_GetConnectionStatus(NET_StreamSocket *sock)
+NET_Status NET_GetConnectionStatus(NET_StreamSocket *sock)
 {
     return CheckClientConnection(sock, 0);
 }
@@ -1091,7 +1084,7 @@ struct NET_Server
 
 NET_Server *NET_CreateServer(NET_Address *addr, Uint16 port)
 {
-    if (addr && SDL_GetAtomicInt(&addr->status) != 1) {
+    if (addr && (((NET_Status) SDL_GetAtomicInt(&addr->status)) != NET_SUCCESS)) {
         SDL_SetError("Address is not resolved");  // strictly speaking, this should be a local interface, but a resolved address can fail later.
         return NULL;
     }
@@ -1243,7 +1236,7 @@ bool NET_AcceptClient(NET_Server *server, NET_StreamSocket **client_stream)
         sock->addr = fromaddr;
         sock->port = (Uint16) SDL_atoi(portbuf);
         sock->handle = handle;
-        sock->status = 1;  // connected
+        sock->status = NET_SUCCESS;  // connected
 
         *client_stream = sock;
         return true;  // we got one!
@@ -1288,20 +1281,20 @@ static void UpdateStreamSocketSimulatedFailure(NET_StreamSocket *sock)
 }
 
 // see if any pending data can finally be sent, etc
-static int PumpStreamSocket(NET_StreamSocket *sock)
+static bool PumpStreamSocket(NET_StreamSocket *sock)
 {
     if (!sock) {
         return SDL_InvalidParamError("sock");
     } else if (sock->pending_output_len > 0) {
         // !!! FIXME: there should be some small chance of streams dropping connection to simulate failure.
         if (sock->simulated_failure_until && (SDL_GetTicks() < sock->simulated_failure_until)) {
-            return 0;  // streams are reliable, so instead of packet loss, we introduce lag.
+            return true;  // streams are reliable, so instead of packet loss, we introduce lag.
         }
 
         const int bw = (int) write(sock->handle, sock->pending_output_buffer, sock->pending_output_len);
         if (bw < 0) {
             const int err = LastSocketError();
-            return WouldBlock(err) ? 0 : SetSocketError("Failed to write to socket", err);
+            return WouldBlock(err) ? true : SetSocketErrorBool("Failed to write to socket", err);
         } else if (bw < sock->pending_output_len) {
             SDL_memmove(sock->pending_output_buffer, sock->pending_output_buffer + bw, ((size_t) sock->pending_output_len) - bw);
         }
@@ -1310,12 +1303,12 @@ static int PumpStreamSocket(NET_StreamSocket *sock)
         UpdateStreamSocketSimulatedFailure(sock);
     }
 
-    return 0;
+    return true;
 }
 
 bool NET_WriteToStreamSocket(NET_StreamSocket *sock, const void *buf, int buflen)
 {
-    if (PumpStreamSocket(sock) < 0) {  // try to flush any queued data to the socket now, before we handle more.
+    if (!PumpStreamSocket(sock)) {  // try to flush any queued data to the socket now, before we handle more.
         return false;
     } else if (buf == NULL) {
         return SDL_InvalidParamError("buf");
@@ -1355,7 +1348,7 @@ bool NET_WriteToStreamSocket(NET_StreamSocket *sock, const void *buf, int buflen
         }
         void *ptr = SDL_realloc(sock->pending_output_buffer, newlen);
         if (!ptr) {
-            return -1;
+            return false;
         }
         sock->pending_output_buffer = (Uint8 *) ptr;
         sock->pending_output_allocation = newlen;
@@ -1369,7 +1362,7 @@ bool NET_WriteToStreamSocket(NET_StreamSocket *sock, const void *buf, int buflen
 
 int NET_GetStreamSocketPendingWrites(NET_StreamSocket *sock)
 {
-    if (PumpStreamSocket(sock) < 0) {
+    if (!PumpStreamSocket(sock)) {
         return -1;
     }
     return sock->pending_output_len;
@@ -1378,7 +1371,8 @@ int NET_GetStreamSocketPendingWrites(NET_StreamSocket *sock)
 int NET_WaitUntilStreamSocketDrained(NET_StreamSocket *sock, int timeoutms)
 {
     if (!sock) {
-        return SDL_InvalidParamError("sock");
+        SDL_InvalidParamError("sock");
+        return -1;
     }
 
     if (timeoutms != 0) {
@@ -1411,7 +1405,7 @@ int NET_WaitUntilStreamSocketDrained(NET_StreamSocket *sock, int timeoutms)
 
 int NET_ReadFromStreamSocket(NET_StreamSocket *sock, void *buf, int buflen)
 {
-    if (PumpStreamSocket(sock) < 0) {  // try to flush any queued data to the socket now, before we go further.
+    if (!PumpStreamSocket(sock)) {  // try to flush any queued data to the socket now, before we go further.
         return -1;
     } else if (sock->simulated_failure_until && (SDL_GetTicks() < sock->simulated_failure_until)) {
         return 0;  // streams are reliable, so instead of packet loss, we introduce lag.
@@ -1494,7 +1488,7 @@ struct NET_DatagramSocket
 
 NET_DatagramSocket *NET_CreateDatagramSocket(NET_Address *addr, Uint16 port)
 {
-    if (addr && SDL_GetAtomicInt(&addr->status) != 1) {
+    if (addr && (((NET_Status) SDL_GetAtomicInt(&addr->status)) != NET_SUCCESS)) {
         SDL_SetError("Address is not resolved");  // strictly speaking, this should be a local interface, but a resolved address can fail later.
         return NULL;
     }
@@ -1616,7 +1610,7 @@ static NET_Status SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, U
             const int err = (rc == SOCKET_ERROR) ? LastSocketError() : 0;
             freeaddrinfo(addrwithport);
             if (err != 0) {
-                return WouldBlock(err) ? NET_WOULDBLOCK : SetSocketError("Failed to send from socket", err);
+                return WouldBlock(err) ? NET_WAITING : SetSocketError("Failed to send from socket", err);
             }
             SDL_assert(rc == buflen);
             return NET_SUCCESS;
@@ -1641,7 +1635,7 @@ static bool PumpDatagramSocket(NET_DatagramSocket *sock)
         const NET_Status rc = SendOneDatagram(sock, dgram->addr, dgram->port, dgram->buf, dgram->buflen);
         if (rc == NET_FAILURE) {
             return false;
-        } else if (rc == NET_WOULDBLOCK) {
+        } else if (rc == NET_WAITING) {
             break;  // stop trying to send packets for now.
         }
 
@@ -1680,7 +1674,7 @@ bool NET_SendDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, 
         } else if (rc == NET_SUCCESS) {
             return true;   // successfully sent.
         }
-        // if rc==NET_WOULDBLOCK, it wasn't sent, because we would have blocked. Queue it for later, below.
+        // if rc==NET_WAITING, it wasn't sent, because we would have blocked. Queue it for later, below.
     }
 
     // queue this up for sending later.
@@ -1917,7 +1911,7 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
             switch (sock->socktype) {
                 case SOCKETTYPE_STREAM:
                     pfd->fd = sock->stream.handle;
-                    if (sock->stream.status == 0) {
+                    if (sock->stream.status == NET_WAITING) {
                         pfd->events = POLLOUT;  // marked as writable when connection is complete.
                     } else if (sock->stream.pending_output_len > 0) {
                         pfd->events = POLLIN|POLLOUT;  // poll for input or when we can write more of the pending buffer.
@@ -1972,14 +1966,14 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
                         count_it = true;
                     }
 
-                    if (sock->stream.status == 0) {
+                    if (sock->stream.status == NET_WAITING) {
                         if (failed) {
                             int err = 0;
                             SockLen errsize = sizeof (err);
                             getsockopt(pfd->fd, SOL_SOCKET, SO_ERROR, (char*)&err, &errsize);
-                            sock->stream.status = SetSocketError("Socket failed to connect", err);
+                            sock->stream.status = (NET_Status) SetSocketError("Socket failed to connect", err);
                         } else if (writable) {
-                            sock->stream.status = 1;
+                            sock->stream.status = NET_SUCCESS;
                             count_it = true;
                         }
                     } else if (writable) {
