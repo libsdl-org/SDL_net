@@ -70,7 +70,14 @@ static int read(SOCKET s, char *buf, size_t count) {
 #include <poll.h>
 #include <unistd.h>
 #include <fcntl.h>
+
+#ifdef SDL_PLATFORM_ANDROID
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
+#else
 #include <ifaddrs.h>
+#endif
+
 #define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
 typedef int Socket;
@@ -635,6 +642,37 @@ void NET_SimulateAddressResolutionLoss(int percent_loss)
     SDL_SetAtomicInt(&resolver_percent_loss, SDL_clamp(percent_loss, 0, 100));
 }
 
+#ifdef SDL_PLATFORM_ANDROID
+typedef struct EnumerateNetAddrTableData
+{
+    NET_Address **retval;
+    int count;
+    int real_count;
+} EnumerateNetAddrTableData;
+
+static void SDLCALL EnumerateNetAddrTable(void *userdata, SDL_PropertiesID props, const char *name)
+{
+    NET_Address *netaddr = SDL_GetPointerProperty(props, name, NULL);
+    if (netaddr) {
+        NET_RefAddress(netaddr);
+        EnumerateNetAddrTableData *data = (EnumerateNetAddrTableData *) userdata;
+        SDL_assert(data->real_count < data->count);
+        data->retval[data->real_count++] = netaddr;
+    }
+}
+
+static void SDLCALL CleanupNetAddrTable(void *userdata, void *value)
+{
+    (void) userdata;
+    NET_UnrefAddress((NET_Address *) value);
+}
+
+static int SDLCALL CompareNetAddrQsort(const void *a, const void *b)
+{
+    return NET_CompareAddresses(*(NET_Address **) a, *(NET_Address **) b);
+}
+#endif
+
 NET_Address **NET_GetLocalAddresses(int *num_addresses)
 {
     int count = 0;
@@ -698,6 +736,108 @@ NET_Address **NET_GetLocalAddresses(int *num_addresses)
     }
 
     SDL_free(addrs);
+
+#elif defined(SDL_PLATFORM_ANDROID)
+    // Android has getifaddrs() in Android 24, but we still target 21, so do it the hard way.
+    const int sock = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+    if (sock < 0) {
+        SetLastSocketError("Failed to create AF_NETLINK socket");
+        return NULL;
+    }
+
+    fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK);
+
+    // Ask for the address information.
+    typedef struct reqstruct
+    {
+        struct nlmsghdr header;
+        struct ifaddrmsg msg;
+    } reqstruct;
+
+    reqstruct req;
+    SDL_zero(req);
+    req.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP;
+    req.header.nlmsg_type = RTM_GETADDR;
+    req.header.nlmsg_len = NLMSG_LENGTH(sizeof (req.msg));
+    req.msg.ifa_family = AF_UNSPEC;
+
+    if (send(sock, &req, req.header.nlmsg_len, 0) != req.header.nlmsg_len) {
+        SetLastSocketError("Failed to send request to AF_NETLINK socket");
+        close(sock);
+        return NULL;
+    }
+
+    // this can produce duplicate entries for various reasons; use an SDL_PropertiesID to keep a unique table.
+    const SDL_PropertiesID addr_table = SDL_CreateProperties();
+    if (!addr_table) {
+        close(sock);
+        return NULL;
+    }
+
+    Uint8 buffer[64 * 1024];
+    ssize_t br;
+    while ((br = recv(sock, buffer, sizeof (buffer), 0)) > 0) {
+        for (const struct nlmsghdr *header = (const struct nlmsghdr *) buffer; NLMSG_OK(header, (size_t) br); header = NLMSG_NEXT(header, br)) {
+            if (header->nlmsg_type == NLMSG_DONE) {
+                break;  // we got it all.
+            } else if (header->nlmsg_type == NLMSG_ERROR) {
+                // uhoh.
+                NET_FreeLocalAddresses(retval);
+                retval = NULL;
+                break;
+            } else if (header->nlmsg_type == RTM_NEWADDR) {
+                const struct ifaddrmsg *msg = (const struct ifaddrmsg *) (NLMSG_DATA(header));
+                size_t payload_len = IFA_PAYLOAD(header);
+                for (const struct rtattr *attr = IFA_RTA(msg); RTA_OK(attr, payload_len); attr = RTA_NEXT(attr, payload_len)) {
+                    if ((attr->rta_type != IFA_ADDRESS) && (attr->rta_type != IFA_LOCAL)) {
+                        continue;
+                    }
+
+                    // this gives us the raw bytes of an address, but not the actual sockaddr_* layout, so we have to go with known protocols.  :/
+                    AddressStorage addrstorage;
+                    SockLen addrlen = 0;
+                    SDL_zero(addrstorage);
+                    addrstorage.ss_family = msg->ifa_family;
+                    if (addrstorage.ss_family == AF_INET) {
+                        struct sockaddr_in *sa = (struct sockaddr_in *) &addrstorage;
+                        SDL_memcpy(&sa->sin_addr, RTA_DATA(attr), RTA_PAYLOAD(attr));
+                        addrlen = sizeof (*sa);
+                    } else if (addrstorage.ss_family == AF_INET6) {
+                        struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &addrstorage;
+                        SDL_memcpy(&sa6->sin6_addr, RTA_DATA(attr), RTA_PAYLOAD(attr));
+                        addrlen = sizeof (*sa6);
+                    } else {
+                        continue;  // unknown protocol family.
+                    }
+
+                    NET_Address *netaddr = CreateSDLNetAddrFromSockAddr((const struct sockaddr *) &addrstorage, addrlen);
+                    if (!netaddr) {
+                        continue;
+                    }
+
+                    const char *key = NET_GetAddressString(netaddr);
+                    if (!key) {
+                        NET_UnrefAddress(netaddr);
+                    } else {
+                        SDL_SetPointerPropertyWithCleanup(addr_table, key, netaddr, CleanupNetAddrTable, NULL);
+                        count++;
+                    }
+                }
+            }
+        }
+    }
+
+    close(sock);
+
+    retval = (NET_Address **) SDL_calloc(count + 1, sizeof (NET_Address *));
+    if (retval) {
+        EnumerateNetAddrTableData data = { retval, count, 0 };
+        SDL_EnumerateProperties(addr_table, EnumerateNetAddrTable, &data);
+        count = data.real_count;
+        SDL_qsort(retval, count, sizeof (*retval), CompareNetAddrQsort);
+    }
+
+    SDL_DestroyProperties(addr_table);  // will unref all addresses still in the table, but we took a reference too.
 
 #else
     struct ifaddrs *ifaddr;
