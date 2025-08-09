@@ -341,7 +341,7 @@ static void DestroyAddress(NET_Address *addr)
     }
 }
 
-static NET_Address *CreateSDLNetAddrFromSockAddr(struct sockaddr *saddr, SockLen saddrlen)
+static NET_Address *CreateSDLNetAddrFromSockAddr(const struct sockaddr *saddr, SockLen saddrlen)
 {
     // !!! FIXME: this all seems inefficient in the name of keeping addresses generic.
     char hostbuf[128];
@@ -586,9 +586,6 @@ const char *NET_GetAddressString(NET_Address *addr)
 
 int NET_CompareAddresses(const NET_Address *sdlneta, const NET_Address *sdlnetb)
 {
-    const struct addrinfo *a;
-    const struct addrinfo *b;
-
     if (sdlneta == sdlnetb) {  // same pointer?
         return 0;
     } else if (sdlneta && !sdlnetb) {
@@ -597,8 +594,8 @@ int NET_CompareAddresses(const NET_Address *sdlneta, const NET_Address *sdlnetb)
         return 1;
     }
 
-    a = sdlneta->ainfo;
-    b = sdlnetb->ainfo;
+    const struct addrinfo *a = sdlneta->ainfo;
+    const struct addrinfo *b = sdlnetb->ainfo;
     if (a == b) {  // same pointer?
         return 0;
     } else if (a && !b) {
