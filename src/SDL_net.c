@@ -32,7 +32,7 @@
 
 #include "SDL3_net/SDL_net.h"
 
-#ifdef _WIN32
+#ifdef SDL_PLATFORM_WINDOWS
 #define WIN32_LEAN_AND_MEAN 1
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -137,7 +137,7 @@ static bool ShouldSimulateLoss(const int percent_likely_to_lose)
 
 static int CloseSocketHandle(Socket handle)
 {
-#ifdef _WIN32
+#ifdef SDL_PLATFORM_WINDOWS
     return closesocket(handle);
 #else
     return close(handle);
@@ -146,7 +146,7 @@ static int CloseSocketHandle(Socket handle)
 
 static int LastSocketError(void)
 {
-#ifdef _WIN32
+#ifdef SDL_PLATFORM_WINDOWS
     return WSAGetLastError();
 #else
     return errno;
@@ -155,7 +155,7 @@ static int LastSocketError(void)
 
 static char *CreateSocketErrorString(int rc)
 {
-#ifdef _WIN32
+#ifdef SDL_PLATFORM_WINDOWS
     WCHAR msgbuf[256];
     const DWORD bw = FormatMessageW(
         FORMAT_MESSAGE_FROM_SYSTEM |
@@ -178,7 +178,7 @@ static char *CreateSocketErrorString(int rc)
 
 static char *CreateGetAddrInfoErrorString(int rc)
 {
-#ifdef _WIN32
+#ifdef SDL_PLATFORM_WINDOWS
     return CreateSocketErrorString(rc);  // same error codes.
 #else
     return SDL_strdup((rc == EAI_SYSTEM) ? strerror(errno) : gai_strerror(rc));
@@ -391,7 +391,7 @@ bool NET_Init(void)
 
     char *origerrstr = NULL;
 
-    #ifdef _WIN32
+    #ifdef SDL_PLATFORM_WINDOWS
     WSADATA data;
     if (WSAStartup(MAKEWORD(1, 1), &data) != 0) {
         return SetSocketErrorBool("WSAStartup() failed", LastSocketError());
@@ -480,7 +480,7 @@ void NET_Quit(void)
 
     resolver_queue = NULL;
 
-    #ifdef _WIN32
+    #ifdef SDL_PLATFORM_WINDOWS
     WSACleanup();
     #endif
 }
@@ -650,7 +650,7 @@ NET_Address **NET_GetLocalAddresses(int *num_addresses)
 
     *num_addresses = 0;
 
-#ifdef _WIN32
+#ifdef SDL_PLATFORM_WINDOWS
     // !!! FIXME: maybe LoadLibrary(iphlpapi) on the first call, since most
     // !!! FIXME: things won't ever use this.
 
@@ -812,7 +812,7 @@ struct NET_StreamSocket
 
 static int MakeSocketNonblocking(Socket handle)
 {
-    #ifdef _WIN32
+    #ifdef SDL_PLATFORM_WINDOWS
     DWORD one = 1;
     return ioctlsocket(handle, FIONBIO, &one);
     #else
@@ -822,7 +822,7 @@ static int MakeSocketNonblocking(Socket handle)
 
 static bool WouldBlock(const int err)
 {
-    #ifdef _WIN32
+    #ifdef SDL_PLATFORM_WINDOWS
     return (err == WSAEWOULDBLOCK) ? true : false;
     #else
     return ((err == EWOULDBLOCK) || (err == EAGAIN) || (err == EINPROGRESS)) ? true : false;
