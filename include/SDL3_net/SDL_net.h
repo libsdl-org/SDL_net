@@ -517,8 +517,8 @@ extern SDL_DECLSPEC void SDLCALL NET_SimulateAddressResolutionLoss(int percent_l
  *
  * \param a first address to compare.
  * \param b second address to compare.
- * \returns a value less than zero if `a` is "less than" `b`, a value greater than zero
- *          if "greater than", zero if equal.
+ * \returns a value less than zero if `a` is "less than" `b`, a value greater
+ *          than zero if "greater than", zero if equal.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
