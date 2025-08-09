@@ -492,6 +492,27 @@ void NET_Quit(void)
     #endif
 }
 
+static void trim_whitespace(char *str)
+{
+    char *ptr;
+    for (ptr = str; *ptr; ptr++) {
+        if (!SDL_isspace(*ptr)) {
+            break;
+        }
+    }
+
+    if (ptr > str) {
+        SDL_memmove(str, ptr, SDL_strlen(ptr) + 1);
+    }
+
+    for (ptr = str + (SDL_strlen(str) - 1); ptr >= str; ptr--) {
+        if (!SDL_isspace(*ptr)) {
+            break;
+        }
+        *ptr = '\0';
+    }
+}
+
 NET_Address *NET_ResolveHostname(const char *host)
 {
     NET_Address *addr = SDL_calloc(1, sizeof (NET_Address));
@@ -504,6 +525,9 @@ NET_Address *NET_ResolveHostname(const char *host)
         SDL_free(addr);
         return NULL;
     }
+
+    // remove whitespace around name, just in case. https://github.com/libsdl-org/SDL_net/issues/148
+    trim_whitespace(addr->hostname);
 
     SDL_SetAtomicInt(&addr->refcount, 2);  // one for creation, one for the resolver thread to unref when done.
 
