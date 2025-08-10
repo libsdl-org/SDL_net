@@ -23,8 +23,6 @@ LOCAL_CFLAGS =
 # Warnings we haven't fixed (yet)
 LOCAL_CFLAGS += -Wno-unused-parameter -Wno-sign-compare
 
-LOCAL_CXXFLAGS += -std=gnu++11
-
 LOCAL_LDLIBS :=
 
 LOCAL_LDFLAGS := -Wl,--no-undefined -Wl,--no-undefined-version -Wl,--version-script=$(LOCAL_PATH)/src/SDL_net.sym
