@@ -96,7 +96,7 @@ static int WindowsPoll(struct pollfd *fds, unsigned int nfds, int timeout)
     #define ALLOC_FDSET(typ) { \
         if (!failed && (n##typ##fds > 0)) { \
             const int len = sizeof (Uint32) + (n##typ##fds * sizeof (SOCKET)); \
-            if (len < sizeof (stackbuf_##typ)) { \
+            if (len < (int) sizeof (stackbuf_##typ)) { \
                 typ##fds = (WindowsPoll_fd_set *) stackbuf_##typ; \
             } else { \
                 typ##fds = (WindowsPoll_fd_set *) SDL_malloc(len); \
