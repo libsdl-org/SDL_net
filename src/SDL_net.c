@@ -57,7 +57,115 @@ static int read(SOCKET s, char *buf, size_t count) {
     }
     return (int)count_received;
 }
-#define poll WSAPoll
+
+// WSAPoll doesn't exist on Windows before Vista, and isn't reliable before some version of Windows 10,
+//  so for now we just fake it with select().
+static int WindowsPoll(struct pollfd *fds, unsigned int nfds, int timeout)
+{
+    SDL_assert(fds != NULL);
+    SDL_assert(nfds > 0);
+
+    int nreadfds = 0, nwritefds = 0, nexceptfds = nfds;
+    for (unsigned int i = 0; i < nfds; i++) {
+        fds[i].revents = 0;
+        if (fds[i].events & POLLIN) {
+            nreadfds++;
+        }
+        if (fds[i].events & POLLOUT) {
+            nwritefds++;
+        }
+    }
+
+    // FD_SETSIZE is 64 on Windows, but they don't use bitsets, so you can
+    //  just supply your own struct that uses any length.
+    //
+    //   https://devblogs.microsoft.com/oldnewthing/20221102-00/?p=107343
+    typedef struct WindowsPoll_fd_set {
+        Uint32 count;
+        SOCKET sockets[]; // variable-length array
+    } WindowsPoll_fd_set;
+
+    Uint8 stackbuf_read[256];  // in case if we can do this without malloc.
+    Uint8 stackbuf_write[256];  // in case if we can do this without malloc.
+    Uint8 stackbuf_except[256];  // in case if we can do this without malloc.
+    WindowsPoll_fd_set *readfds = NULL;
+    WindowsPoll_fd_set *writefds = NULL;
+    WindowsPoll_fd_set *exceptfds = NULL;
+
+    bool failed = false;
+    #define ALLOC_FDSET(typ) { \
+        if (!failed && (n##typ##fds > 0)) { \
+            const int len = sizeof (Uint32) + (n##typ##fds * sizeof (SOCKET)); \
+            if (len < sizeof (stackbuf_##typ)) { \
+                typ##fds = (WindowsPoll_fd_set *) stackbuf_##typ; \
+            } else { \
+                typ##fds = (WindowsPoll_fd_set *) SDL_malloc(len); \
+                if (!typ##fds) { \
+                    failed = true; \
+                } \
+            } \
+            if (typ##fds) { \
+                SDL_memset(typ##fds, '\0', len); \
+            } \
+        } \
+    }
+    ALLOC_FDSET(read);
+    ALLOC_FDSET(write);
+    ALLOC_FDSET(except);
+    #undef ALLOC_FDSET
+
+    int retval = -1;
+    if (!failed) {
+        for (unsigned int i = 0; i < nfds; i++) {
+            exceptfds->sockets[exceptfds->count++] = fds[i].fd;
+            if (fds[i].events & POLLIN) {
+                readfds->sockets[readfds->count++] = fds[i].fd;
+            }
+            if (fds[i].events & POLLOUT) {
+                writefds->sockets[writefds->count++] = fds[i].fd;
+            }
+        }
+
+        struct timeval tvtimeout;
+        struct timeval *ptvtimeout = NULL;
+
+        if (timeout >= 0) {
+            tvtimeout.tv_sec = timeout / 1000;
+            tvtimeout.tv_usec = (timeout % 1000) * 1000;
+            ptvtimeout = &tvtimeout;
+        }
+
+        // WinSock's select() ignores the first parameter, since it doesn't use bitsets, and SOCKETs aren't small integers. Just specify zero here.
+        retval = select(0, (fd_set *) readfds, (fd_set *) writefds, (fd_set *) exceptfds, ptvtimeout);
+        if (retval > 0) {
+            #define CHECKSET(typ, flag) { \
+                if (typ##fds != NULL) { \
+                    for (Uint32 i = 0; i < typ##fds->count; i++) { \
+                        SOCKET sock = typ##fds->sockets[i]; \
+                        for (unsigned int j = 0; j < nfds; j++) { \
+                            if (fds[j].fd == sock) { \
+                                fds[j].revents |= flag; \
+                            } \
+                        } \
+                    } \
+                } \
+            }
+            CHECKSET(read, POLLIN);
+            CHECKSET(write, POLLOUT);
+            CHECKSET(except, POLLERR);
+            #undef CHECKSET
+        }
+    }
+
+    if ((void *) readfds != (void *) stackbuf_read) { SDL_free(readfds); }
+    if ((void *) writefds != (void *) stackbuf_write) { SDL_free(writefds); }
+    if ((void *) exceptfds != (void *) stackbuf_except) { SDL_free(exceptfds); }
+
+    return retval;
+}
+
+#define poll WindowsPoll
+
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -1950,6 +2058,7 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
             return SetLastSocketError("Socket poll failed");
         }
 
+        // !!! FIXME: skip this loop if rc == 0.
         pfd = &pfds[0];
         for (int i = 0; i < numsockets; i++) {
             NET_GenericSocket *sock = sockets[i];
