@@ -10,8 +10,8 @@ message(WARNING
 
 # See release_checklist.md
 set(MAJOR_VERSION 2)
-set(MINOR_VERSION 3)
-set(MICRO_VERSION 0)
+set(MINOR_VERSION 9)
+set(MICRO_VERSION 90)
 set(SDL_REQUIRED_VERSION 3.1.0)
 
 include(PrivateSdlFunctions)
@@ -21,7 +21,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
     message(FATAL_ERROR "Prevented in-tree built. Please create a build directory outside of the SDL_net source code and call cmake from there")
 endif()
 
-project(SDL2On3_net
+project(SDL3_net
     LANGUAGES C
     VERSION "${FULL_VERSION}"
 )

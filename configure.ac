@@ -3,8 +3,8 @@ dnl Process this file with autoconf to produce a configure script.
 dnl Set various version strings - taken gratefully from the GTk sources
 # See release_checklist.md
 m4_define([MAJOR_VERSION_MACRO], [2])
-m4_define([MINOR_VERSION_MACRO], [3])
-m4_define([MICRO_VERSION_MACRO], [0])
+m4_define([MINOR_VERSION_MACRO], [9])
+m4_define([MICRO_VERSION_MACRO], [90])
 
 AC_INIT([SDL2_net],
         [MAJOR_VERSION_MACRO.MINOR_VERSION_MACRO.MICRO_VERSION_MACRO],
@@ -190,7 +190,7 @@ AC_ARG_ENABLE([examples],
 AM_CONDITIONAL(ENABLE_EXAMPLES, [test x$enable_examples = xyes])
 
 dnl Check for SDL
-SDL_VERSION=2.0.4
+SDL_VERSION=3.1.0
 AC_SUBST(SDL_VERSION)
 AM_PATH_SDL2($SDL_VERSION,
             :,
