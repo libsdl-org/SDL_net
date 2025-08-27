@@ -427,7 +427,7 @@ int main(int argc, char *argv[])
     }
 
     /* Initialize SDL */
-    if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
+    if ( ! SDL_Init(SDL_INIT_VIDEO) ) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                     "Couldn't initialize SDL: %s\n",
                     SDL_GetError());
@@ -436,7 +436,7 @@ int main(int argc, char *argv[])
 
 
     /* Set a 640x480 video mode */
-    if ( SDL_CreateWindowAndRenderer("chat", 640, 480, 0, &window, &renderer) < 0 ) {
+    if ( ! SDL_CreateWindowAndRenderer("chat", 640, 480, 0, &window, &renderer) ) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Couldn't create window: %s\n",
                      SDL_GetError());
