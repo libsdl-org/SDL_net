@@ -70,17 +70,6 @@ else
     not_ok "CMakeLists.txt SDL_REQUIRED_VERSION=$sdl_req disagrees with configure.ac SDL_VERSION=$ref_sdl_req"
 fi
 
-major=$(sed -ne 's/^MAJOR_VERSION *= *//p' Makefile.os2)
-minor=$(sed -ne 's/^MINOR_VERSION *= *//p' Makefile.os2)
-micro=$(sed -ne 's/^MICRO_VERSION *= *//p' Makefile.os2)
-version="${major}.${minor}.${micro}"
-
-if [ "$ref_version" = "$version" ]; then
-    ok "Makefile.os2 $version"
-else
-    not_ok "Makefile.os2 $version disagrees with $header $ref_version"
-fi
-
 for rcfile in src/version.rc VisualC/Version.rc; do
     tuple=$(sed -ne 's/^ *FILEVERSION *//p' "$rcfile" | tr -d '\r')
     ref_tuple="${ref_major},${ref_minor},${ref_micro},0"

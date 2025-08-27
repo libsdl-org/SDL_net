@@ -20,7 +20,6 @@ EXTRA_DIST = \
 	CHANGES.txt 		\
 	CMakeLists.txt		\
 	LICENSE.txt 		\
-	Makefile.os2		\
 	Makefile.psp		\
 	README.txt 		\
 	SDL2_net.spec		\

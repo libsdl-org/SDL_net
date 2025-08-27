@@ -92,14 +92,6 @@ case "$host" in
         use_version_rc=true
         LT_EXTRA="-Wl,src/version.o"
         ;;
-    *-*-os2*)
-        # disable static builds on os/2
-        enable_static=no
-        # -DBUILD_SDL is needed for DECLSPEC
-        CFLAGS="$CFLAGS -DBUILD_SDL"
-        # OS/2 does not support a DLL name longer than 8 characters.
-        LT_EXTRA="-os2dllname SDL2net"
-        ;;
 esac
 AM_CONDITIONAL(USE_VERSION_RC, test x$use_version_rc = xtrue)
 
@@ -162,7 +154,7 @@ CheckVisibilityHidden()
     AC_MSG_CHECKING(for GCC -fvisibility=hidden option)
     have_gcc_fvisibility=no
     case "$host" in
-    *-*-cygwin* | *-*-mingw* | *-*-os2*)
+    *-*-cygwin* | *-*-mingw*)
         AC_MSG_RESULT([ignored for $host_os])
         return
         ;;
