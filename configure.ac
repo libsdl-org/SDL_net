@@ -192,10 +192,7 @@ AM_CONDITIONAL(ENABLE_EXAMPLES, [test x$enable_examples = xyes])
 dnl Check for SDL
 SDL_VERSION=3.1.0
 AC_SUBST(SDL_VERSION)
-AM_PATH_SDL2($SDL_VERSION,
-            :,
-	    AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
-)
+PKG_CHECK_MODULES([SDL], [sdl3], [], [AC_MSG_ERROR([Cannot find SDL3])])
 CFLAGS="$CFLAGS $SDL_CFLAGS"
 LIBS="$LIBS $SDL_LIBS"
 
@@ -238,3 +235,10 @@ SDL2_net.spec
 SDL2_net.pc
 ])
 AC_OUTPUT
+
+AC_MSG_WARN([
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! SDL2_net on top of SDL3 is provided as a means to making porting easier.  !!!
+!!! This library is completely unsupported.                                   !!!
+!!! DO NOT SHIP THIS LIBRARY                                                  !!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!])
