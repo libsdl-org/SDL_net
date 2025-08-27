@@ -25,7 +25,7 @@
 */
 
 #include "SDL_net.h"
-#include "SDL_test.h"
+#include <SDL3/SDL_test.h>
 #include "chat.h"
 
 #include <stdio.h>
@@ -97,12 +97,12 @@ static void TextWindowDisplay(TextWindow *textwin, SDL_Renderer *renderer)
 static void TextWindowAddTextWithLength(TextWindow *textwin, const char *text, size_t len)
 {
     size_t existing;
-    SDL_bool newline = SDL_FALSE;
+    bool newline = false;
     char *line;
 
     if ( len > 0 && text[len - 1] == '\n' ) {
         --len;
-        newline = SDL_TRUE;
+        newline = true;
     }
 
     if ( textwin->lines[textwin->current] ) {
@@ -261,8 +261,8 @@ int HandleServerData(Uint8 *data)
                     newip.port, people[which].name);
 
             /* Put the address back in network form */
-            newip.host = SDL_SwapBE32(newip.host);
-            newip.port = SDL_SwapBE16(newip.port);
+            newip.host = SDL_Swap32BE(newip.host);
+            newip.port = SDL_Swap16BE(newip.port);
 
             /* Bind the address to the UDP socket */
             SDLNet_UDP_Bind(udpsock, which, &newip);
@@ -436,7 +436,7 @@ int main(int argc, char *argv[])
 
 
     /* Set a 640x480 video mode */
-    if ( SDL_CreateWindowAndRenderer(640, 480, 0, &window, &renderer) < 0 ) {
+    if ( SDL_CreateWindowAndRenderer("chat", 640, 480, 0, &window, &renderer) < 0 ) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Couldn't create window: %s\n",
                      SDL_GetError());
@@ -504,16 +504,17 @@ int main(int argc, char *argv[])
     /* Run the GUI, handling network data */
     SendHello(argv[2]);
     done = 0;
+    SDL_StartTextInput(window);
     while ( !done ) {
         HandleNet();
 
         while ( SDL_PollEvent(&event) == 1 ) {
             switch ( event.type ) {
-            case SDL_QUIT:
+            case SDL_EVENT_QUIT:
                 done = 1;
                 break;
-            case SDL_KEYDOWN:
-                switch ( event.key.keysym.sym ) {
+            case SDL_EVENT_KEY_DOWN:
+                switch ( event.key.key ) {
                 case SDLK_ESCAPE:
                     done = 1;
                     break;
@@ -533,7 +534,7 @@ int main(int argc, char *argv[])
                     break;
                 }
                 break;
-            case SDL_TEXTINPUT:
+            case SDL_EVENT_TEXT_INPUT:
                 {
                     size_t textlen = SDL_strlen(event.text.text);
 
@@ -557,6 +558,7 @@ int main(int argc, char *argv[])
 
         DisplayGUI(renderer);
     }
+    SDL_StopTextInput(window);
     cleanup(0);
 
     /* Keep the compiler happy */

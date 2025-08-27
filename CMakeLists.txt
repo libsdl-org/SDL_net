@@ -1,12 +1,18 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.16...4.0)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
+message(WARNING
+  "SDL2_net on top of SDL3 is provided as a means to making porting easier.\n"
+  "This library is completely unsupported.\n"
+  "DO NOT SHIP THIS LIBRARY"
+)
 
 # See release_checklist.md
 set(MAJOR_VERSION 2)
 set(MINOR_VERSION 3)
 set(MICRO_VERSION 0)
-set(SDL_REQUIRED_VERSION 2.0.4)
+set(SDL_REQUIRED_VERSION 3.1.0)
 
 include(PrivateSdlFunctions)
 sdl_calculate_derived_version_variables()
@@ -15,7 +21,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
     message(FATAL_ERROR "Prevented in-tree built. Please create a build directory outside of the SDL_net source code and call cmake from there")
 endif()
 
-project(SDL2_net
+project(SDL2On3_net
     LANGUAGES C
     VERSION "${FULL_VERSION}"
 )
@@ -28,10 +34,10 @@ else()
     set(SDL2NET_ROOTPROJECT OFF)
 endif()
 
-if(TARGET SDL2::SDL2test)
-    set(SDL2test_FOUND ON)
+if(TARGET SDL3::SDL3_test)
+    set(SDL3test_FOUND ON)
 else()
-    find_package(SDL2test)
+    find_package(SDL3 CONFIG COMPONENTS SDL3_test)
 endif()
 
 set(SDLNET_PKGCONFIG_PRIVATE_LIBS)
@@ -56,10 +62,10 @@ option(BUILD_SHARED_LIBS "Build the library as a shared library" ON)
 
 cmake_dependent_option(SDL2NET_INSTALL "Enable SDL2_net install target" ${SDL2NET_ROOTPROJECT} ${sdl2net_install_enableable} OFF)
 
-cmake_dependent_option(SDL2NET_SAMPLES "Build SDL2_net samples" ${SDL2NET_ROOTPROJECT} "${SDL2test_FOUND}" OFF)
+cmake_dependent_option(SDL2NET_SAMPLES "Build SDL2_net samples" ${SDL2NET_ROOTPROJECT} "TARGET SDL3::SDL3_test" OFF)
 
 if(SDL2NET_SAMPLES)
-    find_package(SDL2test REQUIRED)
+    find_package(SDL3 CONFIG COMPONENTS SDL3_test)
 endif()
 
 # Save BUILD_SHARED_LIBS variable
@@ -68,14 +74,18 @@ set(SDL2NET_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 if(SDL2NET_BUILD_SHARED_LIBS)
     set(sdl2_net_export_name SDL2_net)
     set(sdl2_net_install_name_infix shared)
-    set(sdl2_target_name SDL2::SDL2)
+    set(sdl3_target_name SDL3::SDL3)
+    set(sdl3_component SDL3)
 else()
     set(sdl2_net_export_name SDL2_net-static)
     set(sdl2_net_install_name_infix static)
-    set(sdl2_target_name SDL2::SDL2-static)
+    set(sdl3_target_name SDL3::SDL3-static)
+    set(sdl3_component SDL3-shared)
 endif()
 
-sdl_find_sdl2(${sdl2_target_name} ${SDL_REQUIRED_VERSION})
+if(NOT TARGET ${sdl3_target_name})
+    find_package(SDL3 REQUIRED CONFIG COMPONENTS ${sdl3_component})
+endif()
 
 add_library(SDL2_net
     src/SDLnet.c
@@ -98,7 +108,7 @@ target_compile_definitions(SDL2_net PRIVATE
     SDL_BUILD_MINOR_VERSION=${MINOR_VERSION}
     SDL_BUILD_MICRO_VERSION=${MICRO_VERSION}
 )
-target_link_libraries(SDL2_net PRIVATE $<BUILD_INTERFACE:${sdl2_target_name}>)
+target_link_libraries(SDL2_net PRIVATE $<BUILD_INTERFACE:${sdl3_target_name}>)
 if(WIN32)
     if (MSVC)
         target_compile_options(SDL2_net PRIVATE /W3 /wd4244)
@@ -290,15 +300,15 @@ if(SDL2NET_SAMPLES)
 
     add_executable(showinterfaces examples/showinterfaces.c)
     target_compile_definitions(showinterfaces PRIVATE SDL_MAIN_HANDLED)
-    target_link_libraries(showinterfaces PRIVATE SDL2_net::${sdl2_net_export_name} ${sdl2_target_name})
+    target_link_libraries(showinterfaces PRIVATE SDL2_net::${sdl2_net_export_name} ${sdl3_target_name})
 
     add_executable(chat examples/chat.c examples/chat.h)
-    if(TARGET SDL2::SDL2main)
-        target_link_libraries(chat PRIVATE SDL2::SDL2main)
-    endif()
-    target_link_libraries(chat PRIVATE SDL2_net::${sdl2_net_export_name} SDL2::SDL2test ${sdl2_target_name})
+    target_link_libraries(chat PRIVATE SDL2_net::${sdl2_net_export_name} SDL3::SDL3_test ${sdl3_target_name})
 
     add_executable(chatd examples/chatd.c examples/chat.h)
     target_compile_definitions(chatd PRIVATE SDL_MAIN_HANDLED)
-    target_link_libraries(chatd PRIVATE SDL2_net::${sdl2_net_export_name} ${sdl2_target_name})
+    target_link_libraries(chatd PRIVATE SDL2_net::${sdl2_net_export_name} ${sdl3_target_name})
 endif()
+
+add_library(SDL2_net_on_SDL3 INTERFACE)
+add_library(SDL2_net::on-SDL3 ALIAS SDL2_net_on_SDL3)

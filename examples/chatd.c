@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #include "SDL_net.h"
 #include "chat.h"
 
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
     (void) argv;
 
     /* Initialize SDL */
-    if ( SDL_Init(0) < 0 ) {
+    if ( ! SDL_Init(0) ){
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Couldn't initialize SDL: %s\n", 
                      SDL_GetError());

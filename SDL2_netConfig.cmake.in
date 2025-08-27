@@ -1,3 +1,15 @@
+
+message(WARNING
+  "SDL2_net on top of SDL3 is provided as a means to making porting easier.\n"
+  "This library is completely unsupported.\n"
+  "DO NOT SHIP THIS LIBRARY"
+)
+
+# Presence of a SDL2_net::on-SDL3 target signals SDL2_net on top of SDL3
+if(NOT TARGET SDL2_net::on-SDL3)
+    add_library(SDL2_net::on-SDL3 UNKNOWN IMPORTED)
+endif()
+
 include(FeatureSummary)
 set_package_properties(SDL2_net PROPERTIES
     URL "https://www.libsdl.org/projects/SDL_net/"
