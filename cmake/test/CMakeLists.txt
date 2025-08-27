@@ -26,10 +26,10 @@ endif()
 
 if(TEST_STATIC)
     # FIXME: in the distant future, must become REQUIRED
-    find_package(SDL3 CONFIG REQUIRED COMPONENTS SDL3-static)
+    find_package(SDL3 CONFIG REQUIRED COMPONENTS SDL3)
     find_package(SDL2_net REQUIRED CONFIG)
     add_executable(main_static main.c)
-    target_link_libraries(main_static PRIVATE SDL3::SDL3-static SDL2_net::SDL2_net-static)
+    target_link_libraries(main_static PRIVATE SDL3::SDL3 SDL2_net::SDL2_net-static)
 endif()
 
 feature_summary(WHAT ALL)
