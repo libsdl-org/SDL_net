@@ -1,11 +1,12 @@
 #define SDL_MAIN_HANDLED
-#include "SDL.h"
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 #include "SDL_net.h"
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
     SDL_SetMainReady();
-    if (SDL_Init(0) < 0) {
+    if (!SDL_Init(0)) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
         return 1;
     }

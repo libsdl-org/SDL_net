@@ -50,7 +50,7 @@ jobs:
       uses: libsdl-org/setup-sdl@main
       with:
         cmake-generator: Ninja
-        version: 2-head
+        version: 3-head
         sdl-test: true
         shell: ${{ matrix.platform.shell }}
         add-to-environment: true
