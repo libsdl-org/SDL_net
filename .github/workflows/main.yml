@@ -107,6 +107,9 @@ jobs:
       if: "! matrix.platform.cmake"
       run: |
         set -eu
+        if [ "x${{ runner.os }}" = "xWindows" ]; then
+          export PKG_CONFIG_PATH="$( cygpath -u "${{ steps.sdl.outputs.prefix }}/lib/pkgconfig" ):$PKG_CONFIG_PATH"
+        fi
         rm -fr build-autotools
         mkdir build-autotools
         ./autogen.sh
