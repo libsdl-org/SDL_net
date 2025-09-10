@@ -2,13 +2,17 @@ SDL3_net_0.0.0 {
   global:
     NET_AcceptClient;
     NET_CompareAddresses;
+    NET_ConvertToSecWebSocketAcceptKey;
     NET_CreateClient;
     NET_CreateDatagramSocket;
     NET_CreateServer;
+    NET_CreateSimpleWSStream;
+    NET_CreateWSStream;
     NET_DestroyDatagram;
     NET_DestroyDatagramSocket;
     NET_DestroyServer;
     NET_DestroyStreamSocket;
+    NET_DestroyWSStream;
     NET_FreeLocalAddresses;
     NET_GetAddressStatus;
     NET_GetAddressString;
@@ -16,6 +20,7 @@ SDL3_net_0.0.0 {
     NET_GetLocalAddresses;
     NET_GetStreamSocketAddress;
     NET_GetStreamSocketPendingWrites;
+    NET_GetWSStreamAddress;
     NET_Version;
     NET_Init;
     NET_Quit;
@@ -27,6 +32,7 @@ SDL3_net_0.0.0 {
     NET_SimulateAddressResolutionLoss;
     NET_SimulateDatagramPacketLoss;
     NET_SimulateStreamPacketLoss;
+    NET_UpdateWSStream;
     NET_UnrefAddress;
     NET_WaitUntilConnected;
     NET_WaitUntilInputAvailable;

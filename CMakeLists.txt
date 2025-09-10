@@ -80,6 +80,7 @@ cmake_dependent_option(SDLNET_RELOCATABLE "Create relocatable SDL_net package" "
 option(SDLNET_WERROR "Treat warnings as errors" OFF)
 
 option(SDLNET_SAMPLES "Build the SDL3_net sample program(s)" ${SDLNET_SAMPLES_DEFAULT})
+option(SDLNET_WS_SAMPLE "Build the SDL3_net sample web socket server" OFF)
 cmake_dependent_option(SDLNET_SAMPLES_INSTALL "Install the SDL3_net sample program(s)" OFF "SDLNET_SAMPLES;SDLNET_INSTALL" OFF)
 
 # Save BUILD_SHARED_LIBS variable
@@ -316,4 +317,22 @@ if(SDLNET_SAMPLES)
 
     # Build at least one example in C90
     set_property(TARGET get-local-addrs PROPERTY C_STANDARD 90)
+endif()
+
+if(SDLNET_WS_SAMPLE)
+    find_package(OpenSSL REQUIRED)
+
+    add_executable(ws-server examples/web-socket-server.c)
+    sdl_add_warning_options(ws-server WARNING_AS_ERROR ${SDLTTF_WERROR})
+    sdl_target_link_options_no_undefined(ws-server)
+    target_link_libraries(ws-server PRIVATE SDL3_net::${sdl3_net_target_name})
+    target_link_libraries(ws-server PRIVATE ${sdl3_target_name})
+    target_link_libraries(ws-server PRIVATE OpenSSL::SSL)
+    set_property(TARGET ws-server PROPERTY C_STANDARD 99)
+    set_property(TARGET ws-server PROPERTY C_EXTENSIONS FALSE)
+    if(SDLNET_SAMPLES_INSTALL)
+        install(TARGETS ws-server
+            RUNTIME DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/installed-tests/SDL3_net"
+        )
+    endif()
 endif()
