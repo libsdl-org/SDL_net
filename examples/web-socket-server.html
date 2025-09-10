@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<head>
+	<title>SDL3 Web Socket Server Test</title>
+</head>
+<body>
+	<script>
+		const ws = new WebSocket('ws://%s:%d/ws');
+		ws.addEventListener('open', function(){
+			console.log('Connection opened');
+			let button = document.getElementById('button');
+			button.removeAttribute('disabled');
+		});
+		ws.addEventListener('close', function(){
+			console.log('Connection closed');
+			let button = document.getElementById('button');
+			button.setAttribute('disabled', true);
+		});
+		function send() {
+			let input = document.getElementById('input');
+			if(!input.value){
+				return;
+			}
+			ws.send(input.value);
+		}
+	</script>
+	<input id='input' placeholder='Enter text to send' />
+	<button id='button' onclick='send(event)' disabled>Send</button>
+</body>
+</html>

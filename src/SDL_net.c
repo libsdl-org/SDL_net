@@ -1621,14 +1621,17 @@ NET_Address * NET_GetWSStreamAddress(NET_WSStream * ws) {
 
 void NET_WSStreamSendBadRequest(NET_StreamSocket *sock)
 {
-    char buffer[4096];
-    SDL_snprintf(buffer, sizeof(buffer), "HTTP/1.0 400 Bad Request\r\n\r\n");
+    char buffer[128];
+    SDL_snprintf(buffer, sizeof(buffer),
+        "HTTP/1.1 400 Bad Request\r\n"
+        "Connection: close\r\n"
+        "\r\n");
     NET_WriteToStreamSocket(sock, buffer, sizeof(buffer));
 }
 
 bool NET_UpdateWSStream(NET_WSStream *ws)
 {
-    if(!ws) {
+    if(!ws || ws->socktype != SOCKETTYPE_WEBSOCKET) {
         SDL_InvalidParamError("ws");
         return false;
     }
@@ -1673,7 +1676,6 @@ bool NET_UpdateWSStream(NET_WSStream *ws)
             char *endOfMethod = SDL_strchr(start, ' ');
             if (!endOfMethod) {
                 NET_WSStreamSendBadRequest(ws->stream);
-                NET_DestroyWSStream(ws);
                 return false;
             }
             *endOfMethod = '\0';
@@ -1683,7 +1685,6 @@ bool NET_UpdateWSStream(NET_WSStream *ws)
             char *endOfRoute = SDL_strchr(start, ' ');
             if (!endOfRoute) {
                 NET_WSStreamSendBadRequest(ws->stream);
-                NET_DestroyWSStream(ws);
                 return false;
             }
             *endOfRoute = '\0';
@@ -1693,7 +1694,6 @@ bool NET_UpdateWSStream(NET_WSStream *ws)
             char *endOfProtocol = SDL_strstr(start, "\r\n");
             if (!endOfProtocol) {
                 NET_WSStreamSendBadRequest(ws->stream);
-                NET_DestroyWSStream(ws);
                 return false;
             }
             *endOfProtocol = '\0';
@@ -1701,7 +1701,6 @@ bool NET_UpdateWSStream(NET_WSStream *ws)
             start = endOfProtocol + 2;
 
             if (ws->onPreamble && !ws->onPreamble(method, route, protocol, ws->userdata)) {
-                NET_DestroyWSStream(ws);
                 return false;
             }
 
@@ -1729,7 +1728,6 @@ bool NET_UpdateWSStream(NET_WSStream *ws)
                 start = end + 2;
 
                 if( ws->onHeader && !ws->onHeader(key, value, ws->userdata)) {
-                    NET_DestroyWSStream(ws);
                     return false;
                 }
 
@@ -1744,19 +1742,17 @@ bool NET_UpdateWSStream(NET_WSStream *ws)
 
             if (!wsKey || !upgrade || !connection) {
                 NET_WSStreamSendBadRequest(ws->stream);
-                NET_DestroyWSStream(ws);
                 return false;
             }
 
             if (ws->onOpen && !ws->onOpen(ws->userdata)) {
-                NET_DestroyWSStream(ws);
                 return false;
             }
 
             // Clear the input buffer since it should only contain the HTTP request
             ws->pending_input_len = 0;
 
-            char acceptKey[1024];
+            char acceptKey[256];
 
             // Web Socket Key + Magic string defined in the Web Socket protocol
             SDL_snprintf(acceptKey, sizeof(acceptKey), "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", wsKey);
@@ -1766,11 +1762,13 @@ bool NET_UpdateWSStream(NET_WSStream *ws)
                 return false;
             }
 
-            char response[2024];
-            int written = SDL_snprintf(buffer, sizeof(buffer), "HTTP/1.1 200 OK\r\n"
+            char response[256];
+            int written = SDL_snprintf(response, sizeof(response),
+                "HTTP/1.1 101 Switching Protocols\r\n"
                 "Upgrade: %s\r\n"
                 "Connection: %s\r\n"
-                "Sec-WebSocket-Accept: %s\r\n",
+                "Sec-WebSocket-Accept: %s\r\n"
+                "\r\n",
                 upgrade, connection, acceptKey);
 
             ws->established_connection = true;
@@ -1793,10 +1791,12 @@ bool NET_ConvertToSecWebSocketAcceptKey(SDL_INOUT_Z_CAP(maxlen) char *key, int m
 void NET_DestroyWSStream(NET_WSStream *ws)
 {
     if (ws) {
+        if (ws->onClose) {
+            ws->onClose(ws->userdata);
+        }
         SDL_free(ws->pending_input_buffer);
         NET_DestroyStreamSocket(ws->stream);
         SDL_free(ws);
-        SDL_zerop(ws);
     }
 }
 

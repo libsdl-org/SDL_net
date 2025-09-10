@@ -13,10 +13,11 @@ bool onOpen(void*);
 bool onData(NET_WSPacketType, void*, int);
 void onClose(void*);
 
+Uint16 server_port = 2382;
+
 int main(int argc, char **argv)
 {
 	const char *interface = NULL;
-    Uint16 server_port = 2382;
     int simulate_failure = 0;
 
     for (int i = 1; i < argc; i++) {
@@ -81,7 +82,7 @@ int main(int argc, char **argv)
                     if (simulate_failure) {
                         NET_SimulateStreamPacketLoss(streamsocket, simulate_failure);
                     }
-                    NET_WSStream * ws = NET_CreateWSStream(streamsocket, onPreamble, onHeader, onOpen, onData, onClose, NULL);
+                    NET_WSStream * ws = NET_CreateWSStream(streamsocket, onPreamble, onHeader, onOpen, onData, onClose, streamsocket);
                     if (!ws) {
                     	SDL_Log("NET_CreateWSStream: %s\n", SDL_GetError());
                     	break;
@@ -92,8 +93,8 @@ int main(int argc, char **argv)
 
             for (int i = 1; i < num_vsockets; i++) {
                 NET_WSStream * ws = (NET_WSStream *) vsockets[i];
-            	if(!NET_UpdateWSStream(ws)){
-            		SDL_Log("Dropping connection to '%s'", NET_GetAddressString(NET_GetWSStreamAddress(ws)));
+            	if(!ws || !NET_UpdateWSStream(ws)){
+            		SDL_Log("Dropping connection to '%s'\n", NET_GetAddressString(NET_GetWSStreamAddress(ws)));
                     NET_DestroyWSStream(ws);
                     vsockets[i] = NULL;
                     if (i < (num_vsockets - 1)) {
@@ -115,11 +116,74 @@ int main(int argc, char **argv)
     return 0;
 }
 
+const char* indexFormat = "<!DOCTYPE html>"
+"<head>"
+"	<title>SDL3 Web Socket Server Test</title>"
+"</head>"
+"<body>"
+"	<script>"
+"		const ws = new WebSocket('ws://%s:%d/ws');"
+"		ws.addEventListener('open', function(){"
+"			console.log('Connection opened');"
+"			let button = document.getElementById('button');"
+"			button.removeAttribute('disabled');"
+"		});"
+"		ws.addEventListener('close', function(){"
+"			console.log('Connection closed');"
+"			let button = document.getElementById('button');"
+"			button.setAttribute('disabled', true);"
+"		});"
+"		function send() {"
+"			let input = document.getElementById('input');"
+"			if(!input.value){"
+"				return;"
+"			}"
+"			ws.send(input.value);"
+"		}"
+"	</script>"
+"	<input id='input' placeholder='Enter text to send' />"
+"	<button id='button' onclick='send(event)' disabled>Send</button>"
+"</body>"
+"</html>";
+
 bool onPreamble(const char *method, const char *route, const char *protocol, void *userdata)
 {
-	(void)userdata;
-	SDL_Log("Method: %s; Route: %s; Protocol: %s\n", method, route, protocol);
-	return true;
+	bool isWebSocket = false;
+	bool logPreamble = false;
+	char header[128];
+	NET_StreamSocket *streamsocket = (NET_StreamSocket *)userdata;
+	if (SDL_strcmp(method, "GET") == 0 && SDL_strcmp(route, "/") == 0) {
+		char response[1024];
+
+		const int responseSize = SDL_snprintf(response, sizeof(response),
+			indexFormat, NET_GetAddressString(NET_GetStreamSocketAddress(streamsocket)), server_port);
+
+		const int headerSize = SDL_snprintf(header, sizeof(header),
+			"HTTP/1.1 200 OK\r\n"
+			"Connection: close\r\n"
+			"Content-Type: text/html\r\n"
+			"Content-Length: %d\r\n"
+			"\r\n",
+			responseSize);
+
+		NET_WriteToStreamSocket(streamsocket, header, headerSize);
+		NET_WriteToStreamSocket(streamsocket, response, responseSize);
+		logPreamble = true;
+	} else if (SDL_strcmp(method, "GET") == 0 && SDL_strcmp(route, "/ws") == 0){
+		isWebSocket = true;
+		logPreamble = true;
+	} else {
+		const int headerSize = SDL_snprintf(header, sizeof(header),
+			"HTTP/1.1 400 Bad Request\r\n"
+			"Connection: close\r\n"
+			"\r\n");
+		NET_WriteToStreamSocket(streamsocket, header, headerSize);
+	}
+
+	if (logPreamble) {
+		SDL_Log("Method: %s; Route: %s; Protocol: %s\n", method, route, protocol);
+	}
+	return isWebSocket;
 }
 
 bool onHeader(const char *key, const char *value, void *userdata)
@@ -163,16 +227,20 @@ bool NET_ConvertToSecWebSocketAcceptKey(SDL_INOUT_Z_CAP(maxlen) char *wsKeyPlusM
     EVP_DigestInit_ex(ctx, md, NULL);
 
 	// SHA1 hash the key + magic string
-    EVP_DigestUpdate(ctx, wsKeyPlusMagicString, maxlen);
+    EVP_DigestUpdate(ctx, wsKeyPlusMagicString, strlen(wsKeyPlusMagicString));
 
     unsigned int len;
     EVP_DigestFinal_ex(ctx, (unsigned char*)buffer, &len);
     EVP_MD_CTX_destroy(ctx);
     EVP_cleanup();
 
+    if((int)len >= maxlen) {
+    	return false;
+    }
+
   	// Base64 encode the contents of buffer and place into key + magic string
-    int size = EVP_EncodeBlock((unsigned char*)wsKeyPlusMagicString, (unsigned char*)buffer, len);
-    wsKeyPlusMagicString[size] = '\0';
+    EVP_EncodeBlock((unsigned char*)wsKeyPlusMagicString, (unsigned char*)buffer, len);
     SDL_free(buffer);
+    SDL_Log("Key=%s\n", wsKeyPlusMagicString);
     return true;
 }
