@@ -7,11 +7,11 @@
 #include <openssl/evp.h>
 #include <openssl/sha.h>
 
-bool onPreamble(const char*, const char*, const char*, void*);
-bool onHeader(const char*, const char*, void*);
-bool onOpen(void*);
-bool onData(NET_WSPacketType, void*, int);
-void onClose(void*);
+bool onPreamble(NET_WSStream *, const char*, const char*, const char*, void*);
+bool onHeader(NET_WSStream *, const char*, const char*, void*);
+bool onOpen(NET_WSStream *, void*);
+bool onData(NET_WSStream *, Uint8, void*, int);
+void onClose(NET_WSStream *, void*);
 
 Uint16 server_port = 2382;
 
@@ -63,7 +63,8 @@ int main(int argc, char **argv)
     if (!server) {
         SDL_Log("Failed to create server: %s", SDL_GetError());
     } else {
-        SDL_Log("Server is ready! Create a web socket connection to port %d", (int) server_port);
+        SDL_Log("Server is ready! Open http://%s:%d in your browser",
+        	interface == NULL ? "localhost" : interface, (int) server_port);
         int num_vsockets = 1;
         void *vsockets[128];
         SDL_zeroa(vsockets);
@@ -133,27 +134,57 @@ const char* indexFormat = "<!DOCTYPE html>"
 "			let button = document.getElementById('button');"
 "			button.setAttribute('disabled', true);"
 "		});"
+"		ws.addEventListener('message', function(e){"
+"			let label = document.createElement('li');"
+"			label.innerText = e.data;"
+"			let output = document.getElementById('output');"
+"			output.append(label);"
+"		});"
+"		ws.addEventListener('error', function(e){"
+"			console.error(e);"
+"		});"
 "		function send() {"
 "			let input = document.getElementById('input');"
 "			if(!input.value){"
 "				return;"
 "			}"
 "			ws.send(input.value);"
+"			input.value = '';"
+"		}"
+"		function sendFiles(event) {"
+"			for(let file of event.currentTarget.files) {"
+"				const reader = new FileReader();"
+"				reader.onload = () =>  ws.send(reader.result);"
+"				reader.readAsArrayBuffer(file);"
+"			}"
 "		}"
 "	</script>"
-"	<input id='input' placeholder='Enter text to send' />"
-"	<button id='button' onclick='send(event)' disabled>Send</button>"
+"	<div style='display: grid; grid-template-columns: 1fr 1fr;'>"
+"		<div>"
+"			<div>"
+"				<input id='input' placeholder='Enter text to send' />"
+"				<button id='button' onclick='send(event)' disabled>Send</button>"
+"			</div>"
+"			<div style='position: fixed; bottom: 0; left: 0;'>"
+"				<label for='file'>Open File to Send</label>"
+"				<input id='file' type='file' onchange='sendFiles(event)'>"
+"			</div>"
+"		</div>"
+"		<ul id='output'>"
+"		</ul>"
+"	</div>"
 "</body>"
 "</html>";
 
-bool onPreamble(const char *method, const char *route, const char *protocol, void *userdata)
+bool onPreamble(NET_WSStream *ws, const char *method, const char *route, const char *protocol, void *userdata)
 {
+	(void)ws;
 	bool isWebSocket = false;
 	bool logPreamble = false;
 	char header[128];
 	NET_StreamSocket *streamsocket = (NET_StreamSocket *)userdata;
 	if (SDL_strcmp(method, "GET") == 0 && SDL_strcmp(route, "/") == 0) {
-		char response[1024];
+		char response[2048];
 
 		const int responseSize = SDL_snprintf(response, sizeof(response),
 			indexFormat, NET_GetAddressString(NET_GetStreamSocketAddress(streamsocket)), server_port);
@@ -186,31 +217,35 @@ bool onPreamble(const char *method, const char *route, const char *protocol, voi
 	return isWebSocket;
 }
 
-bool onHeader(const char *key, const char *value, void *userdata)
+bool onHeader(NET_WSStream *ws, const char *key, const char *value, void *userdata)
 {
+	(void)ws;
 	(void)userdata;
 	SDL_Log("Header %s=%s\n", key, value);
 	return true;
 }
 
-bool onOpen(void *userdata)
+bool onOpen(NET_WSStream *ws, void *userdata)
 {
+	(void)ws;
 	(void)userdata;
 	return true;
 }
 
-bool onData(NET_WSPacketType type, void *buf, int len)
+bool onData(NET_WSStream *ws, Uint8 opcode, void *buf, int len)
 {
-	if(type == WS_PACKET_TYPE_TEXT) {
+	if(opcode == NET_WS_OP_CODE_TEXT) {
 		SDL_Log("Received: %.*s\n", len, (char*)buf);
+
 	} else {
 		SDL_Log("Received: %d bytes\n", len);
 	}
-	return true;
+	return NET_SendPayloadToWSStream(ws, opcode, buf, len);
 }
 
-void onClose(void *userdata)
+void onClose(NET_WSStream *ws, void *userdata)
 {
+	(void)ws;
 	(void)userdata;
 }
 

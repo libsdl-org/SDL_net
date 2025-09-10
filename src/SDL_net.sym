@@ -29,6 +29,7 @@ SDL3_net_0.0.0 {
     NET_RefAddress;
     NET_ResolveHostname;
     NET_SendDatagram;
+    NET_SendPayloadToWSStream;
     NET_SimulateAddressResolutionLoss;
     NET_SimulateDatagramPacketLoss;
     NET_SimulateStreamPacketLoss;

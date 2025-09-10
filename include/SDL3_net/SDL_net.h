@@ -1134,38 +1134,40 @@ extern SDL_DECLSPEC void SDLCALL NET_DestroyStreamSocket(NET_StreamSocket *sock)
  */
 typedef struct NET_WSStream NET_WSStream;
 
-typedef enum NET_WSPacketType {
-    WS_PACKET_TYPE_TEXT,
-    WS_PACKET_TYPE_BINARY,
-} NET_WSPacketType;
+#define NET_WS_OP_CODE_CONTINUE 0x0
+#define NET_WS_OP_CODE_TEXT 0x1
+#define NET_WS_OP_CODE_BINARY 0x2
+#define NET_WS_OP_CODE_CLOSE 0x8
+#define NET_WS_OP_CODE_PING 0x9
+#define NET_WS_OP_CODE_PONG 0xA
 
 /**
  * Callback that will be called when an HTTP Request sends its method, route, and protocol. Returning false
  * will close the web socket connection.
  */
-typedef bool (*NET_OnWSPreamble)(const char *method, const char *route, const char* protocol, void *);
+typedef bool (*NET_OnWSPreamble)(NET_WSStream *ws, const char *method, const char *route, const char* protocol, void *);
 
 /**
  * Callback that will be called for each header received in an HTTP Request. Returning false
  * will close web socket connection.
  */
-typedef bool (*NET_OnWSHeader)(const char *key, const char *value, void *);
+typedef bool (*NET_OnWSHeader)(NET_WSStream *ws, const char *key, const char *value, void *);
 
 /**
  * Callback that will be called when before the HTTP response establishing the web socket connection
  * has been sent. Returning false will close web socket connection and not send the HTTP Response.
  */
-typedef bool (*NET_OnWSOpen)(void *);
+typedef bool (*NET_OnWSOpen)(NET_WSStream *ws, void *);
 
 /**
  * Callback when a web socket frame has been received in its entirety.
  */
-typedef bool (*NET_OnWSData)(NET_WSPacketType, void *, int);
+typedef bool (*NET_OnWSData)(NET_WSStream *ws, Uint8 opcode, void *, int);
 
 /**
  * Callback that will be called when the server receives a web socket frame with the close op code.
  */
-typedef void (*NET_OnWSClose)(void *);
+typedef void (*NET_OnWSClose)(NET_WSStream *ws, void *);
 
 /**
  * WebSocket protocol requires that client's accept key be the
@@ -1207,6 +1209,8 @@ extern SDL_DECLSPEC NET_Address * NET_GetWSStreamAddress(NET_WSStream *);
  * \since This datatype is available since SDL_net 3.0.0.
  */
 extern SDL_DECLSPEC bool NET_UpdateWSStream(NET_WSStream *ws);
+
+extern SDL_DECLSPEC bool NET_SendPayloadToWSStream(NET_WSStream *ws, Uint8 opcode, void *buf, int len);
 
 extern SDL_DECLSPEC void NET_DestroyWSStream(NET_WSStream *ws);
 

@@ -15,15 +15,44 @@
 			let button = document.getElementById('button');
 			button.setAttribute('disabled', true);
 		});
+		ws.addEventListener('message', function(e){
+			let label = document.createElement('li');
+			label.innerText = e.data;
+			let output = document.getElementById('output');
+			output.append(label);
+		});
+		ws.addEventListener('error', function(e){
+			console.error(e);
+		});
 		function send() {
 			let input = document.getElementById('input');
 			if(!input.value){
 				return;
 			}
 			ws.send(input.value);
+			input.value = '';
+		}
+		function sendFiles(event) {
+			for(let file of event.currentTarget.files) {
+				const reader = new FileReader();
+				reader.onload = () =>  ws.send(reader.result);
+				reader.readAsArrayBuffer(file);
+			}
 		}
 	</script>
-	<input id='input' placeholder='Enter text to send' />
-	<button id='button' onclick='send(event)' disabled>Send</button>
+	<div style='display: grid; grid-template-columns: 1fr 1fr;'>
+		<div>
+			<div>
+				<input id='input' placeholder='Enter text to send' />
+				<button id='button' onclick='send(event)' disabled>Send</button>
+			</div>
+			<div style='position: fixed; bottom: 0; left: 0;'>
+				<label for='file'>Open File to Send</label>
+				<input id='file' type='file' onchange='sendFiles(event)'>
+			</div>
+		</div>
+		<ul id='output'>
+		</ul>
+	</div>
 </body>
 </html>
