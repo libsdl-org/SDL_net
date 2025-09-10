@@ -277,6 +277,8 @@ if(SDLNET_INSTALL)
         COMPONENT library
     )
 
+    export(TARGETS ${sdl3_net_target_name} NAMESPACE "SDL3_net::" FILE "${sdl3_net_target_name}-targets.cmake")
+
     if(SDLNET_INSTALL_MAN)
         sdl_get_git_revision_hash(SDLNET_REVISION)
         SDL_generate_manpages(
