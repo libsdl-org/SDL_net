@@ -28,8 +28,7 @@ EXTRA_DIST = \
 	Xcode			\
 	autogen.sh		\
 	cmake			\
-	mingw			\
-	src/version.rc
+	mingw
 
 libSDL2_net_la_CPPFLAGS = -I$(srcdir)/include
 libSDL2_net_la_LDFLAGS = 	\
@@ -37,9 +36,6 @@ libSDL2_net_la_LDFLAGS = 	\
 	-release $(LT_RELEASE)	\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) $(LT_EXTRA)
 libSDL2_net_la_LIBADD = @INETLIB@
-if USE_VERSION_RC
-libSDL2_net_la_DEPENDENCIES = src/version.o
-endif
 
 .rc.o:
 	$(RC) $< $@

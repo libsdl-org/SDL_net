@@ -58,7 +58,6 @@ include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
 option(CMAKE_POSITION_INDEPENDENT_CODE "Build static libraries with -fPIC" ON)
-option(BUILD_SHARED_LIBS "Build the library as a shared library" ON)
 
 cmake_dependent_option(SDL2NET_INSTALL "Enable SDL2_net install target" ${SDL2NET_ROOTPROJECT} ${sdl2net_install_enableable} OFF)
 
@@ -68,33 +67,18 @@ if(SDL2NET_SAMPLES)
     find_package(SDL3 CONFIG COMPONENTS SDL3_test)
 endif()
 
-# Save BUILD_SHARED_LIBS variable
-set(SDL2NET_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
-
-if(SDL2NET_BUILD_SHARED_LIBS)
-    set(sdl2_net_export_name SDL2_net)
-    set(sdl2_net_install_name_infix shared)
-    set(sdl3_target_name SDL3::SDL3-shared)
-    set(sdl3_component SDL3)
-else()
-    set(sdl2_net_export_name SDL2_net-static)
-    set(sdl2_net_install_name_infix static)
-    set(sdl3_target_name SDL3::Headers)
-    set(sdl3_component Headers SDL3)
+if(NOT TARGET SDL3::Headers)
+    find_package(SDL3 REQUIRED CONFIG COMPONENTS Headers SDL3)
 endif()
 
-if(NOT TARGET ${sdl3_target_name})
-    find_package(SDL3 REQUIRED CONFIG COMPONENTS ${sdl3_component})
-endif()
-
-add_library(SDL2_net
+add_library(SDL2_net STATIC
     src/SDLnet.c
     src/SDLnetselect.c
     src/SDLnetTCP.c
     src/SDLnetUDP.c
 )
 
-add_library(SDL2_net::${sdl2_net_export_name} ALIAS SDL2_net)
+add_library(SDL2_net::SDL2_net-static ALIAS SDL2_net)
 target_include_directories(SDL2_net
   PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/src"
@@ -108,7 +92,7 @@ target_compile_definitions(SDL2_net PRIVATE
     SDL_BUILD_MINOR_VERSION=${MINOR_VERSION}
     SDL_BUILD_MICRO_VERSION=${MICRO_VERSION}
 )
-target_link_libraries(SDL2_net PRIVATE $<BUILD_INTERFACE:${sdl3_target_name}>)
+target_link_libraries(SDL2_net PRIVATE $<BUILD_INTERFACE:SDL3::Headers>)
 if(WIN32)
     if (MSVC)
         target_compile_options(SDL2_net PRIVATE /W3 /wd4244)
@@ -116,16 +100,13 @@ if(WIN32)
     target_compile_definitions(SDL2_net PRIVATE _WINSOCK_DEPRECATED_NO_WARNINGS)
     target_link_libraries(SDL2_net PRIVATE ws2_32 iphlpapi)
     list(APPEND SDLNET_PKGCONFIG_PRIVATE_LIBS -lws2_32 -liphlpapi)
-    if(SDL2NET_BUILD_SHARED_LIBS)
-        target_sources(SDL2_net PRIVATE src/version.rc)
-    endif()
     if(MINGW)
       target_link_options(SDL2_net PRIVATE -static-libgcc)
     endif()
 endif()
 set_target_properties(SDL2_net PROPERTIES
     DEFINE_SYMBOL DLL_EXPORT
-    EXPORT_NAME ${sdl2_net_export_name}
+    EXPORT_NAME SDL2_net-static
     C_VISIBILITY_PRESET "hidden"
 )
 if(NOT ANDROID)
@@ -142,46 +123,10 @@ if(NOT ANDROID)
         )
     endif()
 endif()
-if(SDL2NET_BUILD_SHARED_LIBS AND (APPLE OR (UNIX AND NOT ANDROID)))
-    add_custom_command(TARGET SDL2_net POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E create_symlink "$<TARGET_SONAME_FILE_NAME:SDL2_net>" "libSDL2_net$<$<CONFIG:Debug>:${SDL2NET_DEBUG_POSTFIX}>$<TARGET_FILE_SUFFIX:SDL2_net>"
-        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-    )
-endif()
-if(SDL2NET_BUILD_SHARED_LIBS)
-    if(WIN32 OR OS2)
-        set_target_properties(SDL2_net PROPERTIES
-            PREFIX ""
-        )
-    endif()
-    if(OS2)
-        # FIXME: OS/2 Makefile has a different LIBNAME
-        set_target_properties(SDL2_net PROPERTIES
-            OUTPUT_NAME "SDL2net"
-        )
-    elseif(UNIX AND NOT ANDROID)
-        set_target_properties(SDL2_net PROPERTIES
-            OUTPUT_NAME "SDL2_net-${LT_RELEASE}"
-        )
-    endif()
-else()
-    if(MSVC OR (WATCOM AND (WIN32 OR OS2)))
-        set_target_properties(SDL2_net PROPERTIES
-            OUTPUT_NAME "SDL2_net-static"
-        )
-    endif()
-endif()
-
-# Use `Compatible Interface Properties` to ensure a shared SDL2_net is built with a shared SDL2
-if(SDL2NET_BUILD_SHARED_LIBS)
+if(MSVC OR (WATCOM AND (WIN32 OR OS2)))
     set_target_properties(SDL2_net PROPERTIES
-        INTERFACE_SDL2_SHARED ${SDL2NET_BUILD_SHARED_LIBS}
-        COMPATIBLE_INTERFACE_BOOL SDL2_SHARED
+        OUTPUT_NAME "SDL2_net-static"
     )
-endif()
-
-if(SDL2NET_BUILD_SHARED_LIBS)
-    sdl_target_link_options_no_undefined(SDL2_net)
 endif()
 
 if(SDL2NET_INSTALL)
@@ -224,7 +169,7 @@ if(SDL2NET_INSTALL)
         COMPONENT devel
     )
     install(EXPORT SDL2NetExports
-        FILE SDL2_net-${sdl2_net_install_name_infix}-targets.cmake
+        FILE SDL2_net-static-targets.cmake
         NAMESPACE SDL2_net::
         DESTINATION "${SDLNET_INSTALL_CMAKEDIR}"
         COMPONENT devel
@@ -234,21 +179,14 @@ if(SDL2NET_INSTALL)
     if(NOT TARGET SDL2)
         export(TARGETS SDL2_net
             NAMESPACE SDL2_net::
-            FILE "SDL2_net-${sdl2_net_install_name_infix}-targets.cmake"
+            FILE "SDL2_net-static-targets.cmake"
         )
     endif()
 
-    if(SDL2NET_BUILD_SHARED_LIBS)
-        set(ENABLE_SHARED_TRUE "")
-        set(ENABLE_SHARED_FALSE "#")
-        set(ENABLE_STATIC_TRUE "#")
-        set(ENABLE_STATIC_FALSE "")
-    else()
-        set(ENABLE_SHARED_TRUE "#")
-        set(ENABLE_SHARED_FALSE "")
-        set(ENABLE_STATIC_TRUE "")
-        set(ENABLE_STATIC_FALSE "#")
-    endif()
+    set(ENABLE_SHARED_TRUE "#")
+    set(ENABLE_SHARED_FALSE "")
+    set(ENABLE_STATIC_TRUE "")
+    set(ENABLE_STATIC_FALSE "#")
 
     set(prefix "${CMAKE_INSTALL_PREFIX}")
     set(exec_prefix "\${prefix}")
@@ -280,15 +218,6 @@ if(SDL2NET_INSTALL)
             TYPE FILE
             FILES \"${CMAKE_CURRENT_BINARY_DIR}/SDL2_net.pc\")" COMPONENT devel)
 
-    if(SDL2NET_BUILD_SHARED_LIBS AND (APPLE OR (UNIX AND NOT ANDROID)))
-        install(
-            FILES
-                "${PROJECT_BINARY_DIR}/libSDL2_net$<$<CONFIG:Debug>:${SDL2NET_DEBUG_POSTFIX}>$<TARGET_FILE_SUFFIX:SDL2_net>"
-            DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-            COMPONENT devel
-        )
-    endif()
-
     install(FILES "LICENSE.txt"
         DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/licenses/${PROJECT_NAME}"
         COMPONENT library
@@ -300,15 +229,28 @@ if(SDL2NET_SAMPLES)
 
     add_executable(showinterfaces examples/showinterfaces.c)
     target_compile_definitions(showinterfaces PRIVATE SDL_MAIN_HANDLED)
-    target_link_libraries(showinterfaces PRIVATE SDL2_net::${sdl2_net_export_name} SDL3::SDL3)
+    target_link_libraries(showinterfaces PRIVATE SDL2_net::SDL2_net-static SDL3::SDL3)
 
     add_executable(chat examples/chat.c examples/chat.h)
-    target_link_libraries(chat PRIVATE SDL2_net::${sdl2_net_export_name} SDL3::SDL3_test SDL3::SDL3)
+    target_link_libraries(chat PRIVATE SDL2_net::SDL2_net-static SDL3::SDL3_test SDL3::SDL3)
 
     add_executable(chatd examples/chatd.c examples/chat.h)
     target_compile_definitions(chatd PRIVATE SDL_MAIN_HANDLED)
-    target_link_libraries(chatd PRIVATE SDL2_net::${sdl2_net_export_name} SDL3::SDL3)
+    target_link_libraries(chatd PRIVATE SDL2_net::SDL2_net-static SDL3::SDL3)
 endif()
 
 add_library(SDL2_net_on_SDL3 INTERFACE)
 add_library(SDL2_net::on-SDL3 ALIAS SDL2_net_on_SDL3)
+
+set(msg "SDL_net sdl2-api-on-3 is provided as an aid in porting SDL2 apps to SDL3 and is deprecated by definition. When you read this message, it means you still need to port to SDL3_net.")
+
+message(DEPRECATION "${msg}")
+message(WARNING "${msg}")
+if(COMMAND cmake_language AND NOT PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  # Make sure the warning is also displayed at the end of configuration.
+  cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL message WARNING "${msg}")
+endif()
+
+if(TARGET SDL2_net-shared)
+  message(SEND_ERROR "SDL_net sdl2-api-on-3 can only built as a static library!!!")
+endif()

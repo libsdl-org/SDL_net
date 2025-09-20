@@ -34,7 +34,7 @@ AC_SUBST(BINARY_AGE)
 AC_SUBST(VERSION)
 
 dnl libtool versioning
-LT_INIT([win32-dll])
+LT_INIT([win32-dll disable-shared])
 
 # For historical reasons, the library name redundantly includes the major
 # version twice: libSDL2_net-2.0.so.0.
@@ -89,11 +89,9 @@ case "$host" in
                 ac_default_prefix=$BUILD_PREFIX
             fi
         fi
-        use_version_rc=true
         LT_EXTRA="-Wl,src/version.o"
         ;;
 esac
-AM_CONDITIONAL(USE_VERSION_RC, test x$use_version_rc = xtrue)
 
 dnl Figure out which networking libraries to use
 case "$host" in

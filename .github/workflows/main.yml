@@ -15,14 +15,14 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-        - { name: Windows (MSVC+CMake),         os: windows-latest, shell: sh,   cmake: '-GNinja', msvc: 1, shared: 1, static: 0 }
-        - { name: Windows (mingw32+autotools),  os: windows-latest, shell: 'msys2 {0}', msystem: mingw32, msys-env: mingw-w64-i686, shared: 1, static: 1 }
-        - { name: Windows (mingw64+CMake),      os: windows-latest, shell: 'msys2 {0}', msystem: mingw64, msys-env: mingw-w64-x86_64, cmake: '-G "Ninja Multi-Config"', shared: 1, static: 0 }
-        - { name: Linux (autotools),            os: ubuntu-latest,  shell: sh , shared: 1, static: 1 }
-        - { name: Linux (CMake),                os: ubuntu-latest,  shell: sh,   cmake: '-GNinja', shared: 1, static: 0 }
-        - { name: 'Linux (CMake, static)',      os: ubuntu-latest,  shell: sh,   cmake: '-DBUILD_SHARED_LIBS=OFF -GNinja', shared: 0, static: 1 }
-        - { name: macOS (autotools),            os: macos-latest,   shell: sh, shared: 1, static: 1 }
-        - { name: macOS (CMake),                os: macos-latest,   shell: sh,   cmake: '-GNinja', shared: 1, static: 0 }
+        - { name: Windows (MSVC+CMake),         os: windows-latest, shell: sh,   cmake: '-GNinja', msvc: 1 }
+        - { name: Windows (mingw32+autotools),  os: windows-latest, shell: 'msys2 {0}', msystem: mingw32, msys-env: mingw-w64-i686 }
+        - { name: Windows (mingw64+CMake),      os: windows-latest, shell: 'msys2 {0}', msystem: mingw64, msys-env: mingw-w64-x86_64, cmake: '-G "Ninja Multi-Config"' }
+        - { name: Linux (autotools),            os: ubuntu-latest,  shell: sh  }
+        - { name: Linux (CMake),                os: ubuntu-latest,  shell: sh,   cmake: '-GNinja' }
+        - { name: 'Linux (CMake, static)',      os: ubuntu-latest,  shell: sh,   cmake: '-DBUILD_SHARED_LIBS=OFF -GNinja' }
+        - { name: macOS (autotools),            os: macos-latest,   shell: sh }
+        - { name: macOS (CMake),                os: macos-latest,   shell: sh,   cmake: '-GNinja' }
 
     steps:
     - uses: actions/checkout@v4
@@ -146,8 +146,8 @@ jobs:
         cmake -S cmake/test -B cmake_install_config_build \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_PREFIX_PATH="${{ env.SDL2_net_DIR }}" \
-          -DTEST_SHARED=${{ matrix.platform.shared }} \
-          -DTEST_STATIC=${{ matrix.platform.static }}
+          -DTEST_SHARED=FALSE \
+          -DTEST_STATIC=TRUE
         cmake --build cmake_install_config_build --config Release --verbose
 
     - name: Verify CMake configuration files from the build directory
@@ -156,6 +156,6 @@ jobs:
         cmake -S cmake/test -B cmake_build_config_build \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_PREFIX_PATH="$(pwd)/build-cmake" \
-          -DTEST_SHARED=${{ matrix.platform.shared }} \
-          -DTEST_STATIC=${{ matrix.platform.static }}
+          -DTEST_SHARED=FALSE \
+          -DTEST_STATIC=TRUE
         cmake --build cmake_build_config_build --config Release --verbose

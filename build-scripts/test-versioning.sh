@@ -70,7 +70,7 @@ else
     not_ok "CMakeLists.txt SDL_REQUIRED_VERSION=$sdl_req disagrees with configure.ac SDL_VERSION=$ref_sdl_req"
 fi
 
-for rcfile in src/version.rc VisualC/Version.rc; do
+for rcfile in VisualC/Version.rc; do
     tuple=$(sed -ne 's/^ *FILEVERSION *//p' "$rcfile" | tr -d '\r')
     ref_tuple="${ref_major},${ref_minor},${ref_micro},0"
 
