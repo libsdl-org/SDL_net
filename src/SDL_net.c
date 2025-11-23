@@ -788,7 +788,6 @@ static void SDLCALL EnumerateNetAddrTable(void *userdata, SDL_PropertiesID props
 
 static void SDLCALL CleanupNetAddrTable(void *userdata, void *value)
 {
-    (void) userdata;
     NET_UnrefAddress((NET_Address *) value);
 }
 
