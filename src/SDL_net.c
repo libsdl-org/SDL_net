@@ -616,6 +616,9 @@ static void trim_whitespace(char *str)
 
 NET_Address *NET_ResolveHostname(const char *host)
 {
+    // If this isn't true, we'll spin up resolver threads without locking that will be orphaned in NET_Init()
+    SDL_assert(SDL_GetAtomicInt(&initialize_count) > 0);
+
     NET_Address *addr = SDL_calloc(1, sizeof (NET_Address));
     if (!addr) {
         return NULL;
