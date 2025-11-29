@@ -1974,9 +1974,11 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
 {
     NET_GenericSocket **sockets = (NET_GenericSocket **) vsockets;
     if (!sockets) {
-        return SDL_InvalidParamError("sockets");
+        SDL_InvalidParamError("sockets");
+        return -1;
     } else if (numsockets < 0) {
-        return SDL_InvalidParamError("numsockets");
+        SDL_InvalidParamError("numsockets");
+        return -1;
     } else if (numsockets == 0) {
         return 0;
     }
@@ -1989,7 +1991,8 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
     for (int i = 0; i < numsockets; i++) {
         const NET_GenericSocket *sock = sockets[i];
         if (!sock) {
-            return SDL_InvalidParamError("sockets");
+            SDL_InvalidParamError("sockets");
+            return -1;
         }
         switch (sock->socktype) {
             case SOCKETTYPE_STREAM:
