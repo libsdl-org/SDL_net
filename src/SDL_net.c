@@ -1988,6 +1988,9 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
     int numhandles = 0;
     for (int i = 0; i < numsockets; i++) {
         const NET_GenericSocket *sock = sockets[i];
+        if (!sock) {
+            return SDL_InvalidParamError("sockets");
+        }
         switch (sock->socktype) {
             case SOCKETTYPE_STREAM:
                 numhandles++;
