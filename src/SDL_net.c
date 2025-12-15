@@ -171,6 +171,7 @@ static int WindowsPoll(struct pollfd *fds, unsigned int nfds, int timeout)
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <net/if.h>
 #include <netdb.h>
 #include <errno.h>
 #include <string.h>
@@ -179,7 +180,11 @@ static int WindowsPoll(struct pollfd *fds, unsigned int nfds, int timeout)
 #include <unistd.h>
 #include <fcntl.h>
 
-#ifdef SDL_PLATFORM_ANDROID
+#if defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_ANDROID)
+#define USE_NETLINK 1
+#endif
+
+#ifdef USE_NETLINK
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #else
@@ -206,6 +211,14 @@ int NET_Version(void)
     return SDL_NET_VERSION;
 }
 
+typedef enum NET_AddressType
+{
+    NET_ADDRTYPE_UNKNOWN=-1,
+    NET_ADDRTYPE_UNICAST,
+    NET_ADDRTYPE_MULTICAST,
+    NET_ADDRTYPE_BROADCAST
+} NET_AddressType;
+
 struct NET_Address
 {
     char *hostname;
@@ -213,13 +226,24 @@ struct NET_Address
     char *errstr;
     SDL_AtomicInt refcount;
     SDL_AtomicInt status;  // This is actually a NET_Status.
+    NET_AddressType type;
     struct addrinfo *ainfo;
     NET_Address *resolver_next;  // a linked list for the resolution job queue.
 };
 
+typedef struct NetworkInterfaces
+{
+    char *name;
+    int index;
+    NET_Address *address;
+    NET_Address *broadcast;
+} NetworkInterfaces;
+
+
 #define MIN_RESOLVER_THREADS 2
 #define MAX_RESOLVER_THREADS 10
 
+// Address resolver state...
 static NET_Address *resolver_queue = NULL;
 static SDL_Thread *resolver_threads[MAX_RESOLVER_THREADS];
 static SDL_Mutex *resolver_lock = NULL;
@@ -228,6 +252,13 @@ static SDL_AtomicInt resolver_shutdown;
 static SDL_AtomicInt resolver_num_threads;
 static SDL_AtomicInt resolver_num_requests;
 static SDL_AtomicInt resolver_percent_loss;
+
+// Network interface state...
+static SDL_InitState interface_init;
+static SDL_RWLock *interface_rwlock = NULL;
+static int num_interfaces = 0;
+static NetworkInterfaces *interfaces = NULL;
+static SDL_AtomicInt interfaces_have_changed;
 
 // between lo and hi (inclusive; it can return lo or hi itself, too!).
 static int RandomNumberBetween(const int lo, const int hi)
@@ -326,6 +357,470 @@ static bool SetGetAddrInfoErrorBool(const char *msg, int err)
     return false;
 }
 
+static int MakeSocketNonblocking(Socket handle)
+{
+    #ifdef SDL_PLATFORM_WINDOWS
+    DWORD one = 1;
+    return ioctlsocket(handle, FIONBIO, &one);
+    #else
+    return fcntl(handle, F_SETFL, fcntl(handle, F_GETFL, 0) | O_NONBLOCK);
+    #endif
+}
+
+static bool WouldBlock(const int err)
+{
+    #ifdef SDL_PLATFORM_WINDOWS
+    return (err == WSAEWOULDBLOCK);
+    #else
+    return ((err == EWOULDBLOCK) || (err == EAGAIN) || (err == EINPROGRESS));
+    #endif
+}
+
+static NET_Address *CreateSDLNetAddrFromSockAddr(const struct sockaddr *saddr, SockLen saddrlen);
+
+
+
+/* Network interface enumeration... */
+static void FreeNetworkInterfaces(NetworkInterfaces *ifaces, int num_ifaces)
+{
+    for (int i = 0; i < num_ifaces; i++) {
+        NET_UnrefAddress(ifaces[i].address);
+        NET_UnrefAddress(ifaces[i].broadcast);
+        SDL_free(ifaces[i].name);
+    }
+    SDL_free(ifaces);
+}
+
+
+#ifdef SDL_PLATFORM_WINDOWS
+static HANDLE interface_change_notifications_handle;
+
+static VOID WINAPI NetworkInterfaceChangedCallback(PVOID ctx, PMIB_IPINTERFACE_ROW row, MIB_NOTIFICATION_TYPE type)
+{
+    SDL_SetAtomicInt(&interfaces_have_changed, 1);
+}
+
+static bool InitInterfaceChangeNotifications(void)   // WINDOWS VERSION
+{
+    // this would need to use NotifyAddrChange for Windows XP, but it doesn't work with IPv6 before Vista.
+    //return (NotifyAddrChange(&addr_change_notification_handle, &overlapped) == ERROR_IO_PENDING);
+
+    // !!! FIXME: this function is available on Vista and later.
+    return (NotifyIpInterfaceChange(AF_UNSPEC, NetworkInterfaceChangedCallback, NULL, FALSE, &interface_change_notifications_handle) == NO_ERROR);
+}
+
+static void QuitInterfaceChangeNotifications(void)  // WINDOWS VERSION
+{
+    CancelMibChangeNotify2(interface_change_notifications_handle);
+    interface_change_notifications_handle = 0;
+}
+
+static void RefreshInterfaces(void)  // WINDOWS VERSION
+{
+    // MSDN docs say start with a 15K buffer, which usually works on the first
+    //  try, instead of trying to query for size, allocate, and then retry,
+    //  since this tends to be more expensive.
+    ULONG buflen = 15 * 1024;
+    IP_ADAPTER_ADDRESSES *addrs = NULL;
+    ULONG rc;
+
+    do {
+        SDL_free(addrs);
+        addrs = (IP_ADAPTER_ADDRESSES *) SDL_malloc(buflen);
+        if (!addrs) {
+            return;
+        }
+
+        const ULONG flags = GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME;
+        rc = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, addrs, &buflen);
+    } while (rc == ERROR_BUFFER_OVERFLOW);
+
+    if (rc != NO_ERROR) {
+        SDL_free(addrs);
+        return;
+    }
+
+    int new_num_interfaces = 0;
+    for (IP_ADAPTER_ADDRESSES *i = addrs; i != NULL; i = i->Next) {
+        for (IP_ADAPTER_UNICAST_ADDRESS *j = i->FirstUnicastAddress; j != NULL; j = j->Next) {
+            new_num_interfaces++;
+        }
+    }
+
+    NetworkInterfaces *new_interfaces = (NetworkInterfaces *) SDL_calloc(new_num_interfaces + 1, sizeof (*new_interfaces));
+    if (!new_interfaces) {
+        SDL_free(addrs);
+        return;
+    }
+
+    int count = 0;
+    for (IP_ADAPTER_ADDRESSES *i = addrs; i != NULL; i = i->Next) {
+        for (IP_ADAPTER_UNICAST_ADDRESS *j = i->FirstUnicastAddress; j != NULL; j = j->Next) {
+            NET_Address *addr = CreateSDLNetAddrFromSockAddr(j->Address.lpSockaddr, j->Address.iSockaddrLength);
+            if (addr) {
+                new_interfaces[count].address = addr;
+                if (j->Address.lpSockaddr->sa_family == AF_INET6) {
+                    new_interfaces[count].index = i->Ipv6IfIndex;
+                } else if (j->Address.lpSockaddr->sa_family == AF_INET) {  // if this is IPv4, calculate the broadcast address.
+                    SOCKADDR_IN bcast;
+                    SDL_assert(j->Address.iSockaddrLength == sizeof (bcast));
+                    SDL_memcpy(&bcast, (const SOCKADDR_IN *) j->Address.lpSockaddr, sizeof (SOCKADDR_IN));
+                    bcast.sin_addr.S_un.S_addr |= htonl(~((1 << (32 - j->OnLinkPrefixLength)) - 1));
+                    new_interfaces[count].broadcast = CreateSDLNetAddrFromSockAddr((const struct sockaddr *) &bcast, sizeof (bcast));
+                    new_interfaces[count].broadcast->type = NET_ADDRTYPE_BROADCAST;
+                    new_interfaces[count].index = i->IfIndex;
+                }
+                count++;
+            }
+        }
+    }
+
+    new_num_interfaces = count;  // in case we dropped one somewhere.
+
+    SDL_LockRWLockForWriting(interface_rwlock);
+    NetworkInterfaces *old_interfaces = interfaces;
+    const int old_num_interfaces = num_interfaces;
+    interfaces = new_interfaces;
+    num_interfaces = new_num_interfaces;
+    SDL_UnlockRWLock(interface_rwlock);
+    FreeNetworkInterfaces(old_interfaces, old_num_interfaces);
+
+    SDL_free(addrs);
+}
+
+#elif defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_ANDROID) || defined(SDL_PLATFORM_APPLE) || defined(SDL_PLATFORM_FREEBSD) || defined(SDL_PLATFORM_OPENBSD) || defined(SDL_PLATFORM_NETBSD)
+
+// AF_NETLINK covers Linux (and by extension Android). PF_ROUTE covers the BSDs (and by extension Apple platforms).
+// This doesn't cover all Unix platforms that ever existed, but this hits just about everything that is still being maintained seriously.
+
+static SDL_Thread *interface_change_notifications_thread = NULL;
+static SDL_AtomicInt interface_change_notifications_flag;  // !!! FIXME
+
+static int SDLCALL LinuxInterfaceChangeNotificationThread(void *data)
+{
+    #ifdef USE_NETLINK
+    const int fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
+    #else
+    const int fd = socket(PF_ROUTE, SOCK_RAW, 0);
+    #endif
+    if (fd == -1) {
+        return 0;  //  oh well.
+    }
+
+    // !!! FIXME: don't make this non-blocking, find a more efficient way to terminate the thread.
+    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
+
+    #ifdef USE_NETLINK
+    struct sockaddr_nl addr;
+    SDL_zero(addr);
+    addr.nl_family = AF_NETLINK;
+    addr.nl_pid = getpid();
+    addr.nl_groups = RTMGRP_LINK|RTMGRP_IPV4_IFADDR|RTMGRP_IPV6_IFADDR;
+    if (bind(fd, (struct sockaddr *) &addr, sizeof (addr)) == -1) {
+        close(fd);
+        return 0;  // oh well.
+    }
+    #elif defined(RO_MSGFILTER)
+    const unsigned char filter[] = { RTM_IFANNOUNCE, RTM_IFINFO, RTM_NEWADDR, RTM_DELADDR, RTM_CHGADDR };
+    setsockopt(fd, PF_ROUTE, RO_MSGFILTER, &filter, sizeof (filter));
+    #endif
+
+    while (SDL_GetAtomicInt(&interface_change_notifications_flag) == 0) {
+        Uint8 buf[8192];
+        struct iovec iov = { buf, sizeof (buf) };
+        struct msghdr msg;
+        SDL_zero(msg);
+        msg.msg_iov = &iov;
+        msg.msg_iovlen = 1;
+
+        #ifdef USE_NETLINK
+        struct sockaddr_nl sa;
+        SDL_zero(sa);
+        msg.msg_name = &sa;
+        msg.msg_namelen = sizeof (sa);
+        #endif
+
+        const ssize_t br = recvmsg(fd, &msg, 0);
+        if (br < 0) {
+            if (WouldBlock(LastSocketError())) {
+                SDL_Delay(300);
+                continue;
+            }
+            // quit if there's a failure. Presumably this is because another thread close()'d the socket, to unblock the thread and request termination.
+            break;
+        }
+
+        // we don't currently bother parsing for specifics, we just use this as a signal to reenumerate interfaces.
+        //for (struct nlmsghdr *i = buf; NLMSG_OK(i, br); i = NLMSG_NEXT(i, br)) {}
+        SDL_Log("Network interfaces changed!");
+        SDL_SetAtomicInt(&interfaces_have_changed, 1);
+    }
+
+    close(fd);
+
+    return 0;
+}
+
+static bool InitInterfaceChangeNotifications(void)  // LINUX/BSD VERSION
+{
+    interface_change_notifications_thread = SDL_CreateThread(LinuxInterfaceChangeNotificationThread, "SDLNetIfaceEnum", NULL);
+    return (interface_change_notifications_thread != NULL);
+}
+
+static void QuitInterfaceChangeNotifications(void)  // LINUX/BSD VERSION
+{
+    if (interface_change_notifications_thread) {
+        SDL_SetAtomicInt(&interface_change_notifications_flag, 1);
+        SDL_WaitThread(interface_change_notifications_thread, NULL);
+        SDL_SetAtomicInt(&interface_change_notifications_flag, 0);
+    }
+    interface_change_notifications_thread = NULL;
+}
+
+static void RefreshInterfaces(void)  // LINUX/BSD VERSION
+{
+#ifdef USE_NETLINK
+    // Android has getifaddrs() in Android 24, but we still target 21, so do it the hard way. Since this works on normal Linux, we'll just use it there, too.
+    const int sock = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+    if (sock < 0) {
+        return;  // oh well.
+    }
+
+    fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK);
+
+    // Ask for the address information.
+    typedef struct reqstruct
+    {
+        struct nlmsghdr header;
+        struct ifaddrmsg msg;
+    } reqstruct;
+
+    reqstruct req;
+    SDL_zero(req);
+    req.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP;
+    req.header.nlmsg_type = RTM_GETADDR;
+    req.header.nlmsg_len = NLMSG_LENGTH(sizeof (req.msg));
+    req.msg.ifa_family = AF_UNSPEC;
+
+    if (send(sock, &req, req.header.nlmsg_len, 0) != req.header.nlmsg_len) {
+        close(sock);
+        return;  // oh well.
+    }
+
+    int new_num_interfaces = 0;
+    NetworkInterfaces *new_interfaces = NULL;
+
+    Uint8 buffer[64 * 1024];
+    ssize_t br;
+    while ((br = recv(sock, buffer, sizeof (buffer), 0)) > 0) {
+        for (const struct nlmsghdr *header = (const struct nlmsghdr *) buffer; NLMSG_OK(header, (size_t) br); header = NLMSG_NEXT(header, br)) {
+            if (header->nlmsg_type == NLMSG_DONE) {
+                goto succeeded;  // we got it all.
+            } else if (header->nlmsg_type == NLMSG_ERROR) {
+                goto failed;  // uhoh.
+            } else if (header->nlmsg_type == RTM_NEWADDR) {
+                // strictly speaking, one interface can have multiple IP addresses, so you might have multiple addresses with the same interface index.
+                void *ptr = SDL_realloc(new_interfaces, sizeof (*new_interfaces) * (new_num_interfaces + 1));
+                if (!ptr) {
+                    goto failed;
+                }
+                new_interfaces = (NetworkInterfaces *) ptr;
+                NetworkInterfaces *iface = &new_interfaces[new_num_interfaces];
+                SDL_zerop(iface);
+
+                const struct ifaddrmsg *msg = (const struct ifaddrmsg *) (NLMSG_DATA(header));
+                size_t payload_len = IFA_PAYLOAD(header);
+                for (const struct rtattr *attr = IFA_RTA(msg); RTA_OK(attr, payload_len); attr = RTA_NEXT(attr, payload_len)) {
+                    const bool isbroadcast = (attr->rta_type == IFA_BROADCAST);
+                    if (isbroadcast || (attr->rta_type == IFA_ADDRESS)) {
+                        // this gives us the raw bytes of an address, but not the actual sockaddr_* layout, so we have to go with known protocols.  :/
+                        AddressStorage addrstorage;
+                        SockLen addrlen = 0;
+                        SDL_zero(addrstorage);
+                        addrstorage.ss_family = msg->ifa_family;
+                        if (addrstorage.ss_family == AF_INET) {
+                            struct sockaddr_in *sa = (struct sockaddr_in *) &addrstorage;
+                            SDL_memcpy(&sa->sin_addr, RTA_DATA(attr), RTA_PAYLOAD(attr));
+                            addrlen = sizeof (*sa);
+                        } else if (addrstorage.ss_family == AF_INET6) {
+                            struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &addrstorage;
+                            SDL_memcpy(&sa6->sin6_addr, RTA_DATA(attr), RTA_PAYLOAD(attr));
+                            addrlen = sizeof (*sa6);
+                        } else {
+                            continue;  // unknown protocol family.
+                        }
+
+                        NET_Address **paddr = isbroadcast ? &iface->broadcast : &iface->address;
+                        SDL_assert(*paddr == NULL);  // shouldn't be two of these attributes on a single RTM_NEWADDR.
+                        *paddr = CreateSDLNetAddrFromSockAddr((const struct sockaddr *) &addrstorage, addrlen);
+                    }
+                }
+
+                if (iface->address) {
+                    iface->index = msg->ifa_index;
+                    if (iface->broadcast) {
+                        iface->broadcast->type = NET_ADDRTYPE_BROADCAST;
+                    }
+
+                    char interface_name[IF_NAMESIZE];
+                    if (if_indextoname((unsigned int) iface->index, interface_name) == NULL) {  // miraculously, this function is in Android 21; nothing else is, though! We could have done this with netlink too, but this is the easy button.
+                        interface_name[0] = '\0';
+                    }
+
+                    iface->name = SDL_strdup(interface_name);
+                    if (!iface->name) {
+                        goto failed;
+                    }
+
+                    new_num_interfaces++;
+                } else {
+                    NET_UnrefAddress(iface->broadcast);  // just in case.
+                }
+            }
+        }
+    }
+
+succeeded:
+    close(sock);
+    SDL_LockRWLockForWriting(interface_rwlock);
+    NetworkInterfaces *old_interfaces = interfaces;
+    const int old_num_interfaces = num_interfaces;
+    interfaces = new_interfaces;
+    num_interfaces = new_num_interfaces;
+    SDL_UnlockRWLock(interface_rwlock);
+    FreeNetworkInterfaces(old_interfaces, old_num_interfaces);
+    return;
+
+failed:
+    close(sock);
+    FreeNetworkInterfaces(new_interfaces, new_num_interfaces);
+    // if this was a failure case, oh well, old (maybe incorrect) ones will have to stand.
+#else
+    struct ifaddrs *ifaddr = NULL;
+    if (getifaddrs(&ifaddr) == -1) {
+        return;  // oh well.
+    }
+
+    NetworkInterfaces *new_interfaces = NULL;
+    int new_num_interfaces = 0;
+    for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next) {
+        if (i->ifa_name != NULL) {
+            new_num_interfaces++;
+        }
+    }
+
+    if (!new_num_interfaces) {
+        goto succeeded;
+    }
+
+    new_interfaces = SDL_calloc(new_num_interfaces, sizeof (*new_interfaces));
+    if (!new_interfaces) {
+        goto failed;
+    }
+
+    NetworkInterfaces *iface = &new_interfaces[0];
+    for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next, iface++) {
+        if (i->ifa_name == NULL) {
+            continue;  // i guess.
+        }
+
+        // !!! FIXME: getifaddrs doesn't return the sockaddr length, so we have to go with known protocols.  :/
+        if (i->ifa_addr->sa_family == AF_INET) {
+            iface->address = CreateSDLNetAddrFromSockAddr(i->ifa_addr, sizeof (struct sockaddr_in));
+            if (i->ifa_flags & IFF_BROADCAST) {
+                iface->broadcast = CreateSDLNetAddrFromSockAddr(i->ifa_broadaddr, sizeof (struct sockaddr_in));
+            }
+        } else if (i->ifa_addr->sa_family == AF_INET6) {
+            iface->address = CreateSDLNetAddrFromSockAddr(i->ifa_addr, sizeof (struct sockaddr_in6));
+        } else {
+            new_num_interfaces--;
+            iface--;
+            continue;
+        }
+
+        if (iface->address) {
+            if (iface->broadcast) {
+                iface->broadcast->type = NET_ADDRTYPE_BROADCAST;
+            }
+
+            iface->index = (int) if_nametoindex(i->ifa_name);
+            iface->name = SDL_strdup(i->ifa_name);
+            if (!iface->name) {
+                goto failed;
+            }
+
+            char *ptr = SDL_strchr(iface->address->human_readable, '%');  // chop off interface name.
+            if (ptr) {
+                *ptr = '\0';
+            }
+        } else {
+            NET_UnrefAddress(iface->broadcast);  // just in case.
+            goto failed;
+        }
+    }
+
+succeeded:
+    if (ifaddr) {
+        freeifaddrs(ifaddr);
+    }
+
+    SDL_LockRWLockForWriting(interface_rwlock);
+    NetworkInterfaces *old_interfaces = interfaces;
+    const int old_num_interfaces = num_interfaces;
+    interfaces = new_interfaces;
+    num_interfaces = new_num_interfaces;
+    SDL_UnlockRWLock(interface_rwlock);
+    FreeNetworkInterfaces(old_interfaces, old_num_interfaces);
+    return;
+
+failed:
+    if (ifaddr) {
+        freeifaddrs(ifaddr);
+    }
+    FreeNetworkInterfaces(new_interfaces, new_num_interfaces);
+    // if this was a failure case, oh well, old (maybe incorrect) ones will have to stand.
+#endif
+}
+
+#else
+#error implement me for your platform.
+#endif
+
+
+static bool InterfacesReady(void)
+{
+    if (SDL_ShouldInit(&interface_init)) {
+        if (!interface_rwlock) {
+            interface_rwlock = SDL_CreateRWLock();
+        }
+        if (!interface_rwlock || !InitInterfaceChangeNotifications()) {
+            SDL_SetInitialized(&interface_init, false);
+            return false;
+        }
+        SDL_SetAtomicInt(&interfaces_have_changed, 1);  // force refresh at start.
+        SDL_SetInitialized(&interface_init, true);
+    }
+
+    // if there were changes, mark it as unchanged and then we'll enumerate. So if it changes again while enumerating, we'll pick that up next time.
+    if (SDL_CompareAndSwapAtomicInt(&interfaces_have_changed, 1, 0)) {
+        RefreshInterfaces();
+        #if 0
+        SDL_Log("NETWORK INTERFACE REFRESH");
+        for (int i = 0; i < num_interfaces; i++) {
+            const NetworkInterfaces *iface = &interfaces[i];
+            SDL_Log("Interface %d ('%s')", iface->index, iface->name);
+            SDL_Log("  - address %s",  iface->address->human_readable);
+            if (iface->broadcast) {
+                SDL_Log("  - broadcast %s", iface->broadcast->human_readable);
+            }
+        }
+        #endif
+    }
+
+    return true;
+}
+
+
 // this blocks!
 static NET_Status ResolveAddress(NET_Address *addr)
 {
@@ -354,6 +849,8 @@ static NET_Status ResolveAddress(NET_Address *addr)
 
     addr->human_readable = SDL_strdup(buf);
     addr->ainfo = ainfo;
+    addr->type = NET_ADDRTYPE_UNICAST;
+
     return NET_SUCCESS;  // success (zero means "still in progress").
 }
 
@@ -479,6 +976,8 @@ static NET_Address *CreateSDLNetAddrFromSockAddr(const struct sockaddr *saddr, S
         return NULL;
     }
 
+    addr->type = NET_ADDRTYPE_UNICAST;  // until told otherwise.
+
     addr->human_readable = SDL_strdup(hostbuf);
     if (!addr->human_readable) {
         freeaddrinfo(addr->ainfo);
@@ -587,6 +1086,26 @@ void NET_Quit(void)
     }
 
     resolver_queue = NULL;
+
+    if (SDL_ShouldQuit(&interface_init)) {
+        QuitInterfaceChangeNotifications();
+        SDL_SetAtomicInt(&interfaces_have_changed, 0);
+        if (interfaces) {
+            FreeNetworkInterfaces(interfaces, num_interfaces);
+        }
+        if (interface_rwlock) {
+            SDL_DestroyRWLock(interface_rwlock);
+        }
+        interfaces = NULL;
+        num_interfaces = 0;
+        interface_rwlock = NULL;
+        SDL_SetInitialized(&interface_init, false);
+    }
+
+    // asserts to catch that these shouldn't have ever been set if we never initialized interface_init...
+    SDL_assert(!interfaces);
+    SDL_assert(!interface_rwlock);
+    SDL_assert(num_interfaces == 0);
 
     #ifdef SDL_PLATFORM_WINDOWS
     WSACleanup();
@@ -770,41 +1289,9 @@ void NET_SimulateAddressResolutionLoss(int percent_loss)
     SDL_SetAtomicInt(&resolver_percent_loss, SDL_clamp(percent_loss, 0, 100));
 }
 
-#ifdef SDL_PLATFORM_ANDROID
-typedef struct EnumerateNetAddrTableData
-{
-    NET_Address **retval;
-    int count;
-    int real_count;
-} EnumerateNetAddrTableData;
-
-static void SDLCALL EnumerateNetAddrTable(void *userdata, SDL_PropertiesID props, const char *name)
-{
-    NET_Address *netaddr = SDL_GetPointerProperty(props, name, NULL);
-    if (netaddr) {
-        NET_RefAddress(netaddr);
-        EnumerateNetAddrTableData *data = (EnumerateNetAddrTableData *) userdata;
-        SDL_assert(data->real_count < data->count);
-        data->retval[data->real_count++] = netaddr;
-    }
-}
-
-static void SDLCALL CleanupNetAddrTable(void *userdata, void *value)
-{
-    NET_UnrefAddress((NET_Address *) value);
-}
-
-static int SDLCALL CompareNetAddrQsort(const void *a, const void *b)
-{
-    return NET_CompareAddresses(*(NET_Address **) a, *(NET_Address **) b);
-}
-#endif
 
 NET_Address **NET_GetLocalAddresses(int *num_addresses)
 {
-    int count = 0;
-    NET_Address **retval = NULL;
-
     int dummy_addresses;
     if (!num_addresses) {
         num_addresses = &dummy_addresses;
@@ -812,209 +1299,20 @@ NET_Address **NET_GetLocalAddresses(int *num_addresses)
 
     *num_addresses = 0;
 
-#ifdef SDL_PLATFORM_WINDOWS
-    // !!! FIXME: maybe LoadLibrary(iphlpapi) on the first call, since most
-    // !!! FIXME: things won't ever use this.
+    NET_Address **retval = NULL;
 
-    // MSDN docs say start with a 15K buffer, which usually works on the first
-    //  try, instead of trying to query for size, allocate, and then retry,
-    //  since this tends to be more expensive.
-    ULONG buflen = 15 * 1024;
-    IP_ADAPTER_ADDRESSES *addrs = NULL;
-    ULONG rc;
-
-    do {
-        SDL_free(addrs);
-        addrs = (IP_ADAPTER_ADDRESSES *) SDL_malloc(buflen);
-        if (!addrs) {
-            return NULL;
-        }
-
-        const ULONG flags = GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME;
-        rc = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, addrs, &buflen);
-    } while (rc == ERROR_BUFFER_OVERFLOW);
-
-    if (rc != NO_ERROR) {
-        SetSocketError("GetAdaptersAddresses failed", rc);
-        SDL_free(addrs);
-        return NULL;
-    }
-
-    for (IP_ADAPTER_ADDRESSES *i = addrs; i != NULL; i = i->Next) {
-        for (IP_ADAPTER_UNICAST_ADDRESS *j = i->FirstUnicastAddress; j != NULL; j = j->Next) {
-            count++;
-        }
-    }
-
-    retval = (NET_Address **) SDL_calloc(((size_t)count) + 1, sizeof (NET_Address *));
-    if (!retval) {
-        SDL_free(addrs);
-        return NULL;
-    }
-
-    count = 0;
-    for (IP_ADAPTER_ADDRESSES *i = addrs; i != NULL; i = i->Next) {
-        for (IP_ADAPTER_UNICAST_ADDRESS *j = i->FirstUnicastAddress; j != NULL; j = j->Next) {
-            NET_Address *addr = CreateSDLNetAddrFromSockAddr(j->Address.lpSockaddr, j->Address.iSockaddrLength);
-            if (addr) {
-                retval[count++] = addr;
+    if (InterfacesReady()) {
+        SDL_LockRWLockForReading(interface_rwlock);
+        const int total = num_interfaces;
+        retval = (NET_Address **) SDL_malloc((total + 1) * sizeof (NET_Address *));
+        if (retval) {
+            for (int i = 0; i < total; i++) {
+                retval[i] = NET_RefAddress(interfaces[i].address);
             }
+            retval[total] = NULL;
+            *num_addresses = total;
         }
-    }
-
-    SDL_free(addrs);
-
-#elif defined(SDL_PLATFORM_ANDROID)
-    // Android has getifaddrs() in Android 24, but we still target 21, so do it the hard way.
-    const int sock = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
-    if (sock < 0) {
-        SetLastSocketError("Failed to create AF_NETLINK socket");
-        return NULL;
-    }
-
-    fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK);
-
-    // Ask for the address information.
-    typedef struct reqstruct
-    {
-        struct nlmsghdr header;
-        struct ifaddrmsg msg;
-    } reqstruct;
-
-    reqstruct req;
-    SDL_zero(req);
-    req.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP;
-    req.header.nlmsg_type = RTM_GETADDR;
-    req.header.nlmsg_len = NLMSG_LENGTH(sizeof (req.msg));
-    req.msg.ifa_family = AF_UNSPEC;
-
-    if (send(sock, &req, req.header.nlmsg_len, 0) != req.header.nlmsg_len) {
-        SetLastSocketError("Failed to send request to AF_NETLINK socket");
-        close(sock);
-        return NULL;
-    }
-
-    // this can produce duplicate entries for various reasons; use an SDL_PropertiesID to keep a unique table.
-    const SDL_PropertiesID addr_table = SDL_CreateProperties();
-    if (!addr_table) {
-        close(sock);
-        return NULL;
-    }
-
-    Uint8 buffer[64 * 1024];
-    ssize_t br;
-    while ((br = recv(sock, buffer, sizeof (buffer), 0)) > 0) {
-        for (const struct nlmsghdr *header = (const struct nlmsghdr *) buffer; NLMSG_OK(header, (size_t) br); header = NLMSG_NEXT(header, br)) {
-            if (header->nlmsg_type == NLMSG_DONE) {
-                break;  // we got it all.
-            } else if (header->nlmsg_type == NLMSG_ERROR) {
-                // uhoh.
-                NET_FreeLocalAddresses(retval);
-                retval = NULL;
-                break;
-            } else if (header->nlmsg_type == RTM_NEWADDR) {
-                const struct ifaddrmsg *msg = (const struct ifaddrmsg *) (NLMSG_DATA(header));
-                size_t payload_len = IFA_PAYLOAD(header);
-                for (const struct rtattr *attr = IFA_RTA(msg); RTA_OK(attr, payload_len); attr = RTA_NEXT(attr, payload_len)) {
-                    if ((attr->rta_type != IFA_ADDRESS) && (attr->rta_type != IFA_LOCAL)) {
-                        continue;
-                    }
-
-                    // this gives us the raw bytes of an address, but not the actual sockaddr_* layout, so we have to go with known protocols.  :/
-                    AddressStorage addrstorage;
-                    SockLen addrlen = 0;
-                    SDL_zero(addrstorage);
-                    addrstorage.ss_family = msg->ifa_family;
-                    if (addrstorage.ss_family == AF_INET) {
-                        struct sockaddr_in *sa = (struct sockaddr_in *) &addrstorage;
-                        SDL_memcpy(&sa->sin_addr, RTA_DATA(attr), RTA_PAYLOAD(attr));
-                        addrlen = sizeof (*sa);
-                    } else if (addrstorage.ss_family == AF_INET6) {
-                        struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &addrstorage;
-                        SDL_memcpy(&sa6->sin6_addr, RTA_DATA(attr), RTA_PAYLOAD(attr));
-                        addrlen = sizeof (*sa6);
-                    } else {
-                        continue;  // unknown protocol family.
-                    }
-
-                    NET_Address *netaddr = CreateSDLNetAddrFromSockAddr((const struct sockaddr *) &addrstorage, addrlen);
-                    if (!netaddr) {
-                        continue;
-                    }
-
-                    const char *key = NET_GetAddressString(netaddr);
-                    if (!key) {
-                        NET_UnrefAddress(netaddr);
-                    } else {
-                        SDL_SetPointerPropertyWithCleanup(addr_table, key, netaddr, CleanupNetAddrTable, NULL);
-                        count++;
-                    }
-                }
-            }
-        }
-    }
-
-    close(sock);
-
-    retval = (NET_Address **) SDL_calloc(count + 1, sizeof (NET_Address *));
-    if (retval) {
-        EnumerateNetAddrTableData data = { retval, count, 0 };
-        SDL_EnumerateProperties(addr_table, EnumerateNetAddrTable, &data);
-        count = data.real_count;
-        SDL_qsort(retval, count, sizeof (*retval), CompareNetAddrQsort);
-    }
-
-    SDL_DestroyProperties(addr_table);  // will unref all addresses still in the table, but we took a reference too.
-
-#else
-    struct ifaddrs *ifaddr;
-    if (getifaddrs(&ifaddr) == -1) {
-        SDL_SetError("getifaddrs failed: %s", strerror(errno));
-        return NULL;  // oh well.
-    }
-
-    for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next) {
-        if (i->ifa_name != NULL) {
-            count++;
-        }
-    }
-
-    retval = (NET_Address **) SDL_calloc(count + 1, sizeof (NET_Address *));
-    if (!retval) {
-        if (ifaddr) {
-            freeifaddrs(ifaddr);
-        }
-        return NULL;
-    }
-
-    count = 0;
-    for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next) {
-        if (i->ifa_name != NULL) {
-            NET_Address *addr = NULL;
-            // !!! FIXME: getifaddrs doesn't return the sockaddr length, so we have to go with known protocols.  :/
-            if (i->ifa_addr->sa_family == AF_INET) {
-                addr = CreateSDLNetAddrFromSockAddr(i->ifa_addr, sizeof (struct sockaddr_in));
-            } else if (i->ifa_addr->sa_family == AF_INET6) {
-                addr = CreateSDLNetAddrFromSockAddr(i->ifa_addr, sizeof (struct sockaddr_in6));
-            }
-
-            if (addr) {
-                retval[count++] = addr;
-            }
-        }
-    }
-
-    if (ifaddr) {
-        freeifaddrs(ifaddr);
-    }
-#endif
-
-    *num_addresses = count;
-
-    // try to shrink allocation.
-    void *ptr = SDL_realloc(retval, (((size_t) count) + 1) * sizeof (NET_Address *));
-    if (ptr) {
-        retval = (NET_Address **) ptr;
+        SDL_UnlockRWLock(interface_rwlock);
     }
 
     return retval;
@@ -1073,25 +1371,6 @@ struct NET_StreamSocket
     int percent_loss;
     Uint64 simulated_failure_until;
 };
-
-static int MakeSocketNonblocking(Socket handle)
-{
-    #ifdef SDL_PLATFORM_WINDOWS
-    DWORD one = 1;
-    return ioctlsocket(handle, FIONBIO, &one);
-    #else
-    return fcntl(handle, F_SETFL, fcntl(handle, F_GETFL, 0) | O_NONBLOCK);
-    #endif
-}
-
-static bool WouldBlock(const int err)
-{
-    #ifdef SDL_PLATFORM_WINDOWS
-    return (err == WSAEWOULDBLOCK) ? true : false;
-    #else
-    return ((err == EWOULDBLOCK) || (err == EAGAIN) || (err == EINPROGRESS)) ? true : false;
-    #endif
-}
 
 NET_StreamSocket *NET_CreateClient(NET_Address *addr, Uint16 port)
 {
