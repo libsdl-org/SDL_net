@@ -37,6 +37,7 @@ chat
 chatd
 build
 gen
+!build-scripts/
 Build
 buildbot
 
