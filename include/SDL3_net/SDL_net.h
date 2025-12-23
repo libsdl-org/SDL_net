@@ -1125,6 +1125,94 @@ extern SDL_DECLSPEC void SDLCALL NET_SimulateStreamPacketLoss(NET_StreamSocket *
  */
 extern SDL_DECLSPEC void SDLCALL NET_DestroyStreamSocket(NET_StreamSocket *sock);  /* Destroy your sockets when finished with them. Does not block, handles shutdown internally. */
 
+/**
+ * An object that represents a web socket server connection to another system.
+ *
+ * This is meant to be a state machine that parses the incoming data as a web socket connection.
+ *
+ * \since This datatype is available since SDL_net 3.0.0.
+ */
+typedef struct NET_WSStream NET_WSStream;
+
+#define NET_WS_OP_CODE_CONTINUE 0x0
+#define NET_WS_OP_CODE_TEXT 0x1
+#define NET_WS_OP_CODE_BINARY 0x2
+#define NET_WS_OP_CODE_CLOSE 0x8
+#define NET_WS_OP_CODE_PING 0x9
+#define NET_WS_OP_CODE_PONG 0xA
+
+/**
+ * Callback that will be called when an HTTP Request sends its method, route, and protocol. Returning false
+ * will close the web socket connection.
+ */
+typedef bool (*NET_OnWSPreamble)(NET_WSStream *ws, const char *method, const char *route, const char* protocol, void *);
+
+/**
+ * Callback that will be called for each header received in an HTTP Request. Returning false
+ * will close web socket connection.
+ */
+typedef bool (*NET_OnWSHeader)(NET_WSStream *ws, const char *key, const char *value, void *);
+
+/**
+ * Callback that will be called when before the HTTP response establishing the web socket connection
+ * has been sent. Returning false will close web socket connection and not send the HTTP Response.
+ */
+typedef bool (*NET_OnWSOpen)(NET_WSStream *ws, void *);
+
+/**
+ * Callback when a web socket frame has been received in its entirety.
+ */
+typedef bool (*NET_OnWSData)(NET_WSStream *ws, Uint8 opcode, void *, int);
+
+/**
+ * Callback that will be called when the server receives a web socket frame with the close op code.
+ */
+typedef void (*NET_OnWSClose)(NET_WSStream *ws, void *);
+
+/**
+ * WebSocket protocol requires that client's accept key be the
+ * 'Sec-WebSocket-Key' value concatenated with a magic string
+ * '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'. We must take the SHA1 hash of that
+ * concatenation. Then, take the base64 encoding of the hash. While base64 is trivial,
+ * SHA1 hashing is not. So by default, this SDL function will always return NULL.
+ * The user should define the SDL_WEBSOCKET_ACCEPT_KEY_FUNCTION macro and
+ * include an implementation of this function in their code.
+ *
+ * TODO: Find a simple implementation to include into SDL.
+ */
+extern SDL_DECLSPEC bool NET_ConvertToSecWebSocketAcceptKey(SDL_INOUT_Z_CAP(maxlen) char* wsKeyPlusMagicString, int maxlen);
+
+/**
+ * The web socket stream will use a NET_StreamSocket to send and receive data. The NET_WSStream now owns
+ * a reference to the NET_StreamSocket and will clean it up it is destroyed.
+ */
+extern SDL_DECLSPEC NET_WSStream * NET_CreateWSStream(NET_StreamSocket *sock,
+    NET_OnWSPreamble, NET_OnWSHeader, NET_OnWSOpen, NET_OnWSData, NET_OnWSClose, void *);
+
+/**
+ * Shortcut for a simple web socket connection stream that doesn't handle any other event accept when it receives data.
+ */
+extern SDL_DECLSPEC NET_WSStream * NET_CreateSimpleWSStream(NET_StreamSocket *sock, NET_OnWSData, void *);
+
+extern SDL_DECLSPEC NET_Address * NET_GetWSStreamAddress(NET_WSStream *);
+
+/**
+ * This will update the web socket state machine.
+ *
+ * First, the initial HTTP request must be parsed and verified that it is a valid web socket connection.
+ * Then, an HTTP response is sent validating that the web socket connection can be established.
+ * Once established, all incoming and outgoing data must be sent as a web socket data frame.
+ *
+  * The client must adhere to the web socket protocol. Typically, the client should just be the
+ * web socket connection from a client's web browser.
+ *
+ * \since This datatype is available since SDL_net 3.0.0.
+ */
+extern SDL_DECLSPEC bool NET_UpdateWSStream(NET_WSStream *ws);
+
+extern SDL_DECLSPEC bool NET_SendPayloadToWSStream(NET_WSStream *ws, Uint8 opcode, void *buf, int len);
+
+extern SDL_DECLSPEC void NET_DestroyWSStream(NET_WSStream *ws);
 
 /* Datagram (UDP) API... */
 
