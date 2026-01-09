@@ -42,7 +42,7 @@ jobs:
             ${{ matrix.platform.msys-env }}-ninja
             ${{ matrix.platform.msys-env }}-perl
       - name: Get SDL3_net sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install Ninja
         if: ${{ !contains(matrix.platform.shell, 'msys2') }}
         uses: aseprite/get-ninja@main
