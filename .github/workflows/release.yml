@@ -139,224 +139,225 @@ jobs:
           cmake --build /tmp/build --verbose
           # ctest --test-dir /tmp/build --no-tests=error --output-on-failure
 
-#  dmg:
-#    needs: [src]
-#    runs-on: macos-latest
-#    outputs:
-#      dmg: ${{ steps.releaser.outputs.dmg }}
-#    steps:
-#      - name: 'Set up Python'
-#        uses: actions/setup-python@v5
-#        with:
-#          python-version: '3.11'
-#      - name: 'Fetch build-release.py'
-#        uses: actions/checkout@v6
-#        with:
-#          ref: ${{ inputs.commit }}
-#          sparse-checkout: 'build-scripts/build-release.py'
-#      - name: 'Download source archives'
-#        uses: actions/download-artifact@v6
-#        with:
-#          name: sources
-#          path: '${{ github.workspace }}'
-#      - name: 'Untar ${{ needs.src.outputs.src-tar-gz }}'
-#        id: tar
+  dmg:
+    needs: [src]
+    runs-on: macos-latest
+    outputs:
+      dmg: ${{ steps.releaser.outputs.dmg }}
+    steps:
+      - name: 'Set up Python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 'Fetch build-release.py'
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.commit }}
+          sparse-checkout: 'build-scripts/build-release.py'
+      - name: 'Download source archives'
+        uses: actions/download-artifact@v6
+        with:
+          name: sources
+          path: '${{ github.workspace }}'
+      - name: 'Untar ${{ needs.src.outputs.src-tar-gz }}'
+        id: tar
+        run: |
+          mkdir -p "${{ github.workspace }}/tardir"
+          tar -C "${{ github.workspace }}/tardir" -v -x -f "${{ github.workspace }}/${{ needs.src.outputs.src-tar-gz }}"
+          echo "path=${{ github.workspace }}/tardir/${{ needs.src.outputs.project }}-${{ needs.src.outputs.version }}" >>$GITHUB_OUTPUT
+#      - name: 'Download external dependencies'
 #        run: |
-#          mkdir -p "${{ github.workspace }}/tardir"
-#          tar -C "${{ github.workspace }}/tardir" -v -x -f "${{ github.workspace }}/${{ needs.src.outputs.src-tar-gz }}"
-#          echo "path=${{ github.workspace }}/tardir/${{ needs.src.outputs.project }}-${{ needs.src.outputs.version }}" >>$GITHUB_OUTPUT
-##      - name: 'Download external dependencies'
-##        run: |
-##          sh "${{ steps.tar.outputs.path }}/external/download.sh" --depth 1
-#      - name: 'Build SDL3_net.dmg'
-#        id: releaser
-#        shell: bash
-#        env:
-#          GH_TOKEN: ${{ github.token }}
-#        run: |
-#          python build-scripts/build-release.py \
-#            --actions dmg \
-#            --commit ${{ inputs.commit }} \
-#            --root "${{ steps.tar.outputs.path }}" \
-#            --github \
-#            --debug
-#      - name: 'Store DMG image file'
-#        uses: actions/upload-artifact@v6
-#        with:
-#          name: dmg
-#          path: '${{ github.workspace }}/dist'
-#
-#  dmg-verify:
-#    needs: [dmg, src]
-#    runs-on: macos-latest
-#    steps:
-#      - name: 'Set up Python'
-#        uses: actions/setup-python@v5
-#        with:
-#          python-version: '3.11'
-#      - name: 'Fetch build-release.py'
-#        uses: actions/checkout@v6
-#        with:
-#          ref: ${{ inputs.commit }}
-#          sparse-checkout: 'build-scripts/build-release.py'
-#      - name: 'Download source archives'
-#        uses: actions/download-artifact@v6
-#        with:
-#          name: sources
-#          path: '${{ github.workspace }}'
-#      - name: 'Untar ${{ needs.src.outputs.src-tar-gz }}'
-#        id: src
-#        run: |
-#          mkdir -p /tmp/tardir
-#          tar -C /tmp/tardir -v -x -f "${{ github.workspace }}/${{ needs.src.outputs.src-tar-gz }}"
-#          echo "path=/tmp/tardir/${{ needs.src.outputs.project }}-${{ needs.src.outputs.version }}" >>$GITHUB_OUTPUT
-#      - name: 'Download dependencies'
-#        id: deps
-#        env:
-#          GH_TOKEN: ${{ github.token }}
-#        run: |
-#          python build-scripts/build-release.py \
-#            --actions download \
-#            --commit ${{ inputs.commit }} \
-#            --root "${{ steps.src.outputs.path }}" \
-#            --github \
-#            --debug
-#      - name: 'Mount dependencies'
-#        id: deps-mount
-#        run: |
-#          hdiutil attach "${{ steps.deps.outputs.dep-path }}/SDL3-${{ steps.deps.outputs.dep-sdl-version }}.dmg"
-#          sdl_mount_pount="/Volumes/SDL3"
-#          if [ ! -d "$sdl_mount_pount/SDL3.xcframework" ]; then
-#            echo "Cannot find SDL3.xcframework!"
-#            exit 1
-#          fi
-#          echo "path=${sdl_mount_pount}" >>$GITHUB_OUTPUT
-#      - name: 'Download ${{ needs.dmg.outputs.dmg }}'
-#        uses: actions/download-artifact@v6
-#        with:
-#          name: dmg
-#          path: '${{ github.workspace }}'
-#      - name: 'Mount ${{ needs.dmg.outputs.dmg }}'
-#        id: mount
-#        run: |
-#          hdiutil attach '${{ github.workspace }}/${{ needs.dmg.outputs.dmg }}'
-#          mount_point="/Volumes/${{ needs.src.outputs.project }}"
-#          if [ ! -d "$mount_point/${{ needs.src.outputs.project }}.xcframework" ]; then
-#            echo "Cannot find ${{ needs.src.outputs.project }}.xcframework!"
-#            exit 1
-#          fi
-#          echo "mount-point=${mount_point}">>$GITHUB_OUTPUT
-#      - name: 'CMake (configure + build) Darwin'
-#        run: |
-#          set -e
-#          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
-#              -DTEST_SHARED=TRUE                                            \
-#              -DTEST_SHARED=TRUE                                            \
-#              -DTEST_STATIC=FALSE                                           \
-#              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }};${{ steps.deps-mount.outputs.path }}" \
-#              -DCMAKE_SYSTEM_NAME=Darwin                                    \
-#              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"                      \
-#              -Werror=dev                                                   \
-#              -B build_darwin
-#          cmake --build build_darwin --config Release --verbose
-#
-#          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
-#              -DTEST_SHARED=TRUE                                            \
-#              -DTEST_STATIC=FALSE                                           \
-#              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }}/SDL3_net.xcframework/macos-arm64_x86_64;${{ steps.deps-mount.outputs.path }}/SDL3.xcframework/macos-arm64_x86_64" \
-#              -DCMAKE_SYSTEM_NAME=Darwin                                    \
-#              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"                      \
-#              -B build_darwin2
-#          cmake --build build_darwin2 --config Release --verbose
-#
-#      - name: 'CMake (configure + build) iOS'
-#        run: |
-#          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
-#              -DTEST_SHARED=TRUE                                            \
-#              -DTEST_STATIC=FALSE                                           \
-#              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }};${{ steps.deps-mount.outputs.path }}" \
-#              -DCMAKE_SYSTEM_NAME=iOS                                       \
-#              -DCMAKE_OSX_ARCHITECTURES="arm64"                             \
-#              -Werror=dev                                                   \
-#              -B build_ios
-#          cmake --build build_ios --config Release --verbose
-#
-#          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
-#              -DTEST_SHARED=TRUE                                            \
-#              -DTEST_STATIC=FALSE                                           \
-#              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }}/SDL3_net.xcframework/ios-arm64;${{ steps.deps-mount.outputs.path }}/SDL3.xcframework/ios-arm64" \
-#              -DCMAKE_SYSTEM_NAME=iOS                                       \
-#              -DCMAKE_OSX_ARCHITECTURES="arm64"                             \
-#              -B build_ios2
-#          cmake --build build_ios2 --config Release --verbose
-#      - name: 'CMake (configure + build) tvOS'
-#        run: |
-#          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
-#              -DTEST_SHARED=TRUE                                            \
-#              -DTEST_STATIC=FALSE                                           \
-#              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }};${{ steps.deps-mount.outputs.path }}" \
-#              -DCMAKE_SYSTEM_NAME=tvOS                                      \
-#              -DCMAKE_OSX_ARCHITECTURES="arm64"                             \
-#              -Werror=dev                                                   \
-#              -B build_tvos
-#          cmake --build build_tvos --config Release --verbose
-#
-#          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
-#              -DTEST_SHARED=TRUE                                            \
-#              -DTEST_STATIC=FALSE                                           \
-#              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }}/SDL3_net.xcframework/tvos-arm64;${{ steps.deps-mount.outputs.path }}/SDL3.xcframework/tvos-arm64" \
-#              -DCMAKE_SYSTEM_NAME=tvOS                                      \
-#              -DCMAKE_OSX_ARCHITECTURES="arm64"                             \
-#              -B build_tvos2
-#          cmake --build build_tvos2 --config Release --verbose
-#      - name: 'CMake (configure + build) iOS simulator'
-#        run: |
-#          sysroot=$(xcodebuild -version -sdk iphonesimulator Path)
-#          echo "sysroot=$sysroot"
-#          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
-#              -DTEST_SHARED=TRUE                                            \
-#              -DTEST_STATIC=FALSE                                           \
-#              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }};${{ steps.deps-mount.outputs.path }}" \
-#              -DCMAKE_SYSTEM_NAME=iOS                                       \
-#              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"                      \
-#              -DCMAKE_OSX_SYSROOT="${sysroot}"                              \
-#              -Werror=dev                                                   \
-#              -B build_ios_simulator
-#          cmake --build build_ios_simulator --config Release --verbose
-#
-#          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
-#              -DTEST_SHARED=TRUE                                            \
-#              -DTEST_STATIC=FALSE                                           \
-#              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }}/SDL3_net.xcframework/ios-arm64_x86_64-simulator;${{ steps.deps-mount.outputs.path }}/SDL3.xcframework/ios-arm64_x86_64-simulator" \
-#              -DCMAKE_SYSTEM_NAME=iOS                                       \
-#              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"                      \
-#              -DCMAKE_OSX_SYSROOT="${sysroot}"                              \
-#              -B build_ios_simulator2
-#          cmake --build build_ios_simulator2 --config Release --verbose
-#      - name: 'CMake (configure + build) tvOS simulator'
-#        run: |
-#          sysroot=$(xcodebuild -version -sdk appletvsimulator Path)
-#          echo "sysroot=$sysroot"
-#          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
-#              -DTEST_SHARED=TRUE                                            \
-#              -DTEST_STATIC=FALSE                                           \
-#              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }};${{ steps.deps-mount.outputs.path }}" \
-#              -DCMAKE_SYSTEM_NAME=tvOS                                      \
-#              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"                      \
-#              -DCMAKE_OSX_SYSROOT="${sysroot}"                              \
-#              -Werror=dev                                                   \
-#              -B build_tvos_simulator
-#          cmake --build build_tvos_simulator --config Release --verbose
-#
-#          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
-#              -DTEST_SHARED=TRUE                                            \
-#              -DTEST_STATIC=FALSE                                           \
-#              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }}/SDL3_net.xcframework/tvos-arm64_x86_64-simulator;${{ steps.deps-mount.outputs.path }}/SDL3.xcframework/tvos-arm64_x86_64-simulator" \
-#              -DCMAKE_SYSTEM_NAME=tvOS                                      \
-#              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"                      \
-#              -DCMAKE_OSX_SYSROOT="${sysroot}"                              \
-#              -B build_tvos_simulator2
-#          cmake --build build_tvos_simulator2 --config Release --verbose
+#          sh "${{ steps.tar.outputs.path }}/external/download.sh" --depth 1
+      - name: 'Build SDL3_net.dmg'
+        id: releaser
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python build-scripts/build-release.py \
+            --actions dmg \
+            --commit ${{ inputs.commit }} \
+            --root "${{ steps.tar.outputs.path }}" \
+            --github \
+            --debug
+      - name: 'Store DMG image file'
+        uses: actions/upload-artifact@v6
+        with:
+          name: dmg
+          path: '${{ github.workspace }}/dist'
+
+  dmg-verify:
+    needs: [dmg, src]
+    runs-on: macos-latest
+    steps:
+      - name: 'Set up Python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 'Fetch build-release.py'
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.commit }}
+          sparse-checkout: 'build-scripts/build-release.py'
+      - name: 'Download source archives'
+        uses: actions/download-artifact@v6
+        with:
+          name: sources
+          path: '${{ github.workspace }}'
+      - name: 'Untar ${{ needs.src.outputs.src-tar-gz }}'
+        id: src
+        run: |
+          mkdir -p /tmp/tardir
+          tar -C /tmp/tardir -v -x -f "${{ github.workspace }}/${{ needs.src.outputs.src-tar-gz }}"
+          echo "path=/tmp/tardir/${{ needs.src.outputs.project }}-${{ needs.src.outputs.version }}" >>$GITHUB_OUTPUT
+      - name: 'Download dependencies'
+        id: deps
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python build-scripts/build-release.py \
+            --actions download \
+            --commit ${{ inputs.commit }} \
+            --root "${{ steps.src.outputs.path }}" \
+            --github \
+            --debug
+      - name: 'Mount dependencies'
+        id: deps-mount
+        run: |
+          hdiutil attach "${{ steps.deps.outputs.dep-path }}/SDL3-${{ steps.deps.outputs.dep-sdl-version }}.dmg"
+          sdl_mount_pount="/Volumes/SDL3"
+          if [ ! -d "$sdl_mount_pount/SDL3.xcframework" ]; then
+            echo "Cannot find SDL3.xcframework!"
+            exit 1
+          fi
+          echo "path=${sdl_mount_pount}" >>$GITHUB_OUTPUT
+      - name: 'Download ${{ needs.dmg.outputs.dmg }}'
+        uses: actions/download-artifact@v6
+        with:
+          name: dmg
+          path: '${{ github.workspace }}'
+      - name: 'Mount ${{ needs.dmg.outputs.dmg }}'
+        id: mount
+        run: |
+          hdiutil attach '${{ github.workspace }}/${{ needs.dmg.outputs.dmg }}'
+          mount_point="/Volumes/${{ needs.src.outputs.project }}"
+          if [ ! -d "$mount_point/${{ needs.src.outputs.project }}.xcframework" ]; then
+            echo "Cannot find ${{ needs.src.outputs.project }}.xcframework!"
+            exit 1
+          fi
+          echo "mount-point=${mount_point}">>$GITHUB_OUTPUT
+      - name: 'CMake (configure + build) Darwin'
+        run: |
+          set -e
+          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
+              -DTEST_SHARED=TRUE                                            \
+              -DTEST_SHARED=TRUE                                            \
+              -DTEST_STATIC=FALSE                                           \
+              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }};${{ steps.deps-mount.outputs.path }}" \
+              -DCMAKE_SYSTEM_NAME=Darwin                                    \
+              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"                      \
+              -Werror=dev                                                   \
+              -B build_darwin
+          cmake --build build_darwin --config Release --verbose
+
+          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
+              -DTEST_SHARED=TRUE                                            \
+              -DTEST_STATIC=FALSE                                           \
+              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }}/SDL3_net.xcframework/macos-arm64_x86_64;${{ steps.deps-mount.outputs.path }}/SDL3.xcframework/macos-arm64_x86_64" \
+              -DCMAKE_SYSTEM_NAME=Darwin                                    \
+              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"                      \
+              -B build_darwin2
+          cmake --build build_darwin2 --config Release --verbose
+
+      - name: 'CMake (configure + build) iOS'
+        run: |
+          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
+              -DTEST_SHARED=TRUE                                            \
+              -DTEST_STATIC=FALSE                                           \
+              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }};${{ steps.deps-mount.outputs.path }}" \
+              -DCMAKE_SYSTEM_NAME=iOS                                       \
+              -DCMAKE_OSX_ARCHITECTURES="arm64"                             \
+              -Werror=dev                                                   \
+              -B build_ios
+          cmake --build build_ios --config Release --verbose
+
+          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
+              -DTEST_SHARED=TRUE                                            \
+              -DTEST_STATIC=FALSE                                           \
+              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }}/SDL3_net.xcframework/ios-arm64;${{ steps.deps-mount.outputs.path }}/SDL3.xcframework/ios-arm64" \
+              -DCMAKE_SYSTEM_NAME=iOS                                       \
+              -DCMAKE_OSX_ARCHITECTURES="arm64"                             \
+              -B build_ios2
+          cmake --build build_ios2 --config Release --verbose
+      - name: 'CMake (configure + build) tvOS'
+        run: |
+          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
+              -DTEST_SHARED=TRUE                                            \
+              -DTEST_STATIC=FALSE                                           \
+              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }};${{ steps.deps-mount.outputs.path }}" \
+              -DCMAKE_SYSTEM_NAME=tvOS                                      \
+              -DCMAKE_OSX_ARCHITECTURES="arm64"                             \
+              -Werror=dev                                                   \
+              -B build_tvos
+          cmake --build build_tvos --config Release --verbose
+
+          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
+              -DTEST_SHARED=TRUE                                            \
+              -DTEST_STATIC=FALSE                                           \
+              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }}/SDL3_net.xcframework/tvos-arm64;${{ steps.deps-mount.outputs.path }}/SDL3.xcframework/tvos-arm64" \
+              -DCMAKE_SYSTEM_NAME=tvOS                                      \
+              -DCMAKE_OSX_ARCHITECTURES="arm64"                             \
+              -B build_tvos2
+          cmake --build build_tvos2 --config Release --verbose
+      - name: 'CMake (configure + build) iOS simulator'
+        run: |
+          sysroot=$(xcodebuild -version -sdk iphonesimulator Path)
+          echo "sysroot=$sysroot"
+          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
+              -DTEST_SHARED=TRUE                                            \
+              -DTEST_STATIC=FALSE                                           \
+              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }};${{ steps.deps-mount.outputs.path }}" \
+              -DCMAKE_SYSTEM_NAME=iOS                                       \
+              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"                      \
+              -DCMAKE_OSX_SYSROOT="${sysroot}"                              \
+              -Werror=dev                                                   \
+              -B build_ios_simulator
+          cmake --build build_ios_simulator --config Release --verbose
+
+          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
+              -DTEST_SHARED=TRUE                                            \
+              -DTEST_STATIC=FALSE                                           \
+              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }}/SDL3_net.xcframework/ios-arm64_x86_64-simulator;${{ steps.deps-mount.outputs.path }}/SDL3.xcframework/ios-arm64_x86_64-simulator" \
+              -DCMAKE_SYSTEM_NAME=iOS                                       \
+              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"                      \
+              -DCMAKE_OSX_SYSROOT="${sysroot}"                              \
+              -B build_ios_simulator2
+          cmake --build build_ios_simulator2 --config Release --verbose
+      - name: 'CMake (configure + build) tvOS simulator'
+        run: |
+          sysroot=$(xcodebuild -version -sdk appletvsimulator Path)
+          echo "sysroot=$sysroot"
+          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
+              -DTEST_SHARED=TRUE                                            \
+              -DTEST_STATIC=FALSE                                           \
+              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }};${{ steps.deps-mount.outputs.path }}" \
+              -DCMAKE_SYSTEM_NAME=tvOS                                      \
+              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"                      \
+              -DCMAKE_OSX_SYSROOT="${sysroot}"                              \
+              -Werror=dev                                                   \
+              -B build_tvos_simulator
+          cmake --build build_tvos_simulator --config Release --verbose
+
+          cmake -S "${{ steps.src.outputs.path }}/cmake/test"               \
+              -DTEST_SHARED=TRUE                                            \
+              -DTEST_STATIC=FALSE                                           \
+              -DCMAKE_PREFIX_PATH="${{ steps.mount.outputs.mount-point }}/SDL3_net.xcframework/tvos-arm64_x86_64-simulator;${{ steps.deps-mount.outputs.path }}/SDL3.xcframework/tvos-arm64_x86_64-simulator" \
+              -DCMAKE_SYSTEM_NAME=tvOS                                      \
+              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"                      \
+              -DCMAKE_OSX_SYSROOT="${sysroot}"                              \
+              -B build_tvos_simulator2
+          cmake --build build_tvos_simulator2 --config Release --verbose
+
   msvc:
     needs: [src]
     runs-on: windows-2025
