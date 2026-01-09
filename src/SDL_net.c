@@ -202,7 +202,8 @@ typedef enum NET_SocketType
 {
     SOCKETTYPE_STREAM,
     SOCKETTYPE_DATAGRAM,
-    SOCKETTYPE_SERVER
+    SOCKETTYPE_SERVER,
+    SOCKETTYPE_WEBSOCKET
 } NET_SocketType;
 
 
@@ -1850,6 +1851,359 @@ void NET_DestroyStreamSocket(NET_StreamSocket *sock)
     }
 }
 
+struct NET_WSStream
+{
+    NET_SocketType socktype;
+    NET_StreamSocket *stream;
+    NET_OnWSPreamble onPreamble;
+    NET_OnWSHeader onHeader;
+    NET_OnWSData onData;
+    NET_OnWSOpen onOpen;
+    NET_OnWSClose onClose;
+    Uint8 *pending_input_buffer;
+    int pending_input_len;
+    int pending_input_allocation;
+    bool established_connection;
+    void *userdata;
+};
+
+NET_WSStream * NET_CreateWSStream(NET_StreamSocket *stream,
+    NET_OnWSPreamble onPreamble,
+    NET_OnWSHeader onHeader,
+    NET_OnWSOpen onOpen,
+    NET_OnWSData onData,
+    NET_OnWSClose onClose,
+    void *userdata)
+{
+    NET_WSStream *ws = (NET_WSStream *)SDL_calloc(1, sizeof(NET_WSStream));
+    if(!ws) {
+        return NULL;
+    }
+
+    ws->socktype = SOCKETTYPE_WEBSOCKET;
+    ws->stream = stream;
+    ws->onPreamble = onPreamble;
+    ws->onHeader = onHeader;
+    ws->onOpen = onOpen;
+    ws->onData = onData;
+    ws->onClose = onClose;
+    ws->userdata = userdata;
+    return ws;
+}
+
+NET_WSStream * NET_CreateSimpleWSStream(NET_StreamSocket *sock, NET_OnWSData onData, void *userdata)
+{
+    return NET_CreateWSStream(sock, NULL, NULL, NULL, onData, NULL, userdata);
+}
+
+NET_Address * NET_GetWSStreamAddress(NET_WSStream * ws) {
+    return NET_GetStreamSocketAddress(ws->stream);
+}
+
+bool NET_WSStreamSendBadRequest(NET_StreamSocket *sock)
+{
+    char buffer[128];
+    SDL_snprintf(buffer, sizeof(buffer),
+        "HTTP/1.1 400 Bad Request\r\n"
+        "Connection: close\r\n"
+        "\r\n");
+    return NET_WriteToStreamSocket(sock, buffer, sizeof(buffer));
+}
+
+bool NET_SendPayloadToWSStream(NET_WSStream *ws, Uint8 opcode, void* buf, int len)
+{
+    Uint8 bytes[2];
+    bytes[0] = 0b10000000 | opcode;
+    if (len < 126) {
+        bytes[1] = len;
+        if (!NET_WriteToStreamSocket(ws->stream, bytes, sizeof(bytes))) {
+            return false;
+        }
+    } else if (len < UINT16_MAX) {
+        bytes[1] = 126;
+        Uint16 payloadLength = len;
+        payloadLength = SDL_Swap16BE(payloadLength);
+        if (!NET_WriteToStreamSocket(ws->stream, bytes, sizeof(bytes)) ||
+            !NET_WriteToStreamSocket(ws->stream, &payloadLength, sizeof(payloadLength))) {
+            return false;
+        }
+    } else {
+        bytes[1] = 127;
+        Uint64 payloadLength = len;
+        payloadLength = SDL_Swap64BE(payloadLength);
+        if (!NET_WriteToStreamSocket(ws->stream, bytes, sizeof(bytes)) ||
+            !NET_WriteToStreamSocket(ws->stream, &payloadLength, sizeof(payloadLength))) {
+            return false;
+        }
+    }
+
+    return NET_WriteToStreamSocket(ws->stream, buf, len);
+}
+
+bool NET_WSStreamParseInput(NET_WSStream *ws)
+{
+    // bit 0 = FIN
+    // bits 1 - 3 = RSV (ignore)
+    // bits 4 - 7 = Op Code
+    // bit 8 = Mask
+    // bit 9 - 15 = Payload Length
+    if (ws->pending_input_len < 2) {
+        return true;
+    }
+
+    // TODO: Handle clients that send partial payloads by setting FIN to 0
+    const bool complete = (ws->pending_input_buffer[0] & 0b10000000) != 0;
+    if (!complete) {
+        // Send close message to client
+        NET_SendPayloadToWSStream(ws, NET_WS_OP_CODE_CLOSE, NULL, 0);
+        return false;
+    }
+
+    const Uint16 opcode = ws->pending_input_buffer[0] & 0b1111;
+
+    // As part of the web socket specification, client's must always send masked
+    // payloads to a server.
+    const bool masked = (ws->pending_input_buffer[1] & 0b10000000) != 0;
+    if (!masked) {
+        NET_SendPayloadToWSStream(ws, NET_WS_OP_CODE_CLOSE, NULL, 0);
+        return false;
+    }
+
+    Uint8 *maskingKey = &ws->pending_input_buffer[2];
+    Uint64 payloadLength = ws->pending_input_buffer[1] & 0b01111111;
+    if (payloadLength == 127) {
+        // The next 8 bytes are the actual payload length
+        // Must use big endian
+        if ((Uint64)ws->pending_input_len < 2 + sizeof(Uint64)) {
+            return true;
+        }
+        SDL_memcpy(&payloadLength, &ws->pending_input_buffer[2], sizeof(Uint64));
+        payloadLength = SDL_Swap64BE(payloadLength);
+        maskingKey += sizeof(Uint64);
+    } else if (payloadLength == 126) {
+        // The next 2 bytes are the actual payload length
+        // Must use big endian
+        if ((Uint64)ws->pending_input_len < 2 + sizeof(Uint16)) {
+            return true;
+        }
+        SDL_memcpy(&payloadLength, &ws->pending_input_buffer[2], sizeof(Uint16));
+        payloadLength = SDL_Swap16BE(payloadLength);
+        maskingKey += sizeof(Uint16);
+    }
+
+    Uint8* payloadStart = maskingKey + 4;
+    Uint8 *payloadEnd = payloadStart + payloadLength;
+
+    // Check if the entire payload has been received
+    if(payloadEnd > ws->pending_input_buffer + ws->pending_input_len) {
+        return true;
+    }
+
+    // The next four bytes are the masking key. Then, the next payload length bytes
+    // are the actual payload.
+    // Must decode every byte in the payload using byte XOR mask byte
+    for (Uint64 i = 0; i < payloadLength; ++i) {
+        payloadStart[i] ^= maskingKey[i % 4];
+    }
+
+    switch (opcode) {
+    case NET_WS_OP_CODE_TEXT:
+    case NET_WS_OP_CODE_BINARY:
+        if(ws->onData && !ws->onData(ws, opcode, payloadStart, payloadLength)){
+            NET_SendPayloadToWSStream(ws, NET_WS_OP_CODE_CLOSE, NULL, 0);
+            return false;
+        }
+        break;
+    case NET_WS_OP_CODE_CLOSE:
+        return false;
+    case NET_WS_OP_CODE_PING:
+        NET_SendPayloadToWSStream(ws, NET_WS_OP_CODE_PONG, payloadStart, payloadLength);
+        break;
+    case NET_WS_OP_CODE_PONG:
+        break;
+    default:
+        // Unknown op code
+        NET_SendPayloadToWSStream(ws, NET_WS_OP_CODE_CLOSE, NULL, 0);
+        return false;
+    }
+
+    const Uint64 totalRead = payloadEnd - ws->pending_input_buffer;
+    const Uint64 remaining = ws->pending_input_len - totalRead;
+    SDL_memmove(ws->pending_input_buffer, payloadEnd, remaining);
+    ws->pending_input_len = remaining;
+    return true;
+}
+
+bool NET_UpdateWSStream(NET_WSStream *ws)
+{
+    if(!ws || ws->socktype != SOCKETTYPE_WEBSOCKET) {
+        SDL_InvalidParamError("ws");
+        return false;
+    }
+
+    char buffer[4096];
+    const int bytesRead = NET_ReadFromStreamSocket(ws->stream, buffer, sizeof(buffer));
+    switch(bytesRead) {
+        case -1:
+            return false;
+        case 0:
+            return true;
+        default:
+            break;
+    }
+
+    const int min_alloc = ws->pending_input_len + bytesRead;
+    if (min_alloc > ws->pending_input_allocation) {
+        int newlen = sizeof(buffer) + ws->pending_input_allocation;
+        void *ptr = SDL_realloc(ws->pending_input_buffer, newlen);
+        if (!ptr) {
+            return false;
+        }
+        ws->pending_input_buffer = (Uint8 *) ptr;
+        ws->pending_input_allocation = newlen;
+    }
+
+    SDL_memcpy(ws->pending_input_buffer + ws->pending_input_len, buffer, bytesRead);
+    ws->pending_input_len += bytesRead;
+
+    if (ws->established_connection) {
+        return NET_WSStreamParseInput(ws);
+    }
+
+    // If '\r\n' isn't found, then the HTTP Request has not been sent in its entireity.
+    char *start = (char *)ws->pending_input_buffer;
+    char *end = SDL_strnstr(start, "\r\n\r\n", ws->pending_input_len);
+    if (end == NULL) {
+        return true;
+    }
+
+    // Insert a null-terminator before the last empty line
+    end += 2;
+    *end = '\0';
+
+    char *endOfMethod = SDL_strchr(start, ' ');
+    if (!endOfMethod) {
+        NET_WSStreamSendBadRequest(ws->stream);
+        return false;
+    }
+    *endOfMethod = '\0';
+    const char *method = start;
+    start = endOfMethod + 1;
+
+    char *endOfRoute = SDL_strchr(start, ' ');
+    if (!endOfRoute) {
+        NET_WSStreamSendBadRequest(ws->stream);
+        return false;
+    }
+    *endOfRoute = '\0';
+    const char *route = start;
+    start = endOfRoute + 1;
+
+    char *endOfProtocol = SDL_strstr(start, "\r\n");
+    if (!endOfProtocol) {
+        NET_WSStreamSendBadRequest(ws->stream);
+        return false;
+    }
+    *endOfProtocol = '\0';
+    const char *protocol = start;
+    start = endOfProtocol + 2;
+
+    if (ws->onPreamble && !ws->onPreamble(ws, method, route, protocol, ws->userdata)) {
+        return false;
+    }
+
+    const char *upgrade = NULL;
+    const char *connection = NULL;
+    const char *wsKey = NULL;
+
+    while (*start) {
+        end = SDL_strstr(start, ": ");
+        if (!end) {
+            SDL_SetError("HTTP Request is missing ': ' for header");
+            return false;
+        }
+        *end = '\0';
+        const char *key = start;
+        start = end + 2;
+
+        end = SDL_strstr(start, "\r\n");
+        if (!end) {
+            SDL_SetError("HTTP Request is missing '\\r\\n' for the end of the header");
+            return false;
+        }
+        *end = '\0';
+        const char *value = start;
+        start = end + 2;
+
+        if( ws->onHeader && !ws->onHeader(ws, key, value, ws->userdata)) {
+            return false;
+        }
+
+        if (SDL_strcmp(key, "Upgrade") == 0) {
+            upgrade = value;
+        } else if (SDL_strcmp(key, "Connection") == 0){
+            connection = value;
+        } else if (SDL_strcmp(key, "Sec-WebSocket-Key") == 0){
+            wsKey = value;
+        }
+    }
+
+    if (!wsKey || !upgrade || !connection) {
+        NET_WSStreamSendBadRequest(ws->stream);
+        return false;
+    }
+
+    if (ws->onOpen && !ws->onOpen(ws, ws->userdata)) {
+        return false;
+    }
+
+    // Clear the input buffer since it should only contain the HTTP request
+    ws->pending_input_len = 0;
+
+    char acceptKey[256];
+
+    // Web Socket Key + Magic string defined in the Web Socket protocol
+    SDL_snprintf(acceptKey, sizeof(acceptKey), "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", wsKey);
+
+    if (!NET_ConvertToSecWebSocketAcceptKey(acceptKey, sizeof(acceptKey))) {
+        SDL_SetError("Failed to create web socket accept key");
+        return false;
+    }
+
+    char response[256];
+    int written = SDL_snprintf(response, sizeof(response),
+        "HTTP/1.1 101 Switching Protocols\r\n"
+        "Upgrade: %s\r\n"
+        "Connection: %s\r\n"
+        "Sec-WebSocket-Accept: %s\r\n"
+        "\r\n",
+        upgrade, connection, acceptKey);
+
+    ws->established_connection = true;
+    return NET_WriteToStreamSocket(ws->stream, response, written);
+}
+
+#if !SDL_WEBSOCKET_ACCEPT_KEY_FUNCTION
+// This should be implemented by the user if they want web socket support
+bool NET_ConvertToSecWebSocketAcceptKey(SDL_INOUT_Z_CAP(maxlen) char *key, int maxlen) {
+    (void)key;
+    (void)maxlen;
+    return false;
+}
+#endif
+
+void NET_DestroyWSStream(NET_WSStream *ws)
+{
+    if (ws) {
+        if (ws->onClose) {
+            ws->onClose(ws, ws->userdata);
+        }
+        SDL_free(ws->pending_input_buffer);
+        NET_DestroyStreamSocket(ws->stream);
+        SDL_free(ws);
+    }
+}
+
 typedef struct NET_DatagramSocketHandle
 {
     Socket handle;
@@ -2245,6 +2599,7 @@ typedef union NET_GenericSocket
     NET_SocketType socktype;
     NET_StreamSocket stream;
     NET_DatagramSocket dgram;
+    NET_WSStream ws;
     NET_Server server;
 } NET_GenericSocket;
 
@@ -2275,6 +2630,7 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
         }
         switch (sock->socktype) {
             case SOCKETTYPE_STREAM:
+            addStreamHandles:
                 numhandles++;
                 break;
             case SOCKETTYPE_DATAGRAM:
@@ -2283,6 +2639,9 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
             case SOCKETTYPE_SERVER:
                 numhandles += sock->server.num_handles;
                 break;
+            case SOCKETTYPE_WEBSOCKET:
+                sock = (NET_GenericSocket *)sock->ws.stream;
+                goto addStreamHandles;
         }
     }
 
@@ -2306,6 +2665,7 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
 
             switch (sock->socktype) {
                 case SOCKETTYPE_STREAM:
+                addStreamSocket:
                     pfd->fd = sock->stream.handle;
                     if (sock->stream.status == NET_WAITING) {
                         pfd->events = POLLOUT;  // marked as writable when connection is complete.
@@ -2336,6 +2696,10 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
                         pfd++;
                     }
                     break;
+
+                case SOCKETTYPE_WEBSOCKET:
+                    sock = (NET_GenericSocket *)sock->ws.stream;
+                    goto addStreamSocket;
             }
         }
 
@@ -2354,6 +2718,7 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
 
             switch (sock->socktype) {
                 case SOCKETTYPE_STREAM: {
+                pumpStreamSocket:
                     SDL_assert(pfd->fd == sock->stream.handle);
                     const bool failed = ((pfd->revents & (POLLERR|POLLHUP|POLLNVAL)) != 0) ? true : false;
                     const bool writable = (pfd->revents & POLLOUT) ? true : false;
@@ -2417,6 +2782,10 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
                     }
                 }
                 break;
+
+                case SOCKETTYPE_WEBSOCKET:
+                    sock = (NET_GenericSocket *)sock->ws.stream;
+                    goto pumpStreamSocket;
             }
 
             if (count_it) {
