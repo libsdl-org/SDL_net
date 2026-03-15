@@ -783,7 +783,19 @@ failed:
 }
 
 #else
-#error implement me for your platform.
+#warning implement me for your platform.
+static bool InitInterfaceChangeNotifications(void)
+{
+    return true;
+}
+
+static void QuitInterfaceChangeNotifications(void)
+{
+}
+
+static void RefreshInterfaces(void)
+{
+}
 #endif
 
 
