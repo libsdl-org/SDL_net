@@ -396,6 +396,7 @@
 		007288120F0DA5BA00C302A9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				EXPORTED_SYMBOLS_FILE = "$(SRCROOT)/../src/SDL_net.exports";
 				OTHER_LDFLAGS = "$(CONFIG_FRAMEWORK_LDFLAGS)";
 			};
@@ -463,6 +464,7 @@
 		007288160F0DA5C400C302A9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXPORTED_SYMBOLS_FILE = "$(SRCROOT)/../src/SDL_net.exports";
 				OTHER_LDFLAGS = "$(CONFIG_FRAMEWORK_LDFLAGS)";
 			};
