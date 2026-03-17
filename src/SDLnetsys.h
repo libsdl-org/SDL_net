@@ -70,7 +70,7 @@
 #include <sys/select.h> /* for FD_SET, etc */
 #endif
 
-#ifdef __OS2__
+#if defined(__OS2__) && !(defined(__INNOTEK_LIBC__) || defined(__KLIBC__))
 typedef int socklen_t;
 #elif defined(__USE_W32_SOCKETS) && !defined(IP_MSFILTER_SIZE)
 typedef int socklen_t;
