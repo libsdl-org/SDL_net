@@ -182,15 +182,13 @@ static int WindowsPoll(struct pollfd *fds, unsigned int nfds, int timeout)
 
 #if defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_ANDROID)
 #define USE_NETLINK 1
-#endif
-
-#ifdef USE_NETLINK
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
-#else
-#if defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_ANDROID) || defined(SDL_PLATFORM_APPLE) || defined(SDL_PLATFORM_FREEBSD) || defined(SDL_PLATFORM_OPENBSD) || defined(SDL_PLATFORM_NETBSD)
-#include <ifaddrs.h>
 #endif
+
+#if defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_ANDROID) || defined(SDL_PLATFORM_APPLE) || defined(SDL_PLATFORM_FREEBSD) || defined(SDL_PLATFORM_OPENBSD) || defined(SDL_PLATFORM_NETBSD)
+#define USE_GETIFADDRS 1
+#include <ifaddrs.h>
 #endif
 
 #define INVALID_SOCKET -1
@@ -490,7 +488,7 @@ static void RefreshInterfaces(void)  // WINDOWS VERSION
     SDL_free(addrs);
 }
 
-#elif defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_ANDROID) || defined(SDL_PLATFORM_APPLE) || defined(SDL_PLATFORM_FREEBSD) || defined(SDL_PLATFORM_OPENBSD) || defined(SDL_PLATFORM_NETBSD)
+#elif defined(USE_NETLINK) || defined(USE_GETIFADDRS)
 
 // AF_NETLINK covers Linux (and by extension Android). PF_ROUTE covers the BSDs (and by extension Apple platforms).
 // This doesn't cover all Unix platforms that ever existed, but this hits just about everything that is still being maintained seriously.
