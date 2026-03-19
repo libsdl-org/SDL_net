@@ -188,7 +188,9 @@ static int WindowsPoll(struct pollfd *fds, unsigned int nfds, int timeout)
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #else
+#if defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_ANDROID) || defined(SDL_PLATFORM_APPLE) || defined(SDL_PLATFORM_FREEBSD) || defined(SDL_PLATFORM_OPENBSD) || defined(SDL_PLATFORM_NETBSD)
 #include <ifaddrs.h>
+#endif
 #endif
 
 #define INVALID_SOCKET -1
