@@ -27,7 +27,7 @@
  * SDL_net is a simple library to help with networking.
  *
  * In current times, it's a relatively thin layer over system-level APIs like
- * BSD Sockets or WinSock. It's primary strength is in making those interfaces
+ * BSD Sockets or WinSock. Its primary strength is in making those interfaces
  * less complicated to use, and handling several unexpected corner cases, so
  * the app doesn't have to.
  *
