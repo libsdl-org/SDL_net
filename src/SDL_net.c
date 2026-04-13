@@ -719,9 +719,14 @@ failed:
     }
 
     NetworkInterfaces *iface = &new_interfaces[0];
-    for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next, iface++) {
+    for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next) {
         if (i->ifa_name == NULL) {
-            continue;  // i guess.
+            continue;  // not counted in the first pass, no adjustment needed.
+        }
+
+        if (i->ifa_addr == NULL) {
+            new_num_interfaces--;  // was counted in the first pass, undo it.
+            continue;
         }
 
         // !!! FIXME: getifaddrs doesn't return the sockaddr length, so we have to go with known protocols.  :/
@@ -734,7 +739,6 @@ failed:
             iface->address = CreateSDLNetAddrFromSockAddr(i->ifa_addr, sizeof (struct sockaddr_in6));
         } else {
             new_num_interfaces--;
-            iface--;
             continue;
         }
 
@@ -757,6 +761,8 @@ failed:
             NET_UnrefAddress(iface->broadcast);  // just in case.
             goto failed;
         }
+
+        iface++;  // only advance when a slot was actually filled.
     }
 
 succeeded:
