@@ -2,6 +2,7 @@ SDL3_net_0.0.0 {
   global:
     NET_AcceptClient;
     NET_CompareAddresses;
+    NET_CreateBroadcastAddress;
     NET_CreateClient;
     NET_CreateDatagramSocket;
     NET_CreateServer;
