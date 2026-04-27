@@ -580,6 +580,52 @@ extern SDL_DECLSPEC NET_Address **SDLCALL NET_GetLocalAddresses(int *num_address
  */
 extern SDL_DECLSPEC void SDLCALL NET_FreeLocalAddresses(NET_Address **addresses);
 
+/**
+ * Obtain a NET_Address usable for broadcasting on a LAN.
+ *
+ * **WARNING**: This function exists largely for compatibility with existing
+ * software. In software that doesn't have to talk to legacy programs that
+ * use broadcasting, you are encouraged to use NET_CreateMulticastAddress()
+ * instead.
+ *
+ * Broadcast packets are sent to every machine on the LAN, unconditionally.
+ * It can be used to alert everyone of the availability of a service (such as
+ * a game server) without a more formal discovery mechanism.
+ *
+ * The returned address is usable with NET_CreateDatagramSocket() to listen
+ * for broadcasts on the LAN, and with NET_SendDatagram() to send broadcast
+ * packets.
+ *
+ * The address does not need to be resolved (NET_WaitUntilResolved() will not
+ * block and NET_GetAddressStatus() will always report NET_SUCCESS) and can be
+ * used immediately.
+ *
+ * **WARNING**: Sending to a broadcast address sends to every device on the
+ * LAN, whether they want it or not. Broadcasting sparingly is safe; for
+ * example, a server announcing itself with one packet every few seconds.
+ * Once clients discover the server they should communicate directly, not
+ * continue broadcasting. For peer-to-peer games, prefer multicast once
+ * connections are established.
+ *
+ * The `iface` parameter is an interface address to use for broadcast, as
+ * different interfaces may be on different subnets. You can get a list of
+ * valid interfaces from NET_GetLocalAddresses(). Passing NULL will send on
+ * all available interfaces.
+ *
+ * \param iface the interface to use for broadcasting. May be NULL.
+ * \returns an address that can be used for broadcast transmission, or NULL on
+ *          error; call SDL_GetError() for details.
+ *
+ * \threadsafety It is safe to call this function from any thread.
+ *
+ * \since This function is available since SDL_net 3.0.0.
+ *
+ * \sa NET_GetLocalAddresses
+ * \sa NET_CreateDatagramSocket
+ * \sa NET_SendDatagram
+ */
+extern SDL_DECLSPEC NET_Address * SDLCALL NET_CreateBroadcastAddress(NET_Address *iface);
+
 
 /* Streaming (TCP) API... */
 

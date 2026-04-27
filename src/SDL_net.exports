@@ -1,6 +1,7 @@
 # SDL3_net.dylib exports
 _NET_AcceptClient
 _NET_CompareAddresses
+_NET_CreateBroadcastAddress
 _NET_CreateClient
 _NET_CreateDatagramSocket
 _NET_CreateServer
