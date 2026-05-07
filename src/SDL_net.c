@@ -1343,29 +1343,34 @@ void NET_FreeLocalAddresses(NET_Address **addresses)
 
 NET_Address *NET_CreateBroadcastAddress(NET_Address *interface_addr)
 {
-    if (!InterfacesReady()) {
-        SDL_SetError("Failed to initialize network interfaces");
-        return NULL;
-    }
-
     if (interface_addr != NULL) {
+        if (!InterfacesReady()) {
+            SDL_SetError("Failed to initialize network interfaces");
+            return NULL;
+        }
         SDL_LockRWLockForReading(interface_rwlock);
         NET_Address *result = NULL;
+        bool found = false;
         for (int i = 0; i < num_interfaces; i++) {
             if (NET_CompareAddresses(interfaces[i].address, interface_addr) == 0) {
-                result = NET_RefAddress(interfaces[i].broadcast);
+                found = true;
+                if (interfaces[i].broadcast) {
+                    result = NET_RefAddress(interfaces[i].broadcast);
+                }
                 break;
             }
         }
         SDL_UnlockRWLock(interface_rwlock);
         if (!result) {
-            SDL_SetError("No broadcast address found for the specified interface");
+            SDL_SetError(found ? "Interface has no broadcast address" : "Interface not found");
         }
         return result;
     }
 
-    // NULL interface: create a special token address meaning "send on all interfaces".
-    // SendDatagram detects this (ainfo==NULL, type==NET_ADDRTYPE_BROADCAST) and iterates.
+    // NULL interface: create a sentinel token meaning "send on all interfaces".
+    // NET_SendDatagram identifies this token by (type==NET_ADDRTYPE_BROADCAST && ainfo==NULL).
+    // Real broadcast addresses always have ainfo!=NULL (set by CreateSDLNetAddrFromSockAddr),
+    // so the token is unambiguously distinguishable from a concrete broadcast address.
     NET_Address *addr = (NET_Address *) SDL_calloc(1, sizeof (*addr));
     if (!addr) {
         return NULL;
@@ -2065,7 +2070,7 @@ static bool SendBroadcastToAllInterfaces(NET_DatagramSocket *sock, Uint16 port, 
     }
     SDL_free(bcasts);
 
-    return any_success ? true : SDL_SetError("No broadcast addresses available on any interface");
+    return any_success ? true : SDL_SetError("Failed to send broadcast datagram on any interface");
 }
 
 static NET_Status SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, const void *buf, int buflen)
@@ -2141,7 +2146,8 @@ bool NET_SendDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, 
         return true;  // you won the percent_loss lottery. Drop this packet as if you sent it and it never arrived.
     }
 
-    // "broadcast on all interfaces" token address: send to every interface's broadcast address, no queueing.
+    // Sentinel from NET_CreateBroadcastAddress(NULL): send to every interface's broadcast address.
+    // Real broadcast addresses always have ainfo!=NULL; this sentinel has ainfo==NULL.
     if (addr->type == NET_ADDRTYPE_BROADCAST && !addr->ainfo) {
         return SendBroadcastToAllInterfaces(sock, port, buf, buflen);
     }
