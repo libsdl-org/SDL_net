@@ -377,6 +377,7 @@ static bool WouldBlock(const int err)
 }
 
 static NET_Address *CreateSDLNetAddrFromSockAddr(const struct sockaddr *saddr, SockLen saddrlen);
+static NET_Status SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, const void *buf, int buflen);
 
 
 
@@ -1340,6 +1341,51 @@ void NET_FreeLocalAddresses(NET_Address **addresses)
     }
 }
 
+NET_Address *NET_CreateBroadcastAddress(NET_Address *interface_addr)
+{
+    if (interface_addr != NULL) {
+        if (!InterfacesReady()) {
+            SDL_SetError("Failed to initialize network interfaces");
+            return NULL;
+        }
+        SDL_LockRWLockForReading(interface_rwlock);
+        NET_Address *result = NULL;
+        bool found = false;
+        for (int i = 0; i < num_interfaces; i++) {
+            if (NET_CompareAddresses(interfaces[i].address, interface_addr) == 0) {
+                found = true;
+                if (interfaces[i].broadcast) {
+                    result = NET_RefAddress(interfaces[i].broadcast);
+                }
+                break;
+            }
+        }
+        SDL_UnlockRWLock(interface_rwlock);
+        if (!result) {
+            SDL_SetError(found ? "Interface has no broadcast address" : "Interface not found");
+        }
+        return result;
+    }
+
+    // NULL interface: create a sentinel token meaning "send on all interfaces".
+    // NET_SendDatagram identifies this token by (type==NET_ADDRTYPE_BROADCAST && ainfo==NULL).
+    // Real broadcast addresses always have ainfo!=NULL (set by CreateSDLNetAddrFromSockAddr),
+    // so the token is unambiguously distinguishable from a concrete broadcast address.
+    NET_Address *addr = (NET_Address *) SDL_calloc(1, sizeof (*addr));
+    if (!addr) {
+        return NULL;
+    }
+    SDL_SetAtomicInt(&addr->status, (int) NET_SUCCESS);
+    addr->type = NET_ADDRTYPE_BROADCAST;
+    addr->ainfo = NULL;
+    addr->human_readable = SDL_strdup("<broadcast>");
+    if (!addr->human_readable) {
+        SDL_free(addr);
+        return NULL;
+    }
+    return NET_RefAddress(addr);
+}
+
 static struct addrinfo *MakeAddrInfoWithPort(const NET_Address *addr, const int socktype, const Uint16 port)
 {
     const struct addrinfo *ainfo = addr ? addr->ainfo : NULL;
@@ -1996,6 +2042,37 @@ failed:
     return NULL;
 }
 
+static bool SendBroadcastToAllInterfaces(NET_DatagramSocket *sock, Uint16 port, const void *buf, int buflen)
+{
+    // Snapshot broadcast addresses under the read lock so we can send without holding it.
+    SDL_LockRWLockForReading(interface_rwlock);
+    const int n = num_interfaces;
+    NET_Address **bcasts = (NET_Address **) SDL_calloc(n, sizeof (*bcasts));
+    if (bcasts) {
+        for (int i = 0; i < n; i++) {
+            bcasts[i] = interfaces[i].broadcast ? NET_RefAddress(interfaces[i].broadcast) : NULL;
+        }
+    }
+    SDL_UnlockRWLock(interface_rwlock);
+
+    if (!bcasts) {
+        return false;
+    }
+
+    bool any_success = false;
+    for (int i = 0; i < n; i++) {
+        if (bcasts[i]) {
+            if (SendOneDatagram(sock, bcasts[i], port, buf, buflen) == NET_SUCCESS) {
+                any_success = true;
+            }
+            NET_UnrefAddress(bcasts[i]);
+        }
+    }
+    SDL_free(bcasts);
+
+    return any_success ? true : SDL_SetError("Failed to send broadcast datagram on any interface");
+}
+
 static NET_Status SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, const void *buf, int buflen)
 {
     struct addrinfo *addrwithport = MakeAddrInfoWithPort(addr, SOCK_DGRAM, port);
@@ -2067,6 +2144,12 @@ bool NET_SendDatagram(NET_DatagramSocket *sock, NET_Address *addr, Uint16 port, 
         return true;  // nothing to do.  (!!! FIXME: but strictly speaking, a UDP packet with no payload is legal.)
     } else if (ShouldSimulateLoss(sock->percent_loss)) {
         return true;  // you won the percent_loss lottery. Drop this packet as if you sent it and it never arrived.
+    }
+
+    // Sentinel from NET_CreateBroadcastAddress(NULL): send to every interface's broadcast address.
+    // Real broadcast addresses always have ainfo!=NULL; this sentinel has ainfo==NULL.
+    if (addr->type == NET_ADDRTYPE_BROADCAST && !addr->ainfo) {
+        return SendBroadcastToAllInterfaces(sock, port, buf, buflen);
     }
 
     if (sock->pending_output_len == 0) {  // nothing queued? See if we can just send this without queueing.
