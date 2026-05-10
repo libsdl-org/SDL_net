@@ -104,7 +104,19 @@ endif()
 set(PC_LIBS)
 set(PC_REQUIRES)
 
-add_library(${sdl3_net_target_name} src/SDL_net.c)
+set(PLATFORM_UNSUPPORTED False)
+if (DOS OR EMSCRIPTEN)  # These either don't have networking at all, or have needs we don't currently meet.
+    set(PLATFORM_UNSUPPORTED True)
+endif()
+
+option(SDLNET_STUB_ONLY "Build a stub library that does nothing" ${PLATFORM_UNSUPPORTED})
+if(SDLNET_STUB_ONLY)
+    message(WARNING "Only building a stub library. The functions will be there but all of them will fail!")
+    add_library(${sdl3_net_target_name} src/SDL_net_stub_only.c)
+else()
+    add_library(${sdl3_net_target_name} src/SDL_net.c)
+endif()
+
 add_library(SDL3_net::${sdl3_net_target_name} ALIAS ${sdl3_net_target_name})
 if("c_std_99" IN_LIST CMAKE_C_COMPILE_FEATURES)
     target_compile_features(${sdl3_net_target_name} PRIVATE c_std_99)
