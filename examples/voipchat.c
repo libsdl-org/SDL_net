@@ -116,9 +116,8 @@ static void mainloop(void)
         const Uint64 now = SDL_GetTicks();
         SDL_Event event;
         NET_Datagram *dgram = NULL;
-        int rc;
 
-        while (((rc = NET_ReceiveDatagram(sock, &dgram)) == true) && (dgram != NULL)) {
+        while ((NET_ReceiveDatagram(sock, &dgram)) && (dgram != NULL)) {
             SDL_Log("%s: got %d-byte datagram from %s:%d", is_client ? "CLIENT" : "SERVER", (int) dgram->buflen, NET_GetAddressString(dgram->addr), (int) dgram->port);
             activity = true;
             if (!is_client) {  /* we're the server? */
