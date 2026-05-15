@@ -760,15 +760,15 @@ typedef struct NET_Server NET_Server;
  *
  * These are the supported properties:
  *
- * - `NET_PROP_SERVER_REUSEADDR_BOOLEAN`: true if the server should
- *   be created even if a previous server has recently used this address.
- *   For various reasons, networks prefer that there be some delay between
- *   apps reusing the same address, but this can be problematic when
- *   iterating quickly, for software development purposes or just restarting
- *   a crashed service. This property defaults to true (although it should be
- *   noted that, at the operating system level, this defaults to false!). If
- *   this property is false and the OS feels that not enough time has elapsed,
- *   server creation will fail and this function will report an error.
+ * - `NET_PROP_SERVER_REUSEADDR_BOOLEAN`: true if the server should be created
+ *   even if a previous server has recently used this address. For various
+ *   reasons, networks prefer that there be some delay between apps reusing
+ *   the same address, but this can be problematic when iterating quickly, for
+ *   software development purposes or just restarting a crashed service. This
+ *   property defaults to true (although it should be noted that, at the
+ *   operating system level, this defaults to false!). If this property is
+ *   false and the OS feels that not enough time has elapsed, server creation
+ *   will fail and this function will report an error.
  *
  * \param addr the _local_ address to listen for connections on, or NULL.
  * \param port the port on the local address to listen for connections on.
@@ -1243,13 +1243,13 @@ typedef struct NET_Datagram
  * These are the supported properties:
  *
  * - `NET_PROP_DATAGRAM_SOCKET_REUSEADDR_BOOLEAN`: true if the socket should
- *   be created even if a previous socket has recently used this address.
- *   For various reasons, networks prefer that there be some delay between
- *   apps reusing the same address, but this can be problematic when
- *   iterating quickly, for software development purposes or just restarting
- *   a crashed service. This property defaults to true (although it should be
- *   noted that, at the operating system level, this defaults to false!). If
- *   this property is false and the OS feels that not enough time has elapsed,
+ *   be created even if a previous socket has recently used this address. For
+ *   various reasons, networks prefer that there be some delay between apps
+ *   reusing the same address, but this can be problematic when iterating
+ *   quickly, for software development purposes or just restarting a crashed
+ *   service. This property defaults to true (although it should be noted
+ *   that, at the operating system level, this defaults to false!). If this
+ *   property is false and the OS feels that not enough time has elapsed,
  *   socket creation will fail and this function will report an error.
  * - `NET_PROP_DATAGRAM_SOCKET_ALLOW_BROADCAST_BOOLEAN`: true if the socket
  *   should allow broadcasting. At the lower level, this will set
@@ -1328,18 +1328,20 @@ extern SDL_DECLSPEC NET_DatagramSocket * SDLCALL NET_CreateDatagramSocket(NET_Ad
  * the same LAN, and every player is simply broadcasting packets. This is
  * absolutely the wrong thing to do, however. Broadcast packets go to every
  * device on the LAN, whether they want them or not. The game DOOM, in its
- * heyday, was capable of [bringing entire networks to their knees](https://doomwiki.org/wiki/Doom_in_workplaces),
- * as many players on the same network would all be broadcasting relentlessly.
+ * heyday, was capable of
+ * [bringing entire networks to their knees](https://doomwiki.org/wiki/Doom_in_workplaces)
+ * , as many players on the same network would all be broadcasting
+ * relentlessly.
  *
  * In practice, broadcasting sparingly can be useful for certain
  * functionality: a LAN-only client broadcasting a few packets to ask for
  * available servers, and running servers replying directly to that client
  * without broadcasting at all, is reasonable and safe. Once clients and
- * servers have found each other, they can communicate directly without
- * any broadcasting at all. For peer-to-peer games, once connection is
+ * servers have found each other, they can communicate directly without any
+ * broadcasting at all. For peer-to-peer games, once connection is
  * established, it's better to either send unique packets to each known
- * player, or use a multicasting (which works like broadcast, but only
- * routes packets to devices that are explicitly listening for it).
+ * player, or use a multicasting (which works like broadcast, but only routes
+ * packets to devices that are explicitly listening for it).
  *
  * With IPv6, which doesn't support broadcasts, broadcasting is faked with
  * multicast to the all-nodes link-local multicast group, ff02::1, either on a
