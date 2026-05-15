@@ -211,13 +211,7 @@ int NET_Version(void)
     return SDL_NET_VERSION;
 }
 
-typedef enum NET_AddressType
-{
-    NET_ADDRTYPE_UNKNOWN=-1,
-    NET_ADDRTYPE_UNICAST,
-    NET_ADDRTYPE_MULTICAST,
-    NET_ADDRTYPE_BROADCAST
-} NET_AddressType;
+typedef struct NetworkInterface NetworkInterface;
 
 struct NET_Address
 {
@@ -226,18 +220,17 @@ struct NET_Address
     char *errstr;
     SDL_AtomicInt refcount;
     SDL_AtomicInt status;  // This is actually a NET_Status.
-    NET_AddressType type;
     struct addrinfo *ainfo;
     NET_Address *resolver_next;  // a linked list for the resolution job queue.
 };
 
-typedef struct NetworkInterfaces
+struct NetworkInterface
 {
     char *name;
-    int index;
+    Uint32 index;
     NET_Address *address;
     NET_Address *broadcast;
-} NetworkInterfaces;
+};
 
 
 #define MIN_RESOLVER_THREADS 2
@@ -257,7 +250,7 @@ static SDL_AtomicInt resolver_percent_loss;
 static SDL_InitState interface_init;
 static SDL_RWLock *interface_rwlock = NULL;
 static int num_interfaces = 0;
-static NetworkInterfaces *interfaces = NULL;
+static NetworkInterface *interfaces = NULL;
 static SDL_AtomicInt interfaces_have_changed;
 
 // between lo and hi (inclusive; it can return lo or hi itself, too!).
@@ -381,7 +374,7 @@ static NET_Address *CreateSDLNetAddrFromSockAddr(const struct sockaddr *saddr, S
 
 
 /* Network interface enumeration... */
-static void FreeNetworkInterfaces(NetworkInterfaces *ifaces, int num_ifaces)
+static void FreeNetworkInterfaces(NetworkInterface *ifaces, int num_ifaces)
 {
     for (int i = 0; i < num_ifaces; i++) {
         NET_UnrefAddress(ifaces[i].address);
@@ -447,7 +440,7 @@ static void RefreshInterfaces(void)  // WINDOWS VERSION
         }
     }
 
-    NetworkInterfaces *new_interfaces = (NetworkInterfaces *) SDL_calloc(new_num_interfaces + 1, sizeof (*new_interfaces));
+    NetworkInterface *new_interfaces = (NetworkInterface *) SDL_calloc(new_num_interfaces + 1, sizeof (*new_interfaces));
     if (!new_interfaces) {
         SDL_free(addrs);
         return;
@@ -460,15 +453,14 @@ static void RefreshInterfaces(void)  // WINDOWS VERSION
             if (addr) {
                 new_interfaces[count].address = addr;
                 if (j->Address.lpSockaddr->sa_family == AF_INET6) {
-                    new_interfaces[count].index = i->Ipv6IfIndex;
+                    new_interfaces[count].index = (Uint32) i->Ipv6IfIndex;
                 } else if (j->Address.lpSockaddr->sa_family == AF_INET) {  // if this is IPv4, calculate the broadcast address.
                     SOCKADDR_IN bcast;
                     SDL_assert(j->Address.iSockaddrLength == sizeof (bcast));
                     SDL_memcpy(&bcast, (const SOCKADDR_IN *) j->Address.lpSockaddr, sizeof (SOCKADDR_IN));
                     bcast.sin_addr.S_un.S_addr |= htonl(~((1 << (32 - j->OnLinkPrefixLength)) - 1));
                     new_interfaces[count].broadcast = CreateSDLNetAddrFromSockAddr((const struct sockaddr *) &bcast, sizeof (bcast));
-                    new_interfaces[count].broadcast->type = NET_ADDRTYPE_BROADCAST;
-                    new_interfaces[count].index = i->IfIndex;
+                    new_interfaces[count].index = (Uint32) i->IfIndex;
                 }
                 count++;
             }
@@ -478,7 +470,7 @@ static void RefreshInterfaces(void)  // WINDOWS VERSION
     new_num_interfaces = count;  // in case we dropped one somewhere.
 
     SDL_LockRWLockForWriting(interface_rwlock);
-    NetworkInterfaces *old_interfaces = interfaces;
+    NetworkInterface *old_interfaces = interfaces;
     const int old_num_interfaces = num_interfaces;
     interfaces = new_interfaces;
     num_interfaces = new_num_interfaces;
@@ -552,7 +544,7 @@ static int SDLCALL LinuxInterfaceChangeNotificationThread(void *data)
 
         // we don't currently bother parsing for specifics, we just use this as a signal to reenumerate interfaces.
         //for (struct nlmsghdr *i = buf; NLMSG_OK(i, br); i = NLMSG_NEXT(i, br)) {}
-        SDL_Log("Network interfaces changed!");
+        //SDL_Log("Network interfaces changed!");
         SDL_SetAtomicInt(&interfaces_have_changed, 1);
     }
 
@@ -608,7 +600,7 @@ static void RefreshInterfaces(void)  // LINUX/BSD VERSION
     }
 
     int new_num_interfaces = 0;
-    NetworkInterfaces *new_interfaces = NULL;
+    NetworkInterface *new_interfaces = NULL;
 
     Uint8 buffer[64 * 1024];
     ssize_t br;
@@ -624,8 +616,8 @@ static void RefreshInterfaces(void)  // LINUX/BSD VERSION
                 if (!ptr) {
                     goto failed;
                 }
-                new_interfaces = (NetworkInterfaces *) ptr;
-                NetworkInterfaces *iface = &new_interfaces[new_num_interfaces];
+                new_interfaces = (NetworkInterface *) ptr;
+                NetworkInterface *iface = &new_interfaces[new_num_interfaces];
                 SDL_zerop(iface);
 
                 const struct ifaddrmsg *msg = (const struct ifaddrmsg *) (NLMSG_DATA(header));
@@ -657,10 +649,7 @@ static void RefreshInterfaces(void)  // LINUX/BSD VERSION
                 }
 
                 if (iface->address) {
-                    iface->index = msg->ifa_index;
-                    if (iface->broadcast) {
-                        iface->broadcast->type = NET_ADDRTYPE_BROADCAST;
-                    }
+                    iface->index = (Uint32) msg->ifa_index;
 
                     char interface_name[IF_NAMESIZE];
                     if (if_indextoname((unsigned int) iface->index, interface_name) == NULL) {  // miraculously, this function is in Android 21; nothing else is, though! We could have done this with netlink too, but this is the easy button.
@@ -683,7 +672,7 @@ static void RefreshInterfaces(void)  // LINUX/BSD VERSION
 succeeded:
     close(sock);
     SDL_LockRWLockForWriting(interface_rwlock);
-    NetworkInterfaces *old_interfaces = interfaces;
+    NetworkInterface *old_interfaces = interfaces;
     const int old_num_interfaces = num_interfaces;
     interfaces = new_interfaces;
     num_interfaces = new_num_interfaces;
@@ -701,7 +690,7 @@ failed:
         return;  // oh well.
     }
 
-    NetworkInterfaces *new_interfaces = NULL;
+    NetworkInterface *new_interfaces = NULL;
     int new_num_interfaces = 0;
     for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next) {
         if (i->ifa_name != NULL) {
@@ -718,7 +707,7 @@ failed:
         goto failed;
     }
 
-    NetworkInterfaces *iface = &new_interfaces[0];
+    NetworkInterface *iface = &new_interfaces[0];
     for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next, iface++) {
         if (i->ifa_name == NULL) {
             continue;  // i guess.
@@ -739,11 +728,7 @@ failed:
         }
 
         if (iface->address) {
-            if (iface->broadcast) {
-                iface->broadcast->type = NET_ADDRTYPE_BROADCAST;
-            }
-
-            iface->index = (int) if_nametoindex(i->ifa_name);
+            iface->index = (Uint32) if_nametoindex(i->ifa_name);
             iface->name = SDL_strdup(i->ifa_name);
             if (!iface->name) {
                 goto failed;
@@ -765,7 +750,7 @@ succeeded:
     }
 
     SDL_LockRWLockForWriting(interface_rwlock);
-    NetworkInterfaces *old_interfaces = interfaces;
+    NetworkInterface *old_interfaces = interfaces;
     const int old_num_interfaces = num_interfaces;
     interfaces = new_interfaces;
     num_interfaces = new_num_interfaces;
@@ -818,14 +803,16 @@ static bool InterfacesReady(void)
         RefreshInterfaces();
         #if 0
         SDL_Log("NETWORK INTERFACE REFRESH");
+        SDL_LockRWLockForReading(interface_rwlock);
         for (int i = 0; i < num_interfaces; i++) {
-            const NetworkInterfaces *iface = &interfaces[i];
-            SDL_Log("Interface %d ('%s')", iface->index, iface->name);
+            const NetworkInterface *iface = &interfaces[i];
+            SDL_Log("Interface %u ('%s')", (unsigned int) iface->index, iface->name);
             SDL_Log("  - address %s",  iface->address->human_readable);
             if (iface->broadcast) {
                 SDL_Log("  - broadcast %s", iface->broadcast->human_readable);
             }
         }
+        SDL_UnlockRWLock(interface_rwlock);
         #endif
     }
 
@@ -861,7 +848,6 @@ static NET_Status ResolveAddress(NET_Address *addr)
 
     addr->human_readable = SDL_strdup(buf);
     addr->ainfo = ainfo;
-    addr->type = NET_ADDRTYPE_UNICAST;
 
     return NET_SUCCESS;  // success (zero means "still in progress").
 }
@@ -987,8 +973,6 @@ static NET_Address *CreateSDLNetAddrFromSockAddr(const struct sockaddr *saddr, S
         SetGetAddrInfoError("Failed to determine address", gairc);
         return NULL;
     }
-
-    addr->type = NET_ADDRTYPE_UNICAST;  // until told otherwise.
 
     addr->human_readable = SDL_strdup(hostbuf);
     if (!addr->human_readable) {
@@ -1300,7 +1284,6 @@ void NET_SimulateAddressResolutionLoss(int percent_loss)
 {
     SDL_SetAtomicInt(&resolver_percent_loss, SDL_clamp(percent_loss, 0, 100));
 }
-
 
 NET_Address **NET_GetLocalAddresses(int *num_addresses)
 {
