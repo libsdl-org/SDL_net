@@ -26,8 +26,8 @@ jobs:
       run:
         shell: ${{ matrix.platform.shell }}
     steps:
-      - uses: ilammy/msvc-dev-cmd@v1
-        if: ${{ matrix.platform.msvc }}
+      - uses: TheMrMilchmann/setup-msvc-dev@v4
+        if: ${{ matrix.platform.platform == 'msvc' }}
         with:
           arch: ${{ matrix.platform.msvc-arch }}
       - name: Set up MSYS2
