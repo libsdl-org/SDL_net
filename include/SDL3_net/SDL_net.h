@@ -640,8 +640,13 @@ typedef struct NET_StreamSocket NET_StreamSocket;
  * you do not have to byteswap it into "network order," as the library will
  * handle that for you.
  *
+ * There are currently no extra properties for creating a client, so `props`
+ * should be zero. A future revision of SDL_net may add additional (optional)
+ * properties.
+ *
  * \param address the address of the remote server to connect to.
  * \param port the port on the remote server to connect to.
+ * \param props properties of the new client. Specify zero for defaults.
  * \returns a new NET_StreamSocket, pending connection, or NULL on error; call
  *          SDL_GetError() for details.
  *
@@ -653,7 +658,7 @@ typedef struct NET_StreamSocket NET_StreamSocket;
  * \sa NET_GetConnectionStatus
  * \sa NET_DestroyStreamSocket
  */
-extern SDL_DECLSPEC NET_StreamSocket * SDLCALL NET_CreateClient(NET_Address *address, Uint16 port);
+extern SDL_DECLSPEC NET_StreamSocket * SDLCALL NET_CreateClient(NET_Address *address, Uint16 port, SDL_PropertiesID props);
 
 /**
  * Block until a stream socket has connected to a server.
@@ -750,8 +755,24 @@ typedef struct NET_Server NET_Server;
  * you do not have to byteswap it into "network order," as the library will
  * handle that for you.
  *
+ * The caller may supply properties to customize behavior. This is optional,
+ * and a value of zero for `props` will request defaults for all properties.
+ *
+ * These are the supported properties:
+ *
+ * - `NET_PROP_SERVER_REUSEADDR_BOOLEAN`: true if the server should
+ *   be created even if a previous server has recently used this address.
+ *   For various reasons, networks prefer that there be some delay between
+ *   apps reusing the same address, but this can be problematic when
+ *   iterating quickly, for software development purposes or just restarting
+ *   a crashed service. This property defaults to true (although it should be
+ *   noted that, at the operating system level, this defaults to false!). If
+ *   this property is false and the OS feels that not enough time has elapsed,
+ *   server creation will fail and this function will report an error.
+ *
  * \param addr the _local_ address to listen for connections on, or NULL.
  * \param port the port on the local address to listen for connections on.
+ * \param props properties of the new server. Specify zero for defaults.
  * \returns a new NET_Server, or NULL on error; call SDL_GetError() for
  *          details.
  *
@@ -763,7 +784,10 @@ typedef struct NET_Server NET_Server;
  * \sa NET_AcceptClient
  * \sa NET_DestroyServer
  */
-extern SDL_DECLSPEC NET_Server * SDLCALL NET_CreateServer(NET_Address *addr, Uint16 port);
+extern SDL_DECLSPEC NET_Server * SDLCALL NET_CreateServer(NET_Address *addr, Uint16 port, SDL_PropertiesID props);
+
+#define NET_PROP_SERVER_REUSEADDR_BOOLEAN     "NET.server.reuseaddr"
+
 
 /**
  * Create a stream socket for the next pending client connection.
@@ -1213,10 +1237,37 @@ typedef struct NET_Datagram
  * you do not have to byteswap it into "network order," as the library will
  * handle that for you.
  *
+ * The caller may supply properties to customize behavior. This is optional,
+ * and a value of zero for `props` will request defaults for all properties.
+ *
+ * These are the supported properties:
+ *
+ * - `NET_PROP_DATAGRAM_SOCKET_REUSEADDR_BOOLEAN`: true if the socket should
+ *   be created even if a previous socket has recently used this address.
+ *   For various reasons, networks prefer that there be some delay between
+ *   apps reusing the same address, but this can be problematic when
+ *   iterating quickly, for software development purposes or just restarting
+ *   a crashed service. This property defaults to true (although it should be
+ *   noted that, at the operating system level, this defaults to false!). If
+ *   this property is false and the OS feels that not enough time has elapsed,
+ *   socket creation will fail and this function will report an error.
+ * - `NET_PROP_DATAGRAM_SOCKET_ALLOW_BROADCAST_BOOLEAN`: true if the socket
+ *   should allow broadcasting. At the lower level, this will set
+ *   `SO_BROADCAST` for IPv4 sockets, to allow sending to the subnet's
+ *   broadcast address at the OS level. For IPv6, it'll join the all-nodes
+ *   link-local multicast group, ff02::1, allowing sending and receiving
+ *   there, more or less simulating the usual IPv4 broadcast semantics. Other
+ *   protocols take similar approaches. If you do not intend to send or
+ *   receive broadcast packets on this socket, set this property to false, or
+ *   omit it, as it defaults to false. Note: IPv4 will still be able to
+ *   receive broadcast packets without this option, but IPv6 will not. Also
+ *   see notes about sending to a broadcast address in NET_SendDatagram().
+ *
  * \param addr the local address to listen for connections on, or NULL to
  *             listen on all available local addresses.
  * \param port the port on the local address to listen for connections on, or
  *             zero for the system to decide.
+ * \param props properties of the new socket. Specify zero for defaults.
  * \returns a new NET_DatagramSocket, or NULL on error; call SDL_GetError()
  *          for details.
  *
@@ -1227,7 +1278,11 @@ typedef struct NET_Datagram
  * \sa NET_GetLocalAddresses
  * \sa NET_DestroyDatagramSocket
  */
-extern SDL_DECLSPEC NET_DatagramSocket * SDLCALL NET_CreateDatagramSocket(NET_Address *addr, Uint16 port);
+extern SDL_DECLSPEC NET_DatagramSocket * SDLCALL NET_CreateDatagramSocket(NET_Address *addr, Uint16 port, SDL_PropertiesID props);
+
+#define NET_PROP_DATAGRAM_SOCKET_REUSEADDR_BOOLEAN         "NET.datagram_socket.reuseaddr"
+#define NET_PROP_DATAGRAM_SOCKET_ALLOW_BROADCAST_BOOLEAN   "NET.datagram_socket.allow_broadcast"
+
 
 /**
  * Send a new packet over a datagram socket to a remote system.
@@ -1264,8 +1319,35 @@ extern SDL_DECLSPEC NET_DatagramSocket * SDLCALL NET_CreateDatagramSocket(NET_Ad
  * should assume it is no longer usable and should destroy it with
  * SDL_DestroyDatagramSocket().
  *
+ * Sending to a NULL address is treated as a request to broadcast a packet.
+ * Note that this will report failure immediately if the socket was not
+ * created with broadcast permission. Broadcast packets are (more or less)
+ * sent to every machine on the LAN, unconditionally.
+ *
+ * **WARNING**: It is possible to build a game where everyone is playing on
+ * the same LAN, and every player is simply broadcasting packets. This is
+ * absolutely the wrong thing to do, however. Broadcast packets go to every
+ * device on the LAN, whether they want them or not. The game DOOM, in its
+ * heyday, was capable of [bringing entire networks to their knees](https://doomwiki.org/wiki/Doom_in_workplaces),
+ * as many players on the same network would all be broadcasting relentlessly.
+ *
+ * In practice, broadcasting sparingly can be useful for certain
+ * functionality: a LAN-only client broadcasting a few packets to ask for
+ * available servers, and running servers replying directly to that client
+ * without broadcasting at all, is reasonable and safe. Once clients and
+ * servers have found each other, they can communicate directly without
+ * any broadcasting at all. For peer-to-peer games, once connection is
+ * established, it's better to either send unique packets to each known
+ * player, or use a multicasting (which works like broadcast, but only
+ * routes packets to devices that are explicitly listening for it).
+ *
+ * With IPv6, which doesn't support broadcasts, broadcasting is faked with
+ * multicast to the all-nodes link-local multicast group, ff02::1, either on a
+ * specific interface or letting the OS choose the default. Other protocols
+ * might fake broadcast operations in similar ways in the future.
+ *
  * \param sock the datagram socket to send data through.
- * \param address the NET_Address object address.
+ * \param address the NET_Address object address. May be NULL to broadcast.
  * \param port the address port.
  * \param buf a pointer to the data to send as a single packet.
  * \param buflen the size of the data to send, in bytes.
