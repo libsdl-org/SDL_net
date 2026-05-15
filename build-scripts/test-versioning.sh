@@ -76,66 +76,77 @@ for rcfile in src/version.rc; do
     fi
 done
 
-#version=$(sed -Ene '/CFBundleShortVersionString/,+1 s/.*<string>(.*)<\/string>.*/\1/p' Xcode/Info-Framework.plist)
-#
-#if [ "$ref_version" = "$version" ]; then
-#    ok "Info-Framework.plist CFBundleShortVersionString $version"
-#else
-#    not_ok "Info-Framework.plist CFBundleShortVersionString $version disagrees with SDL_net.h $ref_version"
-#fi
-#
-#version=$(sed -Ene '/CFBundleVersion/,+1 s/.*<string>(.*)<\/string>.*/\1/p' Xcode/Info-Framework.plist)
-#
-#if [ "$ref_version" = "$version" ]; then
-#    ok "Info-Framework.plist CFBundleVersion $version"
-#else
-#    not_ok "Info-Framework.plist CFBundleVersion $version disagrees with SDL_net.h $ref_version"
-#fi
-#
+version=$(sed -Ene '/CFBundleShortVersionString/,+1 s/.*<string>(.*)<\/string>.*/\1/p' Xcode/Info-Framework.plist)
+
+if [ "$ref_version" = "$version" ]; then
+    ok "Info-Framework.plist CFBundleShortVersionString $version"
+else
+    not_ok "Info-Framework.plist CFBundleShortVersionString $version disagrees with SDL_net.h $ref_version"
+fi
+
+version=$(sed -Ene '/CFBundleVersion/,+1 s/.*<string>(.*)<\/string>.*/\1/p' Xcode/Info-Framework.plist)
+
+if [ "$ref_version" = "$version" ]; then
+    ok "Info-Framework.plist CFBundleVersion $version"
+else
+    not_ok "Info-Framework.plist CFBundleVersion $version disagrees with SDL_net.h $ref_version"
+fi
+
+marketing=$(sed -Ene 's/.*MARKETING_VERSION = (.*);/\1/p' Xcode/SDL_net.xcodeproj/project.pbxproj)
+
+ref="$ref_version
+$ref_version"
+
+if [ "$ref" = "$marketing" ]; then
+    ok "project.pbxproj MARKETING_VERSION is consistent"
+else
+    not_ok "project.pbxproj MARKETING_VERSION is inconsistent, expected $ref, got $marketing"
+fi
+
 ## For simplicity this assumes we'll never break ABI before SDL 3.
-#dylib_compat=$(sed -Ene 's/.*DYLIB_COMPATIBILITY_VERSION = (.*);$/\1/p' Xcode/SDL_net.xcodeproj/project.pbxproj)
-#
-#case "$ref_minor" in
-#    (*[02468])
-#        major="$(( ref_minor * 100 + 1 ))"
-#        minor="0"
-#        ;;
-#    (*)
-#        major="$(( ref_minor * 100 + ref_micro + 1 ))"
-#        minor="0"
-#        ;;
-#esac
-#
-#ref="${major}.${minor}.0
-#${major}.${minor}.0"
-#
-#if [ "$ref" = "$dylib_compat" ]; then
-#    ok "project.pbxproj DYLIB_COMPATIBILITY_VERSION is consistent"
-#else
-#    not_ok "project.pbxproj DYLIB_COMPATIBILITY_VERSION is inconsistent, expected $ref, got $dylib_compat"
-#fi
-#
-#dylib_cur=$(sed -Ene 's/.*DYLIB_CURRENT_VERSION = (.*);$/\1/p' Xcode/SDL_net.xcodeproj/project.pbxproj)
-#
-#case "$ref_minor" in
-#    (*[02468])
-#        major="$(( ref_minor * 100 + 1 ))"
-#        minor="$ref_micro"
-#        ;;
-#    (*)
-#        major="$(( ref_minor * 100 + ref_micro + 1 ))"
-#        minor="0"
-#        ;;
-#esac
-#
-#ref="${major}.${minor}.0
-#${major}.${minor}.0"
-#
-#if [ "$ref" = "$dylib_cur" ]; then
-#    ok "project.pbxproj DYLIB_CURRENT_VERSION is consistent"
-#else
-#    not_ok "project.pbxproj DYLIB_CURRENT_VERSION is inconsistent, expected $ref, got $dylib_cur"
-#fi
+dylib_compat=$(sed -Ene 's/.*DYLIB_COMPATIBILITY_VERSION = (.*);$/\1/p' Xcode/SDL_net.xcodeproj/project.pbxproj)
+
+case "$ref_minor" in
+    (*[02468])
+        major="$(( ref_minor * 100 + 1 ))"
+        minor="0"
+        ;;
+    (*)
+        major="$(( ref_minor * 100 + ref_micro + 1 ))"
+        minor="0"
+        ;;
+esac
+
+ref="${major}.${minor}.0
+${major}.${minor}.0"
+
+if [ "$ref" = "$dylib_compat" ]; then
+    ok "project.pbxproj DYLIB_COMPATIBILITY_VERSION is consistent"
+else
+    not_ok "project.pbxproj DYLIB_COMPATIBILITY_VERSION is inconsistent, expected $ref, got $dylib_compat"
+fi
+
+dylib_cur=$(sed -Ene 's/.*DYLIB_CURRENT_VERSION = (.*);$/\1/p' Xcode/SDL_net.xcodeproj/project.pbxproj)
+
+case "$ref_minor" in
+    (*[02468])
+        major="$(( ref_minor * 100 + 1 ))"
+        minor="$ref_micro"
+        ;;
+    (*)
+        major="$(( ref_minor * 100 + ref_micro + 1 ))"
+        minor="0"
+        ;;
+esac
+
+ref="${major}.${minor}.0
+${major}.${minor}.0"
+
+if [ "$ref" = "$dylib_cur" ]; then
+    ok "project.pbxproj DYLIB_CURRENT_VERSION is consistent"
+else
+    not_ok "project.pbxproj DYLIB_CURRENT_VERSION is inconsistent, expected $ref, got $dylib_cur"
+fi
 
 echo "1..$tests"
 exit "$failed"
