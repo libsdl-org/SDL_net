@@ -1,3 +1,6 @@
+2.4.0:
+ * Added SDLNet_TCP_OpenServer() and SDLNet_TCP_OpenClient()
+
 2.2.0:
  * Added support for building with CMake
 
