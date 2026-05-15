@@ -35,9 +35,9 @@ void NET_SimulateAddressResolutionLoss(int percent_loss) {}
 int NET_CompareAddresses(const NET_Address *a, const NET_Address *b) { return 0; }
 NET_Address **NET_GetLocalAddresses(int *num_addresses) { SDL_Unsupported(); return NULL; }
 void NET_FreeLocalAddresses(NET_Address **addresses) {}
-NET_StreamSocket * NET_CreateClient(NET_Address *address, Uint16 port) { SDL_Unsupported(); return NULL; }
+NET_StreamSocket * NET_CreateClient(NET_Address *address, Uint16 port, SDL_PropertiesID props) { SDL_Unsupported(); return NULL; }
 NET_Status NET_WaitUntilConnected(NET_StreamSocket *sock, Sint32 timeout) { SDL_Unsupported(); return NET_FAILURE; }
-NET_Server * NET_CreateServer(NET_Address *addr, Uint16 port) { SDL_Unsupported(); return NULL; }
+NET_Server * NET_CreateServer(NET_Address *addr, Uint16 port, SDL_PropertiesID props) { SDL_Unsupported(); return NULL; }
 bool NET_AcceptClient(NET_Server *server, NET_StreamSocket **client_stream) { SDL_Unsupported(); return false; }
 void NET_DestroyServer(NET_Server *server) {}
 NET_Address * NET_GetStreamSocketAddress(NET_StreamSocket *sock) { SDL_Unsupported(); return NULL; }
@@ -48,7 +48,7 @@ int NET_WaitUntilStreamSocketDrained(NET_StreamSocket *sock, Sint32 timeout) { S
 int NET_ReadFromStreamSocket(NET_StreamSocket *sock, void *buf, int buflen) { SDL_Unsupported(); return -1; }
 void NET_SimulateStreamPacketLoss(NET_StreamSocket *sock, int percent_loss) {}
 void NET_DestroyStreamSocket(NET_StreamSocket *sock) {}
-NET_DatagramSocket * NET_CreateDatagramSocket(NET_Address *addr, Uint16 port) { SDL_Unsupported(); return NULL; }
+NET_DatagramSocket * NET_CreateDatagramSocket(NET_Address *addr, Uint16 port, SDL_PropertiesID props) { SDL_Unsupported(); return NULL; }
 bool NET_SendDatagram(NET_DatagramSocket *sock, NET_Address *address, Uint16 port, const void *buf, int buflen) { SDL_Unsupported(); return false; }
 bool NET_ReceiveDatagram(NET_DatagramSocket *sock, NET_Datagram **dgram) { SDL_Unsupported(); return false; }
 void NET_DestroyDatagram(NET_Datagram *dgram) {}
