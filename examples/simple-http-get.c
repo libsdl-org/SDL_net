@@ -27,7 +27,7 @@ int main(int argc, char **argv)
             SDL_Log("%s is %s", argv[i], NET_GetAddressString(addr));
             char *req = NULL;
             SDL_asprintf(&req, "GET / HTTP/1.0\r\nHost: %s\r\n\r\n", argv[i]);
-            NET_StreamSocket *sock = req ? NET_CreateClient(addr, 80) : NULL;
+            NET_StreamSocket *sock = req ? NET_CreateClient(addr, 80, 0) : NULL;
             if (!req) {
                 SDL_Log("Out of memory!");
             } else if (!sock) {

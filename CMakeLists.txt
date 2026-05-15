@@ -339,6 +339,7 @@ if(SDLNET_SAMPLES)
     add_sdl_net_example_executable(resolve-hostnames examples/resolve-hostnames.c)
     add_sdl_net_example_executable(get-local-addrs examples/get-local-addrs.c)
     add_sdl_net_example_executable(echo-server examples/echo-server.c)
+    add_sdl_net_example_executable(datagram examples/datagram.c)
 
     # Build at least one example in C90
     set_property(TARGET get-local-addrs PROPERTY C_STANDARD 90)

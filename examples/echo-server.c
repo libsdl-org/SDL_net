@@ -52,7 +52,7 @@ int main(int argc, char **argv)
         }
     }
 
-    NET_Server *server = NET_CreateServer(server_addr, server_port);
+    NET_Server *server = NET_CreateServer(server_addr, server_port, 0);
     if (!server) {
         SDL_Log("Failed to create server: %s", SDL_GetError());
     } else {

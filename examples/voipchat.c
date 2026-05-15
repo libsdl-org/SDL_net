@@ -347,7 +347,7 @@ static void run_voipchat(int argc, char **argv)
     }
 
     /* server _must_ be on the requested port. Clients can take anything available, server will respond to where it sees it come from. */
-    sock = NET_CreateDatagramSocket(socket_address, is_server ? server_port : 0);
+    sock = NET_CreateDatagramSocket(socket_address, is_server ? server_port : 0, 0);
     NET_UnrefAddress(socket_address);
     if (!sock) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to create datagram socket: %s", SDL_GetError());
