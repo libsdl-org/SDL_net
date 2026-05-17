@@ -9,43 +9,86 @@
   including commercial applications, and to alter it and redistribute it
   freely.
 */
-#define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
+
+/* this creates a stream socket server, waits for connections, then
+   echoes back anything they send. Connect to the server with telnet
+   or netcat on port 7241 and type things! */
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3_net/SDL_net.h>
 
-static SDL_Window *window = NULL;
-static SDL_Renderer *renderer = NULL;
-
-/* This function runs once at startup. */
-SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
+int main(int argc, char **argv)
 {
-    /* Create the window */
-    if (!SDL_CreateWindowAndRenderer("Hello World", 800, 600, SDL_WINDOW_FULLSCREEN, &window, &renderer)) {
-        SDL_Log("Couldn't create window and renderer: %s\n", SDL_GetError());
-        return SDL_APP_FAILURE;
+    const int SERVER_PORT = 7241;
+
+    if (!NET_Init()) {
+        SDL_Log("NET_Init failed: %s\n", SDL_GetError());
+        SDL_Quit();
+        return 1;
     }
 
-    return SDL_APP_CONTINUE;
-}
+    NET_Server *server = NET_CreateServer(NULL, SERVER_PORT, 0);
+    if (!server) {
+        SDL_Log("Failed to create server: %s", SDL_GetError());
+    } else {
+        SDL_Log("Server is ready! Connect to port %d and send text!", (int) SERVER_PORT);
+        int num_vsockets = 1;
+        void *vsockets[128];
+        SDL_zeroa(vsockets);
+        vsockets[0] = server;
+        while (NET_WaitUntilInputAvailable(vsockets, num_vsockets, -1) >= 0) {
+            NET_StreamSocket *streamsocket = NULL;
+            if (!NET_AcceptClient(server, &streamsocket)) {
+                SDL_Log("NET_AcceptClient failed: %s", SDL_GetError());
+                break;
+            } else if (streamsocket) { // new connection!
+                SDL_Log("New connection from %s!", NET_GetAddressString(NET_GetStreamSocketAddress(streamsocket)));
+                if (num_vsockets >= (int) (SDL_arraysize(vsockets) - 1)) {
+                    SDL_Log("  (too many connections, though, so dropping immediately.)");
+                    NET_DestroyStreamSocket(streamsocket);
+                } else {
+                    vsockets[num_vsockets++] = streamsocket;
+                }
+            }
 
-/* This function runs when a new event (mouse input, keypresses, etc) occurs. */
-SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
-{
-    if (event->type == SDL_EVENT_KEY_DOWN ||
-        event->type == SDL_EVENT_QUIT) {
-        return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
+            // see if anything has new stuff.
+            char buffer[1024];
+            for (int i = 1; i < num_vsockets; i++) {
+                bool kill_socket = false;
+                streamsocket = (NET_StreamSocket *) vsockets[i];
+                const int br = NET_ReadFromStreamSocket(streamsocket, buffer, sizeof (buffer));
+                if (br < 0) {  // uhoh, socket failed!
+                    kill_socket = true;
+                } else if (br > 0) {
+                    const char *addrstr = NET_GetAddressString(NET_GetStreamSocketAddress(streamsocket));
+                    SDL_Log("Got %d more bytes from '%s'", br, addrstr);
+                    if (!NET_WriteToStreamSocket(streamsocket, buffer, br)) {
+                        SDL_Log("Failed to echo data back to '%s': %s", addrstr, SDL_GetError());
+                        kill_socket = true;
+                    }
+                }
+
+                if (kill_socket) {
+                    SDL_Log("Dropping connection to '%s'", NET_GetAddressString(NET_GetStreamSocketAddress(streamsocket)));
+                    NET_DestroyStreamSocket(streamsocket);
+                    vsockets[i] = NULL;
+                    if (i < (num_vsockets - 1)) {
+                        SDL_memmove(&vsockets[i], &vsockets[i+1], sizeof (vsockets[0]) * ((num_vsockets - i) - 1));
+                    }
+                    num_vsockets--;
+                    i--;
+                }
+            }
+        }
+
+        SDL_Log("Destroying server...");
+        NET_DestroyServer(server);
     }
-    return SDL_APP_CONTINUE;
+
+    SDL_Log("Shutting down...");
+    NET_Quit();
+    SDL_Quit();
+    return 0;
 }
 
-/* This function runs once per frame, and is the heart of the program. */
-SDL_AppResult SDL_AppIterate(void *appstate)
-{
-    return SDL_APP_CONTINUE;
-}
-
-/* This function runs once at shutdown. */
-void SDL_AppQuit(void *appstate, SDL_AppResult result)
-{
-}
