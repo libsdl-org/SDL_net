@@ -2097,7 +2097,7 @@ static NET_Status SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, U
         for (int i = 0; i < sock->num_handles; i++) {
             const NET_DatagramSocketHandle *handle = &sock->handles[i];
             if ((handle->family == family) && (handle->protocol == protocol)) {  // !!! FIXME: strictly speaking, this _probably_ just needs to check `family`, right?
-                const int rc = sendto(handle->handle, buf, (size_t) buflen, 0, addrwithport->ai_addr, (SockLen) addrwithport->ai_addrlen);
+                const int rc = (int) sendto(handle->handle, buf, (size_t) buflen, 0, addrwithport->ai_addr, (SockLen) addrwithport->ai_addrlen);
                 const int err = (rc == SOCKET_ERROR) ? LastSocketError() : 0;
                 freeaddrinfo(addrwithport);
                 if (err != 0) {
@@ -2127,7 +2127,7 @@ static NET_Status SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, U
             }
 
             //SDL_Log("Broadcasting on %s ...", handle->broadcast->human_readable);
-            const int rc = sendto(handle->handle, buf, (size_t) buflen, 0, addrwithport->ai_addr, (SockLen) addrwithport->ai_addrlen);
+            const int rc = (int) sendto(handle->handle, buf, (size_t) buflen, 0, addrwithport->ai_addr, (SockLen) addrwithport->ai_addrlen);
             const int err = (rc == SOCKET_ERROR) ? LastSocketError() : 0;
             freeaddrinfo(addrwithport);
             if (!err) {
@@ -2153,7 +2153,7 @@ static NET_Status SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, U
                 }
 
                 //SDL_Log("Broadcasting on %s ...", bc->human_readable);
-                const int rc = sendto(handle->handle, buf, (size_t) buflen, 0, addrwithport->ai_addr, (SockLen) addrwithport->ai_addrlen);
+                const int rc = (int) sendto(handle->handle, buf, (size_t) buflen, 0, addrwithport->ai_addr, (SockLen) addrwithport->ai_addrlen);
                 const int err = (rc == SOCKET_ERROR) ? LastSocketError() : 0;
                 freeaddrinfo(addrwithport);
                 if (!err) {
@@ -2284,7 +2284,7 @@ bool NET_ReceiveDatagram(NET_DatagramSocket *sock, NET_Datagram **dgram)
         AddressStorage from;
         SockLen fromlen = sizeof (from);
         // WinSock's recvfrom wants a `char *` buffer instead of `void *`. The cast here is harmless on BSD Sockets.
-        const int br = recvfrom(sock->handles[i].handle, (char *) sock->recv_buffer, sizeof (sock->recv_buffer), 0, (struct sockaddr *) &from, &fromlen);
+        const int br = (int) recvfrom(sock->handles[i].handle, (char *) sock->recv_buffer, sizeof (sock->recv_buffer), 0, (struct sockaddr *) &from, &fromlen);
         if (br == SOCKET_ERROR) {
             const int err = LastSocketError();
             if (WouldBlock(err)) {
