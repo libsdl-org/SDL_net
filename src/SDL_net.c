@@ -462,7 +462,7 @@ static void RefreshInterfaces(void)  // WINDOWS VERSION
                     SOCKADDR_IN bcast;
                     SDL_assert(j->Address.iSockaddrLength == sizeof (bcast));
                     SDL_memcpy(&bcast, (const SOCKADDR_IN *) j->Address.lpSockaddr, sizeof (SOCKADDR_IN));
-                    bcast.sin_addr.S_un.S_addr |= htonl(~((1 << (32 - j->OnLinkPrefixLength)) - 1));
+                    bcast.sin_addr.S_un.S_addr |= htonl((1 << (32 - j->OnLinkPrefixLength)) - 1);
                     new_interfaces[count].broadcast = CreateSDLNetAddrFromSockAddr((const struct sockaddr *) &bcast, sizeof (bcast));
                     new_interfaces[count].index = (Uint32) i->IfIndex;
                 }
