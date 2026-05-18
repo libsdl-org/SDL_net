@@ -791,10 +791,7 @@ static void RefreshInterfaces(void)
 static bool InterfacesReady(void)
 {
     if (SDL_ShouldInit(&interface_init)) {
-        if (!interface_rwlock) {
-            interface_rwlock = SDL_CreateRWLock();
-        }
-        if (!interface_rwlock || !InitInterfaceChangeNotifications()) {
+        if (!InitInterfaceChangeNotifications()) {
             SDL_SetInitialized(&interface_init, false);
             return false;
         }
@@ -1037,6 +1034,11 @@ bool NET_Init(void)
         ipv6_broadcast_addr = CreateSDLNetAddrFromSockAddr((const struct sockaddr *) &sa_in6, sizeof (sa_in6));
     }
 
+    interface_rwlock = SDL_CreateRWLock();
+    if (!interface_rwlock) {
+        goto failed;
+    }
+
     return true;  // good to go.
 
 failed:
@@ -1100,19 +1102,19 @@ void NET_Quit(void)
         if (interfaces) {
             FreeNetworkInterfaces(interfaces, num_interfaces);
         }
-        if (interface_rwlock) {
-            SDL_DestroyRWLock(interface_rwlock);
-        }
         interfaces = NULL;
         num_interfaces = 0;
-        interface_rwlock = NULL;
         SDL_SetInitialized(&interface_init, false);
     }
 
     // asserts to catch that these shouldn't have ever been set if we never initialized interface_init...
     SDL_assert(!interfaces);
-    SDL_assert(!interface_rwlock);
     SDL_assert(num_interfaces == 0);
+
+    if (interface_rwlock) {
+        SDL_DestroyRWLock(interface_rwlock);
+        interface_rwlock = NULL;
+    }
 
     NET_UnrefAddress(ipv6_broadcast_addr);
     ipv6_broadcast_addr = NULL;
@@ -1887,38 +1889,30 @@ struct NET_DatagramSocket
     bool allow_broadcast;
 };
 
-
-// if `addr` isn't from NET_GetLocalAddresses(), lookup the actual NET_Address
-// that matches it. This is so people can get an interface address specified on
-// the command line by "resolving" the command line string into a NET_Address,
-// and we'll figure out if it matches here, if necessary.
-// Caller must hold SDL_LockRWLockForReading(interface_rwlock)!
-static NetworkInterface *GetInterfaceForAddress(NET_Address *addr)
-{
-    if (!addr) {
-        SDL_InvalidParamError("interface");
-        return NULL;
-    } else if (!InterfacesReady()) {
-        return NULL;
-    }
-
-    for (int i = 0; i < num_interfaces; i++) {
-        if (NET_CompareAddresses(addr, interfaces[i].address) == 0) {
-            return &interfaces[i];
-        }
-    }
-
-    return NULL;
-}
-
 static NET_Address *FindBroadcastAddress(struct addrinfo *ainfo, Uint32 *interface_index)
 {
     NET_Address *retval = NULL;
 
     NET_Address *iface = CreateSDLNetAddrFromSockAddr(ainfo->ai_addr, (SockLen) ainfo->ai_addrlen);
+    if (!iface) {
+        return NULL;
+    }
+
+    NetworkInterface *ni = NULL;
+    if (!InterfacesReady()) {
+        NET_UnrefAddress(iface);
+        return NULL;
+    }
+
     SDL_LockRWLockForReading(interface_rwlock);
-    NetworkInterface *ni = GetInterfaceForAddress(iface);
-    NET_UnrefAddress(iface);
+
+    for (int i = 0; i < num_interfaces; i++) {
+        if (NET_CompareAddresses(iface, interfaces[i].address) == 0) {
+            ni = &interfaces[i];
+            break;
+        }
+    }
+
     if (!ni) {
         SDL_SetError("Not a network interface address");
     } else {
@@ -1932,6 +1926,7 @@ static NET_Address *FindBroadcastAddress(struct addrinfo *ainfo, Uint32 *interfa
             SDL_SetError("Can't determine broadcast address for this interface");
         }
     }
+
     SDL_UnlockRWLock(interface_rwlock);
 
     if (!retval && (ainfo->ai_family == AF_INET6)) {   // we fake this for IPv6 on the all-nodes link-local multicast group.
