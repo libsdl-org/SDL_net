@@ -452,9 +452,11 @@ static void RefreshInterfaces(void)  // WINDOWS VERSION
 
     int count = 0;
     for (IP_ADAPTER_ADDRESSES *i = addrs; i != NULL; i = i->Next) {
+        char *friendlyname = SDL_iconv_string("UTF-8", "UTF-16LE", (const char*)(i->FriendlyName), (SDL_wcslen(i->FriendlyName) + 1) * sizeof(WCHAR));
         for (IP_ADAPTER_UNICAST_ADDRESS *j = i->FirstUnicastAddress; j != NULL; j = j->Next) {
             NET_Address *addr = CreateSDLNetAddrFromSockAddr(j->Address.lpSockaddr, j->Address.iSockaddrLength);
             if (addr) {
+                new_interfaces[count].name = friendlyname ? SDL_strdup(friendlyname) : NULL;
                 new_interfaces[count].address = addr;
                 if (j->Address.lpSockaddr->sa_family == AF_INET6) {
                     new_interfaces[count].index = (Uint32) i->Ipv6IfIndex;
@@ -463,12 +465,13 @@ static void RefreshInterfaces(void)  // WINDOWS VERSION
                     SDL_assert(j->Address.iSockaddrLength == sizeof (bcast));
                     SDL_memcpy(&bcast, (const SOCKADDR_IN *) j->Address.lpSockaddr, sizeof (SOCKADDR_IN));
                     bcast.sin_addr.S_un.S_addr |= htonl((1 << (32 - j->OnLinkPrefixLength)) - 1);
-                    new_interfaces[count].broadcast = CreateSDLNetAddrFromSockAddr((const struct sockaddr *) &bcast, sizeof (bcast));
+                    new_interfaces[count].broadcast = CreateSDLNetAddrFromSockAddr((const struct sockaddr*)&bcast, sizeof(bcast));
                     new_interfaces[count].index = (Uint32) i->IfIndex;
                 }
                 count++;
             }
         }
+        SDL_free(friendlyname);
     }
 
     new_num_interfaces = count;  // in case we dropped one somewhere.
