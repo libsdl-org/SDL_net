@@ -23,7 +23,7 @@
 
 // don't do anything. Sorry!
 int NET_Version(void) { return SDL_NET_VERSION; }
-bool NET_Init(void) { return true; }
+bool NET_Init(void) { return SDL_Unsupported(); }
 void NET_Quit(void) {}
 NET_Address * NET_ResolveHostname(const char *host) { SDL_Unsupported(); return NULL; }
 NET_Status NET_WaitUntilResolved(NET_Address *address, Sint32 timeout) { SDL_Unsupported(); return NET_FAILURE; }
