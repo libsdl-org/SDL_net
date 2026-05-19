@@ -145,7 +145,7 @@ extern "C" {
  *
  * \since This macro is available since SDL_net 3.0.0.
  */
-#define SDL_NET_MICRO_VERSION   0
+#define SDL_NET_MICRO_VERSION   1
 
 /**
  * This is the version number macro for the current SDL_net version.
