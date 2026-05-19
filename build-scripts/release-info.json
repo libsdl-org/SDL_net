@@ -44,9 +44,10 @@
     },
     "files": {
       "": [
+        "build-scripts/pkg-support/mingw/INSTALL.md.in:INSTALL.md",
+        "build-scripts/pkg-support/mingw/Makefile"
         "LICENSE.txt",
         "README.md",
-        "build-scripts/pkg-support/mingw/Makefile"
       ],
       "cmake": [
         "build-scripts/pkg-support/mingw/cmake/SDL3_netConfig.cmake",
@@ -108,11 +109,14 @@
     },
     "files-lib": {
       "": [
+        "build-scripts/pkg-support/msvc/@<@ARCH@>@/INSTALL.md.in:INSTALL.md",
+        "LICENSE.txt",
         "README.md"
       ]
     },
     "files-devel": {
       "": [
+        "build-scripts/pkg-support/msvc/INSTALL.md.in:INSTALL.md",
         "LICENSE.txt",
         "README.md"
       ],
@@ -188,7 +192,9 @@
     },
     "files": {
       "": [
-        "build-scripts/pkg-support/android/README.md.in:README.md"
+        "build-scripts/pkg-support/android/INSTALL.md.in:INSTALL.md",
+        "LICENSE.txt",
+        "README.md"
       ]
     },
     "dependencies": {
