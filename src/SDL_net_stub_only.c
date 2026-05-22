@@ -29,6 +29,7 @@ NET_Address * NET_ResolveHostname(const char *host) { SDL_Unsupported(); return 
 NET_Status NET_WaitUntilResolved(NET_Address *address, Sint32 timeout) { SDL_Unsupported(); return NET_FAILURE; }
 NET_Status NET_GetAddressStatus(NET_Address *address) { SDL_Unsupported(); return NET_FAILURE; }
 const char * NET_GetAddressString(NET_Address *address) { SDL_Unsupported(); return NULL; }
+const void * NET_GetAddressBytes(NET_Address *address, int *num_bytes) { if (num_bytes) { *num_bytes = 0; } SDL_Unsupported(); return NULL; }
 NET_Address *NET_RefAddress(NET_Address *address) { SDL_Unsupported(); return NULL; }
 void NET_UnrefAddress(NET_Address *address) {}
 void NET_SimulateAddressResolutionLoss(int percent_loss) {}

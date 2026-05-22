@@ -1253,6 +1253,34 @@ const char *NET_GetAddressString(NET_Address *addr)
     return retval;
 }
 
+const void * NET_GetAddressBytes(NET_Address *addr, int *num_bytes)
+{
+    if (!num_bytes) {
+        SDL_InvalidParamError("num_bytes");
+        return NULL;
+    }
+
+    *num_bytes = 0;
+
+    if (!addr) {
+        SDL_InvalidParamError("address");
+        return NULL;
+    }
+
+    const void *retval = NULL;
+    const NET_Status rc = NET_GetAddressStatus(addr);
+    if (rc == NET_SUCCESS) {
+        const struct addrinfo *ainfo = addr->ainfo;
+        SDL_assert(ainfo != NULL);
+        retval = (const void *) ainfo->ai_addr;
+        *num_bytes = (int) ainfo->ai_addrlen;
+    } else if (rc != NET_FAILURE) {  // if NET_FAILURE, it'll set the error message.
+        SDL_SetError("Address not yet resolved");
+    }
+
+    return retval;
+}
+
 int NET_CompareAddresses(const NET_Address *sdlneta, const NET_Address *sdlnetb)
 {
     if (sdlneta == sdlnetb) {  // same pointer?
