@@ -432,10 +432,10 @@ extern SDL_DECLSPEC const char * SDLCALL NET_GetAddressString(NET_Address *addre
  * address. Since the data is not NULL-terminated, this is the only way to
  * determine its size; as such, this parameter must not be NULL.
  *
- * Do not free or modify the returned data; it belongs to the NET_Address
- * that was queried, and is valid as long as the object lives. Either make
- * sure the address has a reference as long as you need this or make a copy of
- * the bytes.
+ * Do not free or modify the returned data; it belongs to the NET_Address that
+ * was queried, and is valid as long as the object lives. Either make sure the
+ * address has a reference as long as you need this or make a copy of the
+ * bytes.
  *
  * This will return NULL if resolution is still in progress, or if resolution
  * failed. You can use NET_GetAddressStatus() or NET_WaitUntilResolved() to
@@ -446,7 +446,8 @@ extern SDL_DECLSPEC const char * SDLCALL NET_GetAddressString(NET_Address *addre
  *
  * \param address The NET_Address to query.
  * \param num_bytes on return, will be set to the number of bytes returned.
- * \returns a pointer to bytes, or NULL on error; call SDL_GetError() for details.
+ * \returns a pointer to bytes, or NULL on error; call SDL_GetError() for
+ *          details.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
