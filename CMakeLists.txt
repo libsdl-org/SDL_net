@@ -117,6 +117,20 @@ else()
     add_library(${sdl3_net_target_name} src/SDL_net.c)
 endif()
 
+if(NOT (WIN32 OR SDLNET_STUB_ONLY))
+    check_c_source_compiles("
+        #include <ifaddrs.h>
+        int main(void) {
+          struct ifaddrs* ifap;
+          getifaddrs(&ifap);
+          return 0;
+        }
+        " HAVE_GETIFADDRS)
+    if(HAVE_GETIFADDRS)
+        target_compile_definitions(${sdl3_net_target_name} PRIVATE HAVE_GETIFADDRS)
+    endif()
+endif()
+
 add_library(SDL3_net::${sdl3_net_target_name} ALIAS ${sdl3_net_target_name})
 if("c_std_99" IN_LIST CMAKE_C_COMPILE_FEATURES)
     target_compile_features(${sdl3_net_target_name} PRIVATE c_std_99)
