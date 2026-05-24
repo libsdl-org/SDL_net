@@ -713,7 +713,7 @@ failed:
     NetworkInterface *new_interfaces = NULL;
     int new_num_interfaces = 0;
     for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next) {
-        if (i->ifa_name != NULL) {
+        if (i->ifa_name && i->ifa_addr) {
             new_num_interfaces++;
         }
     }
@@ -729,7 +729,7 @@ failed:
 
     NetworkInterface *iface = &new_interfaces[0];
     for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next, iface++) {
-        if (i->ifa_name == NULL) {
+        if (!i->ifa_name || !i->ifa_addr) {
             continue;  // i guess.
         }
 
