@@ -117,7 +117,9 @@ else()
     add_library(${sdl3_net_target_name} src/SDL_net.c)
 endif()
 
-if(NOT (WIN32 OR SDLNET_STUB_ONLY))
+if(HAIKU)
+    set(HAVE_GETIFADDRS True)  # Haiku always has it (but you have to -lnetwork, so check_c_source_compiles won't work as-is).
+elseif(NOT (WIN32 OR SDLNET_STUB_ONLY))
     check_c_source_compiles("
         #include <ifaddrs.h>
         int main(void) {
@@ -126,9 +128,10 @@ if(NOT (WIN32 OR SDLNET_STUB_ONLY))
           return 0;
         }
         " HAVE_GETIFADDRS)
-    if(HAVE_GETIFADDRS)
-        target_compile_definitions(${sdl3_net_target_name} PRIVATE HAVE_GETIFADDRS)
-    endif()
+endif()
+
+if(HAVE_GETIFADDRS)
+    target_compile_definitions(${sdl3_net_target_name} PRIVATE HAVE_GETIFADDRS)
 endif()
 
 add_library(SDL3_net::${sdl3_net_target_name} ALIAS ${sdl3_net_target_name})
