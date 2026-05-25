@@ -728,7 +728,7 @@ failed:
     }
 
     NetworkInterface *iface = &new_interfaces[0];
-    for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next, iface++) {
+    for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next) {
         if (!i->ifa_name || !i->ifa_addr) {
             continue;  // i guess.
         }
@@ -743,7 +743,6 @@ failed:
             iface->address = CreateSDLNetAddrFromSockAddr(i->ifa_addr, sizeof (struct sockaddr_in6));
         } else {
             new_num_interfaces--;
-            iface--;
             continue;
         }
 
@@ -762,6 +761,8 @@ failed:
             NET_UnrefAddress(iface->broadcast);  // just in case.
             goto failed;
         }
+
+        iface++;
     }
 
 succeeded:
