@@ -522,7 +522,7 @@ static int SDLCALL LinuxInterfaceChangeNotificationThread(void *data)
     struct sockaddr_nl addr;
     SDL_zero(addr);
     addr.nl_family = AF_NETLINK;
-    addr.nl_pid = getpid();
+    addr.nl_pid = 0;  // zero==let the kernel choose a unique number. THIS IS THE SOCKET PORT ID, NOT THE PROCESS ID!
     addr.nl_groups = RTMGRP_LINK|RTMGRP_IPV4_IFADDR|RTMGRP_IPV6_IFADDR;
     if (bind(fd, (struct sockaddr *) &addr, sizeof (addr)) == -1) {
         close(fd);
