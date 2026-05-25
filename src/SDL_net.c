@@ -713,7 +713,7 @@ failed:
     NetworkInterface *new_interfaces = NULL;
     int new_num_interfaces = 0;
     for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next) {
-        if (i->ifa_name && i->ifa_addr) {
+        if (i->ifa_name && i->ifa_addr && (i->ifa_flags & IFF_UP)) {
             new_num_interfaces++;
         }
     }
@@ -729,8 +729,8 @@ failed:
 
     NetworkInterface *iface = &new_interfaces[0];
     for (struct ifaddrs *i = ifaddr; i != NULL; i = i->ifa_next) {
-        if (!i->ifa_name || !i->ifa_addr) {
-            continue;  // i guess.
+        if (!i->ifa_name || !i->ifa_addr || ((i->ifa_flags & IFF_UP) == 0)) {
+            continue;
         }
 
         // !!! FIXME: getifaddrs doesn't return the sockaddr length, so we have to go with known protocols.  :/
