@@ -2180,7 +2180,7 @@ static NET_Status SendOneDatagram(NET_DatagramSocket *sock, NET_Address *addr, U
                     SetSocketError("Failed to send from socket", err);  // so there's a clear error message, but keep going, maybe something else works out.
                 }
             }
-        } else if (!addr) {  // iterate all interfaces for this broadcast.
+        } else if (!addr && InterfacesReady()) {  // iterate all interfaces for this broadcast.
             SDL_LockRWLockForReading(interface_rwlock);
             for (int i = 0; i < num_interfaces; i++) {
                 const NET_Address *bc = interfaces[i].broadcast;
