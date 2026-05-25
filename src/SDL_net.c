@@ -491,13 +491,16 @@ static void RefreshInterfaces(void)  // WINDOWS VERSION
 // AF_NETLINK covers Linux (and by extension Android). PF_ROUTE covers the BSDs (and by extension Apple platforms).
 // This doesn't cover all Unix platforms that ever existed, but this hits just about everything that is still being maintained seriously.
 
-#if defined(USE_NETLINK) || defined(PF_ROUTE)
+#if defined(SDL_PLATFORM_HAIKU)  // haiku has its own thing for monitoring, but needs getifaddrs.
+extern bool NET_HAIKU_InitInterfaceChangeNotifications(SDL_AtomicInt *changed);
+extern void NET_HAIKU_QuitInterfaceChangeNotifications(void);
+#elif defined(USE_NETLINK) || defined(PF_ROUTE)
 #define USE_NETWORK_MONITOR 1
 #else
 #warning unknown network monitoring system for this platform - will not report network changes
 #endif
 
-#ifdef USE_NETWORK_MONITOR
+#if defined(USE_NETWORK_MONITOR)
 static SDL_Thread *interface_change_notifications_thread = NULL;
 static SDL_AtomicInt interface_change_notifications_flag;  // !!! FIXME
 
@@ -572,6 +575,8 @@ static bool InitInterfaceChangeNotifications(void)  // LINUX/BSD VERSION
 #ifdef USE_NETWORK_MONITOR
     interface_change_notifications_thread = SDL_CreateThread(LinuxInterfaceChangeNotificationThread, "SDLNetIfaceEnum", NULL);
     return (interface_change_notifications_thread != NULL);
+#elif defined(SDL_PLATFORM_HAIKU)
+    return NET_HAIKU_InitInterfaceChangeNotifications(&interfaces_have_changed);
 #else
     return true;
 #endif
@@ -586,6 +591,8 @@ static void QuitInterfaceChangeNotifications(void)  // LINUX/BSD VERSION
         SDL_SetAtomicInt(&interface_change_notifications_flag, 0);
     }
     interface_change_notifications_thread = NULL;
+#elif defined(SDL_PLATFORM_HAIKU)
+    NET_HAIKU_QuitInterfaceChangeNotifications();
 #endif
 }
 

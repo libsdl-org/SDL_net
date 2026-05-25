@@ -104,6 +104,12 @@ endif()
 set(PC_LIBS)
 set(PC_REQUIRES)
 
+if(HAIKU)
+    set(HAVE_GETIFADDRS True)  # Haiku always has it (but you have to -lnetwork, so check_c_source_compiles won't work as-is).
+    set(EXTRA_SOURCES "src/SDL_net_haiku.cpp")
+    enable_language(CXX)
+endif()
+
 set(PLATFORM_UNSUPPORTED False)
 if (DOS OR EMSCRIPTEN)  # These either don't have networking at all, or have needs we don't currently meet.
     set(PLATFORM_UNSUPPORTED True)
@@ -114,12 +120,10 @@ if(SDLNET_STUB_ONLY)
     message(WARNING "Only building a stub library. The functions will be there but all of them will fail!")
     add_library(${sdl3_net_target_name} src/SDL_net_stub_only.c)
 else()
-    add_library(${sdl3_net_target_name} src/SDL_net.c)
+    add_library(${sdl3_net_target_name} src/SDL_net.c ${EXTRA_SOURCES})
 endif()
 
-if(HAIKU)
-    set(HAVE_GETIFADDRS True)  # Haiku always has it (but you have to -lnetwork, so check_c_source_compiles won't work as-is).
-elseif(NOT (WIN32 OR SDLNET_STUB_ONLY))
+if(NOT (HAIKU OR WIN32 OR SDLNET_STUB_ONLY))
     check_c_source_compiles("
         #include <ifaddrs.h>
         int main(void) {
@@ -173,8 +177,8 @@ if(WIN32)
     target_link_libraries(${sdl3_net_target_name} PRIVATE iphlpapi ws2_32)
     list(APPEND PC_LIBS -liphlpapi -lws2_32)
 endif()
-if(CMAKE_SYSTEM_NAME MATCHES "Haiku.*")
-    target_link_libraries(${sdl3_net_target_name} PRIVATE network)
+if(HAIKU)
+    target_link_libraries(${sdl3_net_target_name} PRIVATE network be bnetapi)
 endif()
 set_target_properties(${sdl3_net_target_name} PROPERTIES
     OUTPUT_NAME "SDL3_net"
