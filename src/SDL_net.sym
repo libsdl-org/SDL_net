@@ -34,6 +34,7 @@ SDL3_net_0.0.0 {
     NET_WaitUntilStreamSocketDrained;
     NET_WriteToStreamSocket;
     NET_GetAddressBytes;
+    NET_IOFromStreamSocket;
     # extra symbols go here (don't modify this line)
   local: *;
 };

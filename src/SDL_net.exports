@@ -33,4 +33,5 @@ _NET_WaitUntilResolved
 _NET_WaitUntilStreamSocketDrained
 _NET_WriteToStreamSocket
 _NET_GetAddressBytes
+_NET_IOFromStreamSocket
 # extra symbols go here (don't modify this line)

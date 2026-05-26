@@ -1596,6 +1596,66 @@ extern SDL_DECLSPEC void SDLCALL NET_DestroyDatagramSocket(NET_DatagramSocket *s
  */
 extern SDL_DECLSPEC int SDLCALL NET_WaitUntilInputAvailable(void **vsockets, int numsockets, Sint32 timeout);
 
+
+/**
+ * Bridge a NET_StreamSocket to an SDL_IOStream.
+ *
+ * This will create an SDL_IOStream wrapper around a NET_StreamSocket, for
+ * passing a network connection to code that can talk to the SDL interface.
+ *
+ * The returned SDL_IOStream will report failure from SDL_SizeIO() and
+ * SDL_SeekIO() calls, as stream sockets have no specific data length and
+ * cannot seek through that data.
+ *
+ * Both SDL_ReadIO() and SDL_WriteIO() can be used on the returned stream
+ * at any time, as stream sockets are bidirectional.
+ *
+ * As NET_StreamSocket is non-blocking, reads from the SDL_IOStream will
+ * report zero if no data is currently available, and set their status to
+ * SDL_IO_STATUS_NOT_READY. However, many things that want to read from an
+ * SDL_IOStream will take any short read as EOF or failure, without checking
+ * the specific stream status. For these cases, you can request blocking
+ * behavior here by setting `blocking_reads` to true; internally, if the
+ * socket doesn't have data available but hasn't disconnected,
+ * NET_WaitUntilInputAvailable() will be used to put the caller to sleep
+ * _indefinitely_ until new data arrives or the connection drops. This can be
+ * an undesirable outcome as well; plan accordingly.
+ *
+ * When calling SDL_CloseIO() on the returned stream, the stream socket will
+ * be destroyed. If `flush_on_close` is true, any pending data will be sent
+ * before the stream is destroyed, which will block indefinitely until either
+ * all pending data is sent, or the connection fails. If false, this will
+ * destroy the stream socket immediately, throwing away any pending data that
+ * was not yet sent, avoiding blocking. One can explicitly call SDL_FlushIO()
+ * on the stream to block until all pending data has been sent, but many
+ * things that deal with SDL_IOStream will not do this, so `flush_on_close`
+ * is designed to help in this scenario.
+ *
+ * The stream socket will be destroyed when the returned SDL_IOStream is
+ * closed. If this function fails to create an SDL_IOStream (usually: out of
+ * memory), the stream is destroyed before returning, so in all cases, the
+ * caller should abandon `sock` once this function is called.
+ *
+ * A single NET_StreamSocket is not allowed to be used from two threads at
+ * once, and this is also true of SDL_IOStream, so the thread safety
+ * guarantees are the same with the returned SDL_IOStream bridge. Do not
+ * create two separate IOStreams from the same socket, as both will want
+ * to destroy the same object on close.
+ *
+ * \param sock the stream socket to bridge to an SDL_IOStream.
+ * \param blocking_reads if true, SDL_ReadIO will block if data isn't available.
+ * \param flush_on_close if true, SDL_CloseIO will block until all pending data is sent.
+ * \returns an SDL_IOStream that wraps the stream socket.
+ *
+ * \threadsafety You should not operate on the same socket from multiple
+ *               threads at the same time without supplying a serialization
+ *               mechanism. However, different threads may access different
+ *               sockets at the same time without problems.
+ *
+ * \since This function is available since SDL_net 3.0.0.
+ */
+extern SDL_DECLSPEC SDL_IOStream * SDLCALL NET_IOFromStreamSocket(NET_StreamSocket *sock, bool blocking_reads, bool flush_on_close);
+
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

@@ -2655,3 +2655,115 @@ int NET_WaitUntilInputAvailable(void **vsockets, int numsockets, int timeoutms)
 
     return retval;
 }
+
+
+// SDL_IOStream bridge ...
+
+typedef struct StreamSocketIOData
+{
+    NET_StreamSocket *sock;
+    bool blocking_reads;
+    bool flush_on_close;
+} StreamSocketIOData;
+
+static Sint64 SDLCALL streamsocketio_size(void *userdata)
+{
+    SDL_SetError("Stream sockets have no total size");
+    return -1;
+}
+
+static Sint64 SDLCALL streamsocketio_seek(void *userdata, Sint64 offset, SDL_IOWhence whence)
+{
+    SDL_SetError("Stream sockets cannot seek");
+    return -1;
+}
+
+static size_t SDLCALL streamsocketio_read(void *userdata, void *vptr, size_t size, SDL_IOStatus *status)
+{
+    Uint8 *ptr = (Uint8 *) vptr;
+    StreamSocketIOData *data = (StreamSocketIOData *) userdata;
+    NET_StreamSocket *sock = data->sock;
+    const bool blocking_reads = data->blocking_reads;
+    size_t retval = 0;
+    int remaining = (int) size;
+    while (remaining > 0) {
+        const int br = NET_ReadFromStreamSocket(sock, ptr, remaining);
+        if (br < 0) {  // uhoh, connection failed/dropped.
+            *status = SDL_IO_STATUS_EOF;  // we charitably call this "EOF" instead of "ERROR".
+            return retval;
+        } else if (br == 0) {  // no new data available.
+            if (blocking_reads) {
+                NET_WaitUntilInputAvailable((void **) &sock, 1, -1);  // sleep until something happens.
+                continue;  // try again!
+            }
+            *status = SDL_IO_STATUS_NOT_READY;
+            return retval;
+        } else {
+            SDL_assert(br <= remaining);
+            remaining -= br;
+            ptr += br;
+            retval += br;
+        }
+    }
+
+    return retval;
+}
+
+static size_t SDLCALL streamsocketio_write(void *userdata, const void *ptr, size_t size, SDL_IOStatus *status)
+{
+    StreamSocketIOData *data = (StreamSocketIOData *) userdata;
+    if (!NET_WriteToStreamSocket(data->sock, ptr, (int) size)) {
+        *status = SDL_IO_STATUS_ERROR;
+        return 0;  // some might have made it through, but we don't know.
+    }
+    return size;
+}
+
+static bool SDLCALL streamsocketio_flush(void *userdata, SDL_IOStatus *status)
+{
+    StreamSocketIOData *data = (StreamSocketIOData *) userdata;
+    return NET_WaitUntilStreamSocketDrained(data->sock, -1) == 0;
+}
+
+static bool SDLCALL streamsocketio_close(void *userdata)
+{
+    StreamSocketIOData *data = (StreamSocketIOData *) userdata;
+    const bool retval = data->flush_on_close ? (NET_WaitUntilStreamSocketDrained(data->sock, -1) == 0) : 0;
+    NET_DestroyStreamSocket(data->sock);
+    SDL_free(data);
+    return retval;
+}
+
+SDL_IOStream *NET_IOFromStreamSocket(NET_StreamSocket *sock, bool blocking_reads, bool flush_on_close)
+{
+    if (!sock) {
+        SDL_InvalidParamError("sock");
+        return NULL;
+    }
+
+    SDL_IOStreamInterface iface;
+    SDL_INIT_INTERFACE(&iface);
+    iface.size = streamsocketio_size;
+    iface.seek = streamsocketio_seek;
+    iface.read = streamsocketio_read;
+    iface.write = streamsocketio_write;
+    iface.flush = streamsocketio_flush;
+    iface.close = streamsocketio_close;
+
+    SDL_IOStream *retval = NULL;
+    StreamSocketIOData *data = (StreamSocketIOData *) SDL_calloc(1, sizeof (*data));
+    if (data) {
+        data->sock = sock;
+        data->blocking_reads = blocking_reads;
+        data->flush_on_close = flush_on_close;
+        retval = SDL_OpenIO(&iface, data);
+    }
+
+    if (!retval) {
+        NET_DestroyStreamSocket(sock);
+        SDL_free(data);
+    }
+
+    return retval;
+}
+
