@@ -373,7 +373,7 @@ extern DECLSPEC void SDLCALL SDLNet_TCP_Close(TCPsocket sock);
 
 /* UDP network API */
 
-/* The maximum channels on a a UDP socket */
+/* The maximum channels on a UDP socket */
 #define SDLNET_MAX_UDPCHANNELS  32
 /* The maximum addresses bound to a single UDP socket channel */
 #define SDLNET_MAX_UDPADDRESSES 4
@@ -551,7 +551,7 @@ extern DECLSPEC void SDLCALL SDLNet_UDP_SetPacketLoss(UDPsocket sock, int percen
  *
  * If `channel` is -1, then the first unbound channel that has not yet been
  * bound to the maximum number of addresses will be bound with the given
- * address as it's primary address.
+ * address as its primary address.
  *
  * If the channel is already bound, this new address will be added to the list
  * of valid source addresses for packets arriving on the channel. If the
@@ -573,9 +573,9 @@ extern DECLSPEC int SDLCALL SDLNet_UDP_Bind(UDPsocket sock, int channel, const I
 /**
  * Unbind all addresses from the given channel.
  *
- * Note that UDP sockets at the platform layer "bind" to a nework port number,
- * but SDL_net's UDP sockets also "bind" to a "channel" on top of that, with
- * SDLNet_UDP_Bind(). But the term is used for both.
+ * Note that UDP sockets at the platform layer "bind" to a network port
+ * number, but SDL_net's UDP sockets also "bind" to a "channel" on top of
+ * that, with SDLNet_UDP_Bind(). But the term is used for both.
  *
  * \param sock the UDP socket to unbind addresses from a channel on.
  * \param channel the channel of the socket to unbind.
@@ -603,7 +603,7 @@ extern DECLSPEC void SDLCALL SDLNet_UDP_Unbind(UDPsocket sock, int channel);
 extern DECLSPEC IPaddress * SDLCALL SDLNet_UDP_GetPeerAddress(UDPsocket sock, int channel);
 
 /**
- * Send a vector of packets to the the channels specified within the packet.
+ * Send a vector of packets to the channels specified within the packet.
  *
  * If the channel specified in the packet is -1, the packet will be sent to
  * the address in the `address` member of the packet.
