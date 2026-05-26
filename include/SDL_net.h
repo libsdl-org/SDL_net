@@ -573,9 +573,9 @@ extern DECLSPEC int SDLCALL SDLNet_UDP_Bind(UDPsocket sock, int channel, const I
 /**
  * Unbind all addresses from the given channel.
  *
- * Note that UDP sockets at the platform layer "bind" to a network port number,
- * but SDL_net's UDP sockets also "bind" to a "channel" on top of that, with
- * SDLNet_UDP_Bind(). But the term is used for both.
+ * Note that UDP sockets at the platform layer "bind" to a network port
+ * number, but SDL_net's UDP sockets also "bind" to a "channel" on top of
+ * that, with SDLNet_UDP_Bind(). But the term is used for both.
  *
  * \param sock the UDP socket to unbind addresses from a channel on.
  * \param channel the channel of the socket to unbind.
