@@ -258,6 +258,9 @@ int SDLNet_UDP_Bind(UDPsocket sock, int channel, const IPaddress *address)
     if ( sock == NULL ) {
         SDLNet_SetError("Passed a NULL socket");
         return(-1);
+    } else if ( address == NULL ) {
+        SDLNet_SetError("Passed a NULL address");
+        return(-1);
     }
 
     if ( channel == -1 ) {
