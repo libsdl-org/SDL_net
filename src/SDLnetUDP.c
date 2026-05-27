@@ -242,9 +242,9 @@ static int ValidChannel(int channel)
 }
 
 /* Bind the address 'address' to the requested channel on the UDP socket.
-   If the channel is -1, then the first unbound channel that has not yet
+   If the channel is -1, then the first channel that has not yet
    been bound to the maximum number of addresses will be bound with
-   the given address as it's primary address.
+   the given address.
    If the channel is already bound, this new address will be added to the
    list of valid source addresses for packets arriving on the channel.
    If the channel is not already bound, then the address becomes the primary

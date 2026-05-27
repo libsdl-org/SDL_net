@@ -549,9 +549,9 @@ extern DECLSPEC void SDLCALL SDLNet_UDP_SetPacketLoss(UDPsocket sock, int percen
  * but SDL_net's UDP sockets also "bind" to a "channel" on top of that, with
  * SDLNet_UDP_Bind(). But the term is used for both.
  *
- * If `channel` is -1, then the first unbound channel that has not yet been
- * bound to the maximum number of addresses will be bound with the given
- * address as its primary address.
+ * If `channel` is -1, then the first channel that has not yet
+ * been bound to the maximum number of addresses will be bound with
+ * the given address.
  *
  * If the channel is already bound, this new address will be added to the list
  * of valid source addresses for packets arriving on the channel. If the
