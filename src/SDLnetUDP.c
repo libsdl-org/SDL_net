@@ -292,10 +292,13 @@ void SDLNet_UDP_Unbind(UDPsocket sock, int channel)
     }
 }
 
-/* Get the primary IP address of the remote system associated with the
-   socket and channel.
-   If the channel is not bound, this function returns NULL.
- */
+/* Get the IP address of the remote system for a socket and channel.
+
+   If `channel` is -1, then the primary IP port of the UDP socket is returned
+   -- this is only meaningful for sockets opened with a specific port.
+
+   If the channel is not bound and not -1, this function returns NULL.
+*/
 IPaddress *SDLNet_UDP_GetPeerAddress(UDPsocket sock, int channel)
 {
     IPaddress *address = NULL;
@@ -321,9 +324,9 @@ IPaddress *SDLNet_UDP_GetPeerAddress(UDPsocket sock, int channel)
     return(address);
 }
 
-/* Send a vector of packets to the the channels specified within the packet.
+/* Send a vector of packets to the channels specified within the packet.
    If the channel specified in the packet is -1, the packet will be sent to
-   the address in the 'src' member of the packet.
+   the address in the 'address' member of the packet.
    Each packet will be updated with the status of the packet after it has
    been sent, -1 if the packet send failed.
    This function returns the number of packets sent.
@@ -436,7 +439,7 @@ static int SocketReady(SOCKET sock)
 
 /* Receive a vector of pending packets from the UDP socket.
    The returned packets contain the source address and the channel they arrived
-   on.  If they did not arrive on a bound channel, the the channel will be set
+   on.  If they did not arrive on a bound channel, then the channel will be set
    to -1.
    This function returns the number of packets read from the network, or -1
    on error.  This function does not block, so can return 0 packets pending.
@@ -500,7 +503,7 @@ foundit:
 
 /* Receive a single packet from the UDP socket.
    The returned packet contains the source address and the channel it arrived
-   on.  If it did not arrive on a bound channel, the the channel will be set
+   on.  If it did not arrive on a bound channel, then the channel will be set
    to -1.
    This function returns the number of packets read from the network, or -1
    on error.  This function does not block, so can return 0 packets pending.
