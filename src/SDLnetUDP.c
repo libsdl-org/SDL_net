@@ -287,7 +287,7 @@ int SDLNet_UDP_Bind(UDPsocket sock, int channel, const IPaddress *address)
 /* Unbind all addresses from the given channel */
 void SDLNet_UDP_Unbind(UDPsocket sock, int channel)
 {
-    if ( (channel >= 0) && (channel < SDLNET_MAX_UDPCHANNELS) ) {
+    if ( sock && (channel >= 0) && (channel < SDLNET_MAX_UDPCHANNELS) ) {
         sock->binding[channel].numbound = 0;
     }
 }
@@ -301,9 +301,13 @@ void SDLNet_UDP_Unbind(UDPsocket sock, int channel)
 */
 IPaddress *SDLNet_UDP_GetPeerAddress(UDPsocket sock, int channel)
 {
-    IPaddress *address;
+    IPaddress *address = NULL;
 
-    address = NULL;
+    if ( sock == NULL ) {
+        SDLNet_SetError("Passed a NULL socket");
+        return NULL;
+    }
+
     switch (channel) {
         case -1:
             /* Return the actual address of the socket */
