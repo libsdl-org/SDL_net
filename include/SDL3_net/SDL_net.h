@@ -136,7 +136,7 @@ extern "C" {
  *
  * \since This macro is available since SDL_net 3.0.0.
  */
-#define SDL_NET_MINOR_VERSION   1
+#define SDL_NET_MINOR_VERSION   2
 
 /**
  * The current micro (or patchlevel) version of the SDL_net headers.
@@ -145,7 +145,7 @@ extern "C" {
  *
  * \since This macro is available since SDL_net 3.0.0.
  */
-#define SDL_NET_MICRO_VERSION   1
+#define SDL_NET_MICRO_VERSION   0
 
 /**
  * This is the version number macro for the current SDL_net version.
