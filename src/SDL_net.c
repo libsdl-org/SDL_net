@@ -171,7 +171,9 @@ static int WindowsPoll(struct pollfd *fds, unsigned int nfds, int timeout)
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#ifndef SDL_PLATFORM_VITA
 #include <net/if.h>
+#endif
 #include <netdb.h>
 #include <errno.h>
 #include <string.h>
@@ -188,6 +190,10 @@ static int WindowsPoll(struct pollfd *fds, unsigned int nfds, int timeout)
 
 #ifdef HAVE_GETIFADDRS
 #include <ifaddrs.h>
+#endif
+
+#ifdef SDL_PLATFORM_VITA
+#include <psp2/net/netctl.h>
 #endif
 
 #define INVALID_SOCKET -1
@@ -795,6 +801,161 @@ failed:
 #endif
 }
 
+#elif defined(SDL_PLATFORM_VITA)
+
+static int interface_change_notifications_handle;
+static SDL_Thread *interface_change_notifications_thread = NULL;
+static SDL_AtomicInt interface_change_notifications_flag;
+
+static int SDLCALL VitaInterfaceChangeNotificationThread(void *data)
+{
+    (void)data;
+
+    while(SDL_GetAtomicInt(&interface_change_notifications_flag) == 0)
+    {
+        sceNetCtlCheckCallback();
+        SDL_Delay(100);
+    }
+    return 0;
+}
+
+static void NetworkInterfaceChangedCallback(int event_type, void* arg)
+{
+    SDL_SetAtomicInt(&interfaces_have_changed, 1);
+}
+
+static bool InitInterfaceChangeNotifications(void)
+{
+    if (sceNetCtlInetRegisterCallback(NetworkInterfaceChangedCallback, NULL, &interface_change_notifications_handle) != 0)
+        return false;
+
+    interface_change_notifications_thread = SDL_CreateThread(VitaInterfaceChangeNotificationThread, "SDLNetIfaceEnum", NULL);
+    return (interface_change_notifications_thread != NULL);
+}
+
+static void QuitInterfaceChangeNotifications(void)
+{
+    sceNetCtlInetUnregisterCallback(interface_change_notifications_handle);
+    if (interface_change_notifications_thread) {
+        SDL_SetAtomicInt(&interface_change_notifications_flag, 1);
+        SDL_WaitThread(interface_change_notifications_thread, NULL);
+        SDL_SetAtomicInt(&interface_change_notifications_flag, 0);
+    }
+    interface_change_notifications_thread = NULL;
+}
+
+static NET_Address *CreateSDLNetAddrFromIp(char* hostbuf)
+{
+    NET_Address *addr = (NET_Address *) SDL_calloc(1, sizeof (NET_Address));
+    if (!addr) {
+        return NULL;
+    }
+    SDL_SetAtomicInt(&addr->status, (int) NET_SUCCESS);
+
+    struct addrinfo hints;
+    SDL_zero(hints);
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_protocol = 0;
+    hints.ai_flags = AI_NUMERICHOST;
+
+    int gairc = getaddrinfo(hostbuf, NULL, &hints, &addr->ainfo);
+    if (gairc != 0) {
+        SDL_free(addr);
+        SetGetAddrInfoError("Failed to determine address", gairc);
+        return NULL;
+    }
+
+    addr->human_readable = SDL_strdup(hostbuf);
+    if (!addr->human_readable) {
+        freeaddrinfo(addr->ainfo);
+        SDL_free(addr);
+        return NULL;
+    }
+
+    return NET_RefAddress(addr);
+}
+
+
+static void RefreshInterfaces(void)
+{
+    NetworkInterface *new_interfaces = NULL;
+    int new_num_interfaces = 0;
+    SceNetCtlInfo info;
+
+    int state;
+    if (sceNetCtlInetGetState(&state) < 0 ) {
+        goto failed;
+    }
+
+    if (state != SCE_NETCTL_STATE_CONNECTED) {
+        goto succeeded;
+    }
+
+    if (state == SCE_NETCTL_STATE_CONNECTED) {
+        new_num_interfaces = 1;
+
+        new_interfaces = SDL_calloc(new_num_interfaces, sizeof (*new_interfaces));
+        if (!new_interfaces) {
+            goto failed;
+        }
+
+        NetworkInterface *iface = &new_interfaces[0];
+
+        if (sceNetCtlInetGetInfo(SCE_NETCTL_INFO_GET_IP_ADDRESS, &info) < 0) {
+            goto failed;
+        }
+
+
+        iface->address = CreateSDLNetAddrFromIp(info.ip_address);
+
+        if (iface->address) {
+            iface->index = 0;
+
+            if (sceNetCtlInetGetInfo(SCE_NETCTL_INFO_GET_DEVICE, &info) < 0) {
+                goto failed;
+            }
+
+            switch (info.device) {
+                case 0:
+                    iface->name = SDL_strdup("wlan0");
+                    break;
+                case 1:
+                    iface->name = SDL_strdup("eth0");
+                    break;
+                case 2:
+                    iface->name = SDL_strdup("phone0");
+                    break;
+            }
+
+            if (!iface->name) {
+                goto failed;
+            }
+
+            char *ptr = SDL_strchr(iface->address->human_readable, '%');  // chop off interface name.
+            if (ptr) {
+                *ptr = '\0';
+            }
+        } else {
+            NET_UnrefAddress(iface->broadcast);  // just in case.
+            goto failed;
+        }
+    }
+
+succeeded:
+    SDL_LockRWLockForWriting(interface_rwlock);
+    NetworkInterface *old_interfaces = interfaces;
+    const int old_num_interfaces = num_interfaces;
+    interfaces = new_interfaces;
+    num_interfaces = new_num_interfaces;
+    SDL_UnlockRWLock(interface_rwlock);
+    FreeNetworkInterfaces(old_interfaces, old_num_interfaces);
+    return;
+
+failed:
+    FreeNetworkInterfaces(new_interfaces, new_num_interfaces);
+}
+
 #else
 #warning implement me for your platform.
 static bool InitInterfaceChangeNotifications(void)
@@ -1024,6 +1185,9 @@ bool NET_Init(void)
     if (WSAStartup(MAKEWORD(1, 1), &data) != 0) {
         return SetSocketErrorBool("WSAStartup() failed", LastSocketError());
     }
+    #elif defined(SDL_PLATFORM_VITA)
+    // trigger vita network stack startup
+    gethostname(NULL,0);
     #else
     signal(SIGPIPE, SIG_IGN);
     #endif
@@ -2097,6 +2261,10 @@ NET_DatagramSocket *NET_CreateDatagramSocket(NET_Address *addr, Uint16 port, SDL
                 SDL_SetError("Failed to determine broadcast address for this interface");
                 goto failed;
             } else if (ainfo->ai_family == AF_INET6) { // fake broadcast support via multicasting to all-nodes link-local group, ff02::1.
+#ifdef SDL_PLATFORM_VITA
+                SDL_SetError("No IPv6 support");
+                goto failed;
+#else
                 SDL_assert(socket_handle->broadcast == ipv6_broadcast_addr);
                 const struct addrinfo *bai = socket_handle->broadcast->ainfo;
                 SDL_assert(bai != NULL);
@@ -2113,6 +2281,7 @@ NET_DatagramSocket *NET_CreateDatagramSocket(NET_Address *addr, Uint16 port, SDL
                 }
                 const int ifidx = (int) interface_index;
                 setsockopt(handle, IPPROTO_IPV6, IPV6_MULTICAST_IF, (const char *) &ifidx, (SockLen) sizeof (ifidx));  // multicast sends go through the same interface.
+#endif
             }
         }
     }
