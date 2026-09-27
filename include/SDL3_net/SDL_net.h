@@ -1440,7 +1440,7 @@ extern SDL_DECLSPEC bool SDLCALL NET_SendDatagram(NET_DatagramSocket *sock, NET_
  * "connection" to fail at this level, but may report failure for
  * unrecoverable system-level conditions; once a datagram socket fails, you
  * should assume it is no longer usable and should destroy it with
- * SDL_DestroyDatagramSocket().
+ * NET_DestroyDatagramSocket().
  *
  * \param sock the datagram socket to send data through.
  * \param dgram a pointer to the datagram packet pointer.
