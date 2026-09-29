@@ -742,7 +742,7 @@ extern SDL_DECLSPEC NET_StreamSocket * SDLCALL NET_CreateClient(NET_Address *add
  * \threadsafety You should not operate on the same socket from multiple
  *               threads at the same time without supplying a serialization
  *               mechanism. However, different threads may access different
- *               socket at the same time without problems.
+ *               sockets at the same time without problems.
  *
  * \since This function is available since SDL_net 3.0.0.
  *
