@@ -314,8 +314,8 @@ can discuss it!
 - SDLNet_FreeSocketSet => no equivalent in SDL3_net. Just pass an array of things to NET_WaitUntilInputAvailable().
 - SDLNet_SetError => SDL_SetError
 - SDLNet_GetError => SDL_GetError
-- SDLNet_Write16 => SDL_SwapBE16
-- SDLNet_Write32 => SDL_SwapBE32
-- SDLNet_Read16 => SDL_SwapBE16
-- SDLNet_Read32 => SDL_SwapBE32
+- SDLNet_Write16 => SDL_Swap16BE
+- SDLNet_Write32 => SDL_Swap32BE
+- SDLNet_Read16 => SDL_Swap16BE
+- SDLNet_Read32 => SDL_Swap32BE
 
