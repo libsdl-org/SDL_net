@@ -228,7 +228,7 @@ multiple interfaces, and it might appear to come from different computers,
 since it might have an IPv4 and IPv6 address. Plan accordingly, so you know
 whether to drop duplicate packets.
 
-Futher, if you broadcast from a client in order to locate servers, and that
+Further, if you broadcast from a client in order to locate servers, and that
 server is listening on both IPv4 and IPv6, you might get two responses that
 appear to be different servers. Plan to add something unique in the payload
 so you can recognize they are the same machine, or separate out IPv4/IPv6
